@@ -2,7 +2,7 @@
 
 **Extract highlights and notes from your Mendeley database**
 
-## Purpose
+## What does this do?
 
 Menotexport.py is a simple python solution to help extracts annotations (highlighted
 texts and sticky notes) you made in the build-in PDF reader of Mendeley.
@@ -35,8 +35,7 @@ Copy-n-Paste one by one, some softwares offer an automated solution.
 
 *skim* on OSX has the functionality to produce a summary of all annotations.
 
-Some versions of *Foxit Reader* can do that (although the functionality is
-not available on all OSs).
+Some versions of *Foxit Reader* can do that (on windows, not on the Linux version, not sure about Mac).
 
 Pro versions of *Adobe Reader* **may** have that too.
 
@@ -89,12 +88,12 @@ python menotexport.py -emns dbfile outputdir
 - The bulk PDF export works with **quite good** accuracy, most highlights and notes are
   reproduced as they should be.
 - Note extraction works with **quite good** accruacy.
-- Highlight extraction accuracy is compromised, due to the inherent nature of the PDF
+- **Highlight extraction accuracy is compromised**, due to the inherent nature of the PDF
   format. Not all texts are correctly extracted, and the order they appear in the output
   may not be exactly the same as in the PDFs. DO proof read afterwards.
 - Highlighted texts from a single "block" of texts are treated as one record/entry. A "block" of
   texts is a continuous chunk of texts in the PDF, could be a whole paragraph, a single
-  line separated from others, or a single word. This ambiguity is again due to the inherent
+  line separated from others, or a single isolated word. This ambiguity is again due to the inherent
   nature of PDF format. Again proof read the results.
 - Citationkeys and tags are added to the extracted texts to facilitate further information
   processes, both can be editted in Mendeley.
@@ -112,6 +111,7 @@ It requires the following packages:
 - pandas
 - pdfminer
 - numpy
+- dateutil
 
 It further incorporate (with minor adjustments) the pdfannotation.py file from
 the [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf) project.
@@ -119,7 +119,7 @@ the [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf) project.
 
 ## Platform/OS
 
-The software is tested on Linux, but should also run on Mac.
+The software is tested on Linux, should also run on Mac.
 Will create a windows version later. 
 
 ## Versions
