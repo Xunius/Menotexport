@@ -10,10 +10,10 @@ texts and sticky notes) you made in the build-in PDF reader of Mendeley.
 *Mendeley is a desktop and web program for managing and sharing research
 papers.* It offers free desktop clients for Windows, OSX and Linux. But the
 software is not open source, and their support team has been real slow in responding
-to customs feature requests, some of which has been proposed by many for YEARS.
+to customers feature requests, some of which has been proposed by many for YEARS.
 This tool aims at solving the following:
 
-1. Bulk export annotated PDFs.
+### 1. Bulk export annotated PDFs.
 
 Annotations (highlights and notes) made inside Mendeley are saved not directly onto
 the relevant PDFs, but to a separate database file. Therefore these annotations can
@@ -28,7 +28,7 @@ This script can bulk export all PDFs with annotations to a given folder, and
 the annotations are readable by other PDF softwares. NOTE that PDFs with no annotations
 are not exported.
 
-2. Extract annotation texts.
+### 2. Extract annotation texts.
 
 To extract texts from the highlights and sticky notes in a PDF, other than
 Copy-n-Paste one by one, some softwares offer an automated solution.
@@ -40,7 +40,7 @@ not available on all OSs).
 
 Pro versions of *Adobe Reader* **may** have that too.
 
-Most of PDF readers in Linux do not have that functionality. (Let me know if you find one).
+Most of the PDF readers in Linux do not have that functionality. (Let me know if you find one).
 
 This tool could extract the texts from the highlights and notes in the PDFs in Mendeley
 to a plain text file, and format the information in a sensible structure.
@@ -59,13 +59,13 @@ where
 - `-m`: Extract markups (highlighted texts).
 - `-n`: Extract notes.
 - `-w`: Do not overwrite existing files in `outputdir`. Default to overwrite.
-- `-s`: Save extracted texts to a separate txt file each PDF. Default to
+- `-s`: Save extracted texts to a separate txt file for each PDF. Default to
       save all texts to a single file.
 - `dbfile`: Absolute path to the Mendeley database file. In Linux systems default location is
-  `~/.local/share/data/Mendeley\ Ltd./Mendeley\ Desktop/your_email_@www.mendeley.com.sqlite`
+  `~/.local/share/data/Mendeley\ Ltd./Mendeley\ Desktop/your_email@www.mendeley.com.sqlite`
 - `outputdir`: folder to save outputs.
 
-If `-s`, texts for each PDF is save to `Anno_PDFTITLE.txt` (if both `-m` and
+- If `-s`, texts for each PDF is saved to `Anno_PDFTITLE.txt` (if both `-m` and
 `-n` are given), or to `Highlights_PDFTITLE.txt` or `Notes_PDFTITLE.txt` (if
 either `-m` or `-n` is given).
 
@@ -73,7 +73,7 @@ If not `-s`, save extracted texts to `Mendeley_annotations.txt` (if both `-m`
 and `-n` are given), or to `Mendeley_highlights.txt` or `Mendeley_notes.txt`
 (if either `-m` or `-n` is given). 
 
-If not `-s`, also generate another txt `Mendeley_annotations_by_tags.txt' where
+If not `-s`, also generate another txt `Mendeley_annotations_by_tags.txt` where
 information is grouped by tags.
 
 Example:
@@ -95,7 +95,7 @@ python menotexport.py -emns dbfile outputdir
 - Citationkeys and tags are added to the extracted texts to facilitate further information
   processes, both can be editted in Mendeley.
 - Possible follow-ups one can do: re-format the extracted txts to PDFs, docs or sync into
-  your evernote account, will probably implement these in a later version.
+  your Evernote account, will probably implement these in a later version.
 
 
 ## Dependencies
@@ -109,7 +109,7 @@ It requires the following packages:
 - pdfminer
 - numpy
 
-It further incorporate (with small adjustments) the pdfannotation.py file from
+It further incorporate (with minor adjustments) the pdfannotation.py file from
 the [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf) project.
 
 
