@@ -68,11 +68,11 @@ where
 `-n` are given), or to `Highlights_PDFTITLE.txt` or `Notes_PDFTITLE.txt` (if
 either `-m` or `-n` is given).
 
-If not `-s`, save extracted texts from all PDFs to `Mendeley_annotations.txt`
+- If not `-s`, save extracted texts from all PDFs to `Mendeley_annotations.txt`
 (if both `-m` and `-n` are given), or to `Mendeley_highlights.txt` or
 `Mendeley_notes.txt` (if either `-m` or `-n` is given). 
 
-If not `-s`, also generate another txt `Mendeley_annotations_by_tags.txt` where
+- If not `-s`, also generate another txt `Mendeley_annotations_by_tags.txt` where
 information is grouped by tags.
 
 Example:
@@ -90,7 +90,7 @@ python menotexport.py -emns dbfile outputdir
 - Note extraction works with **quite good** accruacy.
 - **Highlight extraction accuracy is compromised**, due to the inherent nature of the PDF
   format. Not all texts are correctly extracted, and the order they appear in the output
-  may not be exactly the same as in the PDFs. DO proof read afterwards.
+  may not be exactly the same as in the PDFs (top-down, left-right). DO proof read afterwards.
 - Highlighted texts from a single "block" of texts are treated as one record/entry. A "block" of
   texts is a continuous chunk of texts in the PDF, could be a whole paragraph, a single
   line separated from others, or a single isolated word. This ambiguity is again due to the inherent
