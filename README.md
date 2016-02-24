@@ -1,6 +1,6 @@
 # Menotexport
 
-**Extract highlights and notes from your Mendeley database**
+** Menotexport (Mendeley-Note-Export) extracts highlights and notes from your Mendeley database**
 
 ## What does this do?
 
@@ -97,6 +97,9 @@ python menotexport.py -emns dbfile outputdir
   nature of PDF format. Again proof read the results.
 - Citationkeys and tags are added to the extracted texts to facilitate further information
   processes, both can be editted in Mendeley.
+- If choose to save all annotations to a single file, the programme also re-structure the extracted texts
+  and organize them by their tags before saving to a separate file. Pieces of texts from a PDF that isn't taged are given
+  a tag of @None.
 - Possible follow-ups one can do: re-format the extracted txts to PDFs, docs or sync into
   your Evernote account, will probably implement these in a later version.
 
