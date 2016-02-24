@@ -24,7 +24,7 @@ from pdfminer.layout import LAParams
 from pdfminer.converter import PDFPageAggregator
 from pdfminer.layout import LTTextBox, LTTextLine, LTAnno,\
         LTTextBoxHorizontal, LTTextLineHorizontal, LTChar
-import numpy
+from numpy import sqrt, argsort
 
 
 
@@ -190,13 +190,13 @@ def sortDiag(layout,verbose=True):
     at bottom-left corner of page).
     '''
 
-    dist=lambda x,y,w,h: abs(2.*h*x/w-y+h)/numpy.sqrt((2.*h/w)**2+1)
+    dist=lambda x,y,w,h: abs(2.*h*x/w-y+h)/sqrt((2.*h/w)**2+1)
 
     w=layout.width
     h=layout.height
 
     dists=[dist(jj.bbox[0],jj.bbox[3],w,h) for jj in layout._objs]
-    idx=numpy.argsort(dists)
+    idx=argsort(dists)
 
     objs=[layout._objs[ii] for ii in idx]
 
