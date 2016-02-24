@@ -649,9 +649,9 @@ def main(dbfin, outdir, action, overwrite, allpages,\
 
     #---------------------Loop through files---------------------
     toexports={}
-    #for annoii in annotations:
-    for ii in range(3):
-        annoii=annotations[ii]
+    #for ii in range(3):
+    for annoii in annotations:
+        #annoii=annotations[ii]
         fii=annoii.path
         fnameii=os.path.splitext(os.path.basename(fii))[0]
 
