@@ -1,6 +1,6 @@
 # Menotexport
 
-** Menotexport (Mendeley-Note-Export) extracts highlights and notes from your Mendeley database**
+**Menotexport (Mendeley-Note-Export) extracts highlights and notes from your Mendeley database**
 
 ## What does this do?
 
