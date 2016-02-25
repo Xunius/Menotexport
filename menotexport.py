@@ -20,8 +20,6 @@ Update time: 2016-02-23 18:04:10.
 #---------------------Imports---------------------
 import sys
 import sqlite3
-from urllib import unquote
-from urlparse import urlparse
 import os
 import pdfannotation
 import PyPDF2
@@ -31,6 +29,19 @@ import pandas as pd
 from textwrap import TextWrapper
 import extracttags
 from datetime import datetime
+try:
+    #--------------------Python2.7--------------------
+    from urllib import unquote
+except:
+    #---------------------Python3---------------------
+    from urllib.parse import unquote
+try:
+    #--------------------Python2.7--------------------
+    from urlparse import urlparse
+except:
+    #---------------------Python3---------------------
+    from urllib.parse import urlparse
+
 
 
 class FileAnno(object):
