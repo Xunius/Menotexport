@@ -25,12 +25,12 @@ from urlparse import urlparse
 import os
 import pdfannotation
 import PyPDF2
-from dateutil import parser as dtparser
 import argparse
 import extracthl
 import pandas as pd
 from textwrap import TextWrapper
 import extracttags
+from datetime import datetime
 
 
 class FileAnno(object):
@@ -63,7 +63,8 @@ class FileAnno(object):
 
 
 def convert2datetime(s):
-    return dtparser.parse(s)
+    return datetime.strptime(s,'%Y-%m-%dT%H:%M:%SZ')
+
 
 
 
