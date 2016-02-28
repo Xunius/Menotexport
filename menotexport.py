@@ -629,7 +629,11 @@ def exportAnno(annodict,outdir,action,separate,verbose=True):
                 print(abpath_out)
 
         #----------------------Export----------------------
-        _exportAnnoFile(abpath_out,annoii)
+        try:
+            _exportAnnoFile(abpath_out,annoii)
+        except:
+            faillist.append(fnameii)
+            continue
 
 
 
@@ -661,6 +665,8 @@ def main(dbfin, outdir, action, overwrite, allpages,\
 
     #---------------------Loop through files---------------------
     toexports={}
+    global faillist
+    faillist=[]
     #for ii in range(3):
     for annoii in annotations:
         #annoii=annotations[ii]
@@ -673,20 +679,33 @@ def main(dbfin, outdir, action, overwrite, allpages,\
             print(fnameii)
 
         if 'e' in action:
-            exportPdf(fii,os.path.join(outdir,os.path.basename(fii)),\
-                    annoii,overwrite,allpages,verbose)
+            try:
+                exportPdf(fii,os.path.join(outdir,os.path.basename(fii)),\
+                        annoii,overwrite,allpages,verbose)
+            except:
+                faillist.append(fii)
+                continue
 
         if 'm' in action:
             if verbose:
                 print('\n# <mennoteexport>: Retrieving highlights...')
-            hltexts=extracthl.extractHighlights(fii,annoii,verbose)
+            try:
+                hltexts=extracthl.extractHighlights(fii,annoii,verbose)
+            except:
+                faillist.append(fii)
+                continue
         else:
             hltexts=[]
 
         if 'n' in action:
             if verbose:
                 print('\n# <mennoteexport>: Retrieving sticky notes...')
-            nttexts=extractNotes(fii,annoii,verbose)
+            try:
+                nttexts=extractNotes(fii,annoii,verbose)
+            except:
+                faillist.append(fii)
+                continue
+                
         else:
             nttexts=[]
 
@@ -701,8 +720,13 @@ def main(dbfin, outdir, action, overwrite, allpages,\
         extracttags.exportAnno(tagsdict,outdir,action,verbose)
 
     
-    if verbose:
-        print('\n# <mennoteexport>: All done.')
+    if len(faillist)>0:
+        print('\n# <mennoteexport>: Failed files.')
+        for failii in faillist:
+            print(failii)
+    else:
+        if verbose:
+            print('\n# <mennoteexport>: All done.')
 
 
 
