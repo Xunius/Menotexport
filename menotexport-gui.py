@@ -16,7 +16,7 @@ GUI for Menotexport.py
 # You may use, distribute and modify this code under the
 # terms of the GPLv3 license.
 
-Update time: 2016-02-27 22:09:28.
+Update time: 2016-02-28 22:09:28.
 '''
 
 
@@ -88,7 +88,7 @@ class MainFrame(Frame):
         self.parent=parent
         self.width=700
         self.height=400
-        self.title='Menotexport'
+        self.title='Menotexport v1.0'
 
         self.initUI()
 
@@ -164,7 +164,7 @@ class MainFrame(Frame):
 Default location on Linux:
 ~/.local/share/data/Mendeley\ Ltd./Mendeley\ Desktop/your_email@www.mendeley.com.sqlite
 Default location on Windows:
-C:\User\Your_name\............'''
+C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.mendeley.com.sqlite'''
 
         hint_label=tk.Label(frame,text=hint,\
                 justify=tk.LEFT,anchor=tk.NW)
@@ -357,9 +357,12 @@ Menotexport v1.0\n\n
             self.out_button.configure(state=tk.DISABLED)
             self.start_button.configure(state=tk.DISABLED)
             self.help_button.configure(state=tk.DISABLED)
+	    self.messagelabel.configure(text='Message (working...)')
 
             menotexport.main(dbfile,outdir,action,True,\
                             True,separate,True)
+
+	    self.messagelabel.configure(text='Message')
 
     
     def stop(self):
@@ -374,8 +377,8 @@ Menotexport v1.0\n\n
         frame.pack(fill=tk.BOTH,side=tk.TOP,\
                 expand=1,padx=8,pady=5)
 
-        label=tk.Label(frame,text='Message',bg='#bbb')
-        label.pack(side=tk.TOP,fill=tk.X)
+        self.messagelabel=tk.Label(frame,text='Message',bg='#bbb')
+        self.messagelabel.pack(side=tk.TOP,fill=tk.X)
 
         self.text=tk.Text(frame)
         self.text.pack(side=tk.TOP,fill=tk.BOTH,expand=1)

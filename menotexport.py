@@ -83,8 +83,14 @@ def converturl2abspath(url):
     '''Convert a url string to an absolute path
     This is necessary for filenames with unicode strings.
     '''
-    pth = unquote(str(urlparse(url).path)).decode("utf8") 
-    return os.path.abspath(pth)
+    if url[5:8]==u'///':   
+	url=u'file://'+url[8:]
+	path=urlparse(url)
+	path=os.path.join(path.netloc,path.path)
+	path=unquote(str(path)).decode('utf8')
+    else:
+        path = unquote(str(urlparse(url).path)).decode("utf8") 
+    return os.path.abspath(path)
 
 
 
@@ -277,6 +283,7 @@ def getNotes(db, results=None):
 
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
+   
         pg = r[1]
         bbox = [r[2], r[3], r[2]+30, r[3]+30] 
         # needs a rectangle however size does not matter
@@ -668,14 +675,16 @@ def main(dbfin, outdir, action, overwrite, allpages,\
     global faillist
     faillist=[]
     #for ii in range(3):
-    for annoii in annotations:
-        #annoii=annotations[ii]
+    total=len(annotations)
+    for ii in xrange(total):
+        #for annoii in annotations:
+        annoii=annotations[ii]
         fii=annoii.path
         fnameii=os.path.splitext(os.path.basename(fii))[0]
 
         if verbose:
-            print(int(70)*'-')
-            print('\n# <mennoteexport>: Processing file:\n')
+            print('\n'+int(30)*'-'+str(ii+1)+'/'+str(total)+int(30)*'-')
+            print('# <mennoteexport>: Processing file:\n')
             print(fnameii)
 
         if 'e' in action:
@@ -721,6 +730,7 @@ def main(dbfin, outdir, action, overwrite, allpages,\
 
     
     if len(faillist)>0:
+        print('\n\n\n'+'-'*int(70))
         print('\n# <mennoteexport>: Failed files.')
         for failii in faillist:
             print(failii)

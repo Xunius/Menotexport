@@ -45,7 +45,16 @@ This tool could extract the texts from the highlights and notes in the PDFs in M
 to a plain text file, and format the information in a sensible structure.
 
 
+## Installation
+
+- For Linux (or Mac), download the zip and unzip to any folder. Make sure you have all the dependencies listed below and Python 2.7.
+
+- For Windows, only need to get the `Menotexport-win64.zip` file.
+
+
 ## Usage
+
+### Command line
 
 ```
 python menotexport.py [-h] [-e] [-m] [-n] [-w] [-s] dbfile outputdir
@@ -83,6 +92,11 @@ To bulk export, extract and save to separate txt files:
 python menotexport.py -emns dbfile outputdir
 ```
 
+### GUI
+
+Launch `menotexport-gui.exe`, select the Mendeley database file and an output folder. Select the actions to perform (see above), then *start*. 
+
+
 ## Caveats and further notes
 
 - The bulk PDF export works with **quite good** accuracy, most highlights and notes are
@@ -102,11 +116,12 @@ python menotexport.py -emns dbfile outputdir
   a tag of @None.
 - Possible follow-ups one can do: re-format the extracted txts to PDFs, docs or sync into
   your Evernote account, will probably implement these in a later version.
+- In the GUI version, the programme may freeze for a little while when processing, as it's still not quite optimized. Just be patient.
 
 
 ## Dependencies
 
-Developed in python2.7. Haven't tested in python 3.
+Developed in python2.7. **NOT** compatible with python3+ (*pdfminer* doesn't support python3).
 
 It requires the following packages:
 - PyPDF2
@@ -121,12 +136,13 @@ the [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf) project.
 
 ## Platform/OS
 
-The software is tested on Linux, should also run on Mac.
-Will create a windows version later. 
+The software is tested on Linux, Windows 7 and Windows 10. Should also run on Mac.
 
 ## Versions
 
 * 0.1 first release
+* 1.0 added GUI and Windows version
+
 
 ## Licence
 
