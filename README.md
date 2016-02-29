@@ -49,7 +49,7 @@ to a plain text file, and format the information in a sensible structure.
 
 - For Linux (or Mac), download the zip and unzip to any folder. Make sure you have all the dependencies listed below and Python 2.7.
 
-- For Windows, only need to get the `Menotexport-win64.zip` file.
+- For Windows, only need to get the `Menotexport-win64.zip` file. Download from dropbox: https://www.dropbox.com/s/64267kqvmlemaz8/menotexport-win64.rar?dl=0
 
 
 ## Usage
