@@ -69,6 +69,7 @@ where
 - `-w`: Do not overwrite existing files in `outputdir`. Default to overwrite.
 - `-s`: Save extracted texts to a separate txt file for each PDF. Default to
       save all texts to a single file.
+- `-f`: Select to process only a Mendeley folder. Note this is case sensitive and match has to be literal.
 - `dbfile`: Absolute path to the Mendeley database file. In Linux systems default location is
   `~/.local/share/data/Mendeley\ Ltd./Mendeley\ Desktop/your_email@www.mendeley.com.sqlite`
 - `outputdir`: folder to save outputs.
@@ -90,6 +91,11 @@ To bulk export, extract and save to separate txt files:
 
 ```
 python menotexport.py -emns dbfile outputdir
+```
+To bulk export all PDFs and extract all annotations in Mendeley folder "Tropical_Cyclones" and save extracted annotations to a single file: 
+
+```
+python menotexport.py -emn -f "Tropical_Cyclones" dbfile outputdir
 ```
 
 ### GUI
