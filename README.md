@@ -136,7 +136,7 @@ the [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf) project.
 
 ## Platform/OS
 
-The software is tested on Linux, Windows 7 and Windows 10. Should also run on Mac.
+The software is tested on Linux and Windows 10. Should also run on Mac.
 
 ## Versions
 
