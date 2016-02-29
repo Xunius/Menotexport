@@ -28,6 +28,9 @@ def groupByTags(annodict,verbose=True):
 
         hlii,ntii=annoii
 
+        if len(hlii)==0 and len(ntii)==0:
+            continue
+
         try:
             tagsii=['@'+kk for kk in hlii[0].tags]
         except:
@@ -94,7 +97,14 @@ def exportAnno(annodict,outdir,action,verbose=True):
 
         #----------------Loop through tags----------------
         tags=annodict.keys()
+        if len(tags)==0:
+            return
         tags.sort()
+        #---------------Put @None at the end---------------
+        if '@None' in tags:
+            tags.remove('@None')
+            tags.append('@None')
+
         for tagii in tags:
 
             citedictii=annodict[tagii]
