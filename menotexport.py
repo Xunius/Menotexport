@@ -102,7 +102,7 @@ def converturl2abspath(url):
 
 
 
-def getHighlights(db, results=None):
+def getHighlights(db, results=None, folder=None):
     '''Extract the locations of highlights from the Mendeley database
     and put results into a dictionary.
 
@@ -131,22 +131,47 @@ def getHighlights(db, results=None):
                         'content':txt,
                         'cdate': cdate,
                         'page':pg}
-
+    
     Update time: 2016-02-24 00:36:33.
     '''
 
-    query =\
-    '''SELECT Files.localUrl, FileHighlightRects.page,
-                    FileHighlightRects.x1, FileHighlightRects.y1,
-                    FileHighlightRects.x2, FileHighlightRects.y2,
-                    FileHighlights.createdTime
-            FROM Files
-            LEFT JOIN FileHighlights
-                ON FileHighlights.fileHash=Files.hash
-            LEFT JOIN FileHighlightRects
-                ON FileHighlightRects.highlightId=FileHighlights.id
-            WHERE (FileHighlightRects.page IS NOT NULL)
-    '''
+    if folder is None:
+        query =\
+        '''SELECT Files.localUrl, FileHighlightRects.page,
+                        FileHighlightRects.x1, FileHighlightRects.y1,
+                        FileHighlightRects.x2, FileHighlightRects.y2,
+                        FileHighlights.createdTime
+                FROM Files
+                LEFT JOIN FileHighlights
+                    ON FileHighlights.fileHash=Files.hash
+                LEFT JOIN FileHighlightRects
+                    ON FileHighlightRects.highlightId=FileHighlights.id
+                WHERE (FileHighlightRects.page IS NOT NULL)
+        '''
+
+    else:
+        query =\
+        '''SELECT Files.localUrl, FileHighlightRects.page,
+                        FileHighlightRects.x1, FileHighlightRects.y1,
+                        FileHighlightRects.x2, FileHighlightRects.y2,
+                        FileHighlights.createdTime,
+                        DocumentFolders.folderid,
+                        Folders.name
+                FROM Files
+                LEFT JOIN FileHighlights
+                    ON FileHighlights.fileHash=Files.hash
+                LEFT JOIN FileHighlightRects
+                    ON FileHighlightRects.highlightId=FileHighlights.id
+                LEFT JOIN DocumentFolders
+                    ON DocumentFolders.documentId=FileHighlights.documentId
+                LEFT JOIN Folders
+                    ON Folders.id=DocumentFolders.folderid
+                WHERE (FileHighlightRects.page IS NOT NULL) AND 
+        '''
+        fstr=['(Folders.name="%s")' %ii for ii in folder]
+        fstr=' AND '.join(fstr)
+        query=query+'\n'+fstr
+
 
     query2=\
     '''SELECT Files.localUrl, DocumentTags.tag,
@@ -160,6 +185,7 @@ def getHighlights(db, results=None):
        LEFT JOIN Documents
            ON Documents.id=FileHighlights.documentId
     '''
+
             
     if results is None:
         results={}
@@ -218,7 +244,7 @@ def getHighlights(db, results=None):
 
 
 #-------------------Get notes-------------------
-def getNotes(db, results=None):
+def getNotes(db, results=None, folder=None):
     '''Extract notes from the Mendeley database
 
     <db>: sqlite3.connection to Mendeley sqlite database.
@@ -250,16 +276,38 @@ def getNotes(db, results=None):
     Update time: 2016-02-24 00:36:50.
     '''
 
-    query=\
-    '''SELECT Files.localUrl, FileNotes.page,
-                    FileNotes.x, FileNotes.y,
-                    FileNotes.author, FileNotes.note,
-                    FileNotes.modifiedTime
-            FROM Files
-            LEFT JOIN FileNotes
-                ON FileNotes.fileHash=Files.hash
-            WHERE FileNotes.page IS NOT NULL
-    '''
+    if folder is None:
+        query=\
+        '''SELECT Files.localUrl, FileNotes.page,
+                        FileNotes.x, FileNotes.y,
+                        FileNotes.author, FileNotes.note,
+                        FileNotes.modifiedTime
+                FROM Files
+                LEFT JOIN FileNotes
+                    ON FileNotes.fileHash=Files.hash
+                WHERE FileNotes.page IS NOT NULL
+        '''
+    else:
+        query=\
+        '''SELECT Files.localUrl, FileNotes.page,
+                        FileNotes.x, FileNotes.y,
+                        FileNotes.author, FileNotes.note,
+                        FileNotes.modifiedTime,
+                        DocumentFolders.folderid,
+                        Folders.name
+                FROM Files
+                LEFT JOIN FileNotes
+                    ON FileNotes.fileHash=Files.hash
+                LEFT JOIN DocumentFolders
+                    ON DocumentFolders.documentId=FileNotes.documentId
+                LEFT JOIN Folders
+                    ON Folders.id=DocumentFolders.folderid
+                WHERE (FileNotes.page IS NOT NULL) AND
+        '''
+        fstr=['(Folders.name="%s")' %ii for ii in folder]
+        fstr=' AND '.join(fstr)
+        query=query+'\n'+fstr
+
 
     query2=\
     '''SELECT Files.localUrl, DocumentTags.tag,
@@ -647,19 +695,50 @@ def exportAnno(annodict,outdir,action,separate,verbose=True):
         try:
             _exportAnnoFile(abpath_out,annoii)
         except:
-            faillist.append(fnameii)
+            annofaillist.append(fnameii)
             continue
 
 
 
 
+#--------------------Check folder names in database--------------------
+def checkFolder(db,folder,verbose=True):
+    '''Check folder names in database
+
+    '''
+
+    if folder is None:
+        return
+
+    query=\
+    '''SELECT Documents.title,
+              DocumentFolders.folderid,
+              Folders.name
+       FROM Documents
+       LEFT JOIN DocumentFolders
+           ON Documents.id=DocumentFolders.documentId
+       LEFT JOIN Folders
+           ON Folders.id=DocumentFolders.folderid
+    '''
+
+    fstr=['(Folders.name="%s")' %ii for ii in folder]
+    fstr='WHERE '+' OR '.join(fstr)
+    query=query+' '+fstr
+
+    #------------------Get file meta data------------------
+    ret=db.execute(query)
+    data=ret.fetchall()
+
+    if len(data)==0:
+        raise Exception("Given folder name not found in database or folder is empty.")
         
 
+    
 
 
 
 #----------------Bulk export to pdf----------------
-def main(dbfin, outdir, action, overwrite, allpages,\
+def main(dbfin, outdir, action, folder, overwrite, allpages,\
         separate,verbose=True):
 
     
@@ -669,24 +748,37 @@ def main(dbfin, outdir, action, overwrite, allpages,\
         print('\n# <mennoteexport>: Connected to database:\n')
         print(dbfin)
 
+    #----------------Check folder name----------------
+    checkFolder(db,folder)
+
     #------------------Get highlights------------------
-    annotations = getHighlights(db)
+    annotations = getHighlights(db,None,folder)
 
     #--------------------Get notes--------------------
-    annotations = getNotes(db, annotations)
+    annotations = getNotes(db, annotations, folder)
+
+    #-----------------Close connection-----------------
+    if verbose:
+        print('\n# <mennoteexport>: Drop connection to database:\n')
+    db.close()
+
+    if len(annotations)==0:
+        print('\n# <mennoteexport>: No annotations found. Quit.\n')
+        sys.exit(0)
+
 
     #---------------Reformat annotations---------------
     annotations=reformatAnno(annotations)
 
     #---------------------Loop through files---------------------
     toexports={}
-    global faillist
-    faillist=[]
-    #for ii in range(3):
+    global exportfaillist
+    global annofaillist
+    exportfaillist=[]
+    annofaillist=[]
+
     total=len(annotations)
-    total=3
     for ii in xrange(total):
-        #for annoii in annotations:
         annoii=annotations[ii]
         fii=annoii.path
         fnameii=os.path.splitext(os.path.basename(fii))[0]
@@ -701,8 +793,7 @@ def main(dbfin, outdir, action, overwrite, allpages,\
                 exportPdf(fii,os.path.join(outdir,os.path.basename(fii)),\
                         annoii,overwrite,allpages,verbose)
             except:
-                faillist.append(fii)
-                continue
+                exportfaillist.append(fii)
 
         if 'm' in action:
             if verbose:
@@ -710,8 +801,8 @@ def main(dbfin, outdir, action, overwrite, allpages,\
             try:
                 hltexts=extracthl.extractHighlights(fii,annoii,verbose)
             except:
-                faillist.append(fii)
-                continue
+                annofaillist.append(fii)
+                hltexts=[]
         else:
             hltexts=[]
 
@@ -721,9 +812,8 @@ def main(dbfin, outdir, action, overwrite, allpages,\
             try:
                 nttexts=extractNotes(fii,annoii,verbose)
             except:
-                faillist.append(fii)
-                continue
-                
+                annofaillist.append(fii)
+                nttexts=[]
         else:
             nttexts=[]
 
@@ -738,12 +828,19 @@ def main(dbfin, outdir, action, overwrite, allpages,\
         extracttags.exportAnno(tagsdict,outdir,action,verbose)
 
     
-    if len(faillist)>0:
+    if len(exportfaillist)>0:
         print('\n\n\n'+'-'*int(70))
-        print('\n# <mennoteexport>: Failed files.')
-        for failii in faillist:
+        print('\n# <mennoteexport>: Failed to export PDFs:')
+        for failii in exportfaillist:
             print(failii)
-    else:
+
+    if len(annofaillist)>0:
+        print('\n\n\n'+'-'*int(70))
+        print('\n# <mennoteexport>: Failed to extract and export annotations:')
+        for failii in annofaillist:
+            print(failii)
+
+    if len(exportfaillist)==0 and len(annofaillist)==0:
         if verbose:
             print('\n# <mennoteexport>: All done.')
 
@@ -786,6 +883,9 @@ if __name__ == "__main__":
                 If used with -m, highlights and notes are combined
                 in annotations.txt.''')
 
+    parser.add_argument('-f', '--folder', dest='folder',\
+            type=str, default=None, nargs=1, help='''Select Mendeley folder.''')
+
     parser.add_argument('-w', '--overwrite', action='store_false',\
             help='''Do not overwrite any PDF files in target folder.
             Default to overwrite.''')
@@ -799,6 +899,7 @@ if __name__ == "__main__":
 
     try:
         args = parser.parse_args()
+        print args
     except:
         parser.print_help()
         sys.exit(1)
@@ -806,8 +907,8 @@ if __name__ == "__main__":
     dbfile = os.path.abspath(args.dbfile)
     outdir = os.path.abspath(args.outdir)
 
-    main(dbfile,outdir,args.action,args.overwrite,\
-            True,args.separate,args.verbose)
+    main(dbfile,outdir,args.action,args.folder,\
+            args.overwrite,True,args.separate,args.verbose)
 
 
 
