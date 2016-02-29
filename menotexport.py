@@ -83,14 +83,22 @@ def converturl2abspath(url):
     '''Convert a url string to an absolute path
     This is necessary for filenames with unicode strings.
     '''
-    if url[5:8]==u'///':   
-	url=u'file://'+url[8:]
-	path=urlparse(url)
-	path=os.path.join(path.netloc,path.path)
-	path=unquote(str(path)).decode('utf8')
+
+    #--------------------For linux--------------------
+    path = unquote(str(urlparse(url).path)).decode("utf8") 
+    path=os.path.abspath(path)
+
+    if os.path.exists(path):
+        return path
     else:
-        path = unquote(str(urlparse(url).path)).decode("utf8") 
-    return os.path.abspath(path)
+        #-------------------For windowes-------------------
+        if url[5:8]==u'///':   
+            url=u'file://'+url[8:]
+            path=urlparse(url)
+            path=os.path.join(path.netloc,path.path)
+            path=unquote(str(path)).decode('utf8')
+            path=os.path.abspath(path)
+            return path
 
 
 
@@ -676,6 +684,7 @@ def main(dbfin, outdir, action, overwrite, allpages,\
     faillist=[]
     #for ii in range(3):
     total=len(annotations)
+    total=3
     for ii in xrange(total):
         #for annoii in annotations:
         annoii=annotations[ii]
