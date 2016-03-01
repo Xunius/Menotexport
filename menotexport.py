@@ -29,18 +29,15 @@ import pandas as pd
 from textwrap import TextWrapper
 import extracttags
 from datetime import datetime
-try:
-    #--------------------Python2.7--------------------
-    from urllib import unquote
-except:
+
+if sys.version_info[0]>=3:
     #---------------------Python3---------------------
     from urllib.parse import unquote
-try:
-    #--------------------Python2.7--------------------
-    from urlparse import urlparse
-except:
-    #---------------------Python3---------------------
     from urllib.parse import urlparse
+else:
+    #--------------------Python2.7--------------------
+    from urllib import unquote
+    from urlparse import urlparse
 
 
 
@@ -730,7 +727,11 @@ def checkFolder(db,folder,verbose=True):
     data=ret.fetchall()
 
     if len(data)==0:
-        raise Exception("Given folder name not found in database or folder is empty.")
+        print("Given folder name not found in database or folder is empty.")
+        return 1
+    else:
+        return 0
+
         
 
     
@@ -749,7 +750,9 @@ def main(dbfin, outdir, action, folder, overwrite, allpages,\
         print(dbfin)
 
     #----------------Check folder name----------------
-    checkFolder(db,folder)
+    checkok=checkFolder(db,folder)
+    if checkok!=0:
+        return
 
     #------------------Get highlights------------------
     annotations = getHighlights(db,None,folder)
@@ -764,7 +767,8 @@ def main(dbfin, outdir, action, folder, overwrite, allpages,\
 
     if len(annotations)==0:
         print('\n# <mennoteexport>: No annotations found. Quit.\n')
-        sys.exit(0)
+        #sys.exit(0)
+        return 1
 
 
     #---------------Reformat annotations---------------
@@ -844,6 +848,8 @@ def main(dbfin, outdir, action, folder, overwrite, allpages,\
         if verbose:
             print('\n# <mennoteexport>: All done.')
 
+    return 0
+
 
 
 
@@ -884,7 +890,7 @@ if __name__ == "__main__":
                 in annotations.txt.''')
 
     parser.add_argument('-f', '--folder', dest='folder',\
-            type=str, default=None, nargs=1, help='''Select Mendeley folder.''')
+            type=str, default=None, nargs=1, help='''Select a Mendeley folder to process.''')
 
     parser.add_argument('-w', '--overwrite', action='store_false',\
             help='''Do not overwrite any PDF files in target folder.

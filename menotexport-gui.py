@@ -21,17 +21,22 @@ Update time: 2016-02-28 22:09:28.
 
 
 
-
-import Tkinter as tk
-from Tkinter import Frame
-from ttk import Style
+import sys
+from ttk import Style,Combobox
 from tkFileDialog import askopenfilename, askdirectory
 import tkMessageBox
 import menotexport
-import sys
 import Queue
 import threading
 import time
+import sqlite3
+import pandas as pd
+if sys.version_info[0]>=3:
+    import tkinter as tk
+    from tkinter import Frame
+else:
+    import Tkinter as tk
+    from Tkinter import Frame
 
 
 stdout=sys.stdout
@@ -202,8 +207,43 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.db_entry.insert(tk.END,filename)
         print('Database file: %s' %filename)
 
-        self.hasdb=True
-        self.checkReady()
+        self.probeFolders()
+
+
+    def probeFolders(self):
+        dbfile=self.db_entry.get()
+        try:
+            db=sqlite3.connect(dbfile)
+            query=\
+            '''SELECT Documents.title,
+                      DocumentFolders.folderid,
+                      Folders.name
+               FROM Documents
+               LEFT JOIN DocumentFolders
+                   ON Documents.id=DocumentFolders.documentId
+               LEFT JOIN Folders
+                   ON Folders.id=DocumentFolders.folderid
+            '''
+            ret=db.execute(query)
+            data=ret.fetchall()
+            df=pd.DataFrame(data=data,columns=['title',\
+                    'folerid','name'])
+            fetchField=lambda x, f: x[f].unique().tolist()
+            folders=fetchField(df,'name')
+            folders.sort()
+            folders.remove(None)
+            self.menfolders=['All',]+folders
+            self.foldersmenu['values']=tuple(self.menfolders)
+            self.menfolder.set('All')
+            db.close()
+
+            self.hasdb=True
+            self.checkReady()
+        except:
+            print('Failed to recoganize the given database file.') 
+
+
+
 
 
     
@@ -222,14 +262,14 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.isnote=tk.IntVar()
         self.isseparate=tk.IntVar()
 
-        check_export=tk.Checkbutton(frame,text='Export PDFs',\
+        self.check_export=tk.Checkbutton(frame,text='Export PDFs',\
                 variable=self.isexport,command=self.doExport)
 
-        check_highlight=tk.Checkbutton(frame,\
+        self.check_highlight=tk.Checkbutton(frame,\
                 text='Extract highlights',\
                 variable=self.ishighlight,command=self.doHighlight)
 
-        check_note=tk.Checkbutton(frame,\
+        self.check_note=tk.Checkbutton(frame,\
                 text='Extract notes',\
                 variable=self.isnote,command=self.doNote)
 
@@ -240,19 +280,29 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
 
         frame.columnconfigure(0,weight=1)
 
-        check_export.grid(row=0,column=1,padx=8,sticky=tk.W)
-        check_highlight.grid(row=0,column=2,padx=8,sticky=tk.W)
-        check_note.grid(row=0,column=3,padx=8,sticky=tk.W)
+        self.check_export.grid(row=0,column=1,padx=8,sticky=tk.W)
+        self.check_highlight.grid(row=0,column=2,padx=8,sticky=tk.W)
+        self.check_note.grid(row=0,column=3,padx=8,sticky=tk.W)
         self.check_separate.grid(row=0,column=4,padx=8,sticky=tk.W)
 
-        #-------------------Help button-------------------
+        #---------------------2nd row---------------------
         subframe=Frame(frame)
         subframe.grid(row=1,column=0,columnspan=5,sticky=tk.W+tk.E,\
                 pady=5)
 
-        self.help_button=tk.Button(subframe,text='Help',\
-                command=self.showHelp)
-        self.help_button.pack(side=tk.LEFT,padx=8)
+        #-------------------Folder options-------------------
+        folderlabel=tk.Label(subframe,text='Mendeley folder:',\
+                bg='#bbb')
+        folderlabel.pack(side=tk.LEFT, padx=8)
+
+        self.menfolder=tk.StringVar()
+        self.menfolder.set('All')
+        self.menfolders=['All',]
+        self.foldersmenu=Combobox(subframe,textvariable=\
+                self.menfolder,values=self.menfolders,state='readonly')
+        self.foldersmenu.bind('<<ComboboxSelected>>',self.setfolder)
+        self.foldersmenu.pack(side=tk.LEFT,padx=8)
+
         
         #-------------------Quit button-------------------
         quit_button=tk.Button(subframe,text='Quit',\
@@ -271,6 +321,21 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
                 command=self.start,state=tk.DISABLED)
         self.start_button.pack(side=tk.RIGHT,pady=8)
 
+        #-------------------Help button-------------------
+
+        self.help_button=tk.Button(subframe,text='Help',\
+                command=self.showHelp)
+        self.help_button.pack(side=tk.RIGHT,padx=8)
+
+
+    def setfolder(self,x):
+        self.foldersmenu.selection_clear()
+        self.menfolder=self.foldersmenu.get()
+        self.foldersmenu.set(self.menfolder)
+        print('Select Mendeley folder: '+str(self.menfolder))
+
+
+
     def doExport(self):
         if self.isexport.get()==1:
             print('Export annotated PDFs.')
@@ -278,6 +343,8 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             print('Dont export annotated PDFs.')
 
         self.checkReady()
+
+
 
     def doHighlight(self):
         if self.ishighlight.get()==1:
@@ -319,12 +386,8 @@ Menotexport v1.0\n\n
 - See README.md for more info.\n
 '''
 
-        '''
-        message=tk.Message(self,text=helpstr,\
-                justify=tk.LEFT)
-        message.pack()
-        '''
         tkMessageBox.showinfo(title='Help', message=helpstr)
+        print(self.menfolder.get())
 
 
 
@@ -357,11 +420,27 @@ Menotexport v1.0\n\n
             self.out_button.configure(state=tk.DISABLED)
             self.start_button.configure(state=tk.DISABLED)
             self.help_button.configure(state=tk.DISABLED)
+            self.foldersmenu.configure(state=tk.DISABLED)
+            self.check_export.configure(state=tk.DISABLED)
+            self.check_highlight.configure(state=tk.DISABLED)
+            self.check_note.configure(state=tk.DISABLED)
+            self.check_separate.configure(state=tk.DISABLED)
 	    self.messagelabel.configure(text='Message (working...)')
 
-            menotexport.main(dbfile,outdir,action,True,\
+            folder=None if self.menfolder=='All' else [self.menfolder,]
+            menotexport.main(dbfile,outdir,action,folder,True,\
                             True,separate,True)
 
+            #--------------------After run--------------------
+            self.db_button.configure(state=tk.NORMAL)
+            self.out_button.configure(state=tk.NORMAL)
+            self.start_button.configure(state=tk.NORMAL)
+            self.help_button.configure(state=tk.NORMAL)
+            self.foldersmenu.configure(state='readonly')
+            self.check_export.configure(state=tk.NORMAL)
+            self.check_highlight.configure(state=tk.NORMAL)
+            self.check_note.configure(state=tk.NORMAL)
+            self.check_separate.configure(state=tk.NORMAL)
 	    self.messagelabel.configure(text='Message')
 
     
