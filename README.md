@@ -49,7 +49,9 @@ to a plain text file, and format the information in a sensible structure.
 
 - For Linux (or Mac), download the zip and unzip to any folder. Make sure you have all the dependencies listed below and Python 2.7.
 
-- For Windows, only need to get the `Menotexport-win64.zip` file. Download from dropbox: https://www.dropbox.com/s/64267kqvmlemaz8/menotexport-win64.rar?dl=0
+- For Windows, only need to get the `Menotexport-win64.zip` file. Download from dropbox:
+- https://www.dropbox.com/s/64267kqvmlemaz8/menotexport-win64.rar?dl=0
+
 
 
 ## Usage
@@ -57,7 +59,7 @@ to a plain text file, and format the information in a sensible structure.
 ### Command line
 
 ```
-python menotexport.py [-h] [-e] [-m] [-n] [-w] [-s] dbfile outputdir
+python menotexport.py [-h] [-e] [-m] [-n] [-w] [-s] [-f folder] dbfile outputdir
 ```
 
 where
@@ -122,7 +124,7 @@ Launch `menotexport-gui.exe`, select the Mendeley database file and an output fo
   a tag of @None.
 - Possible follow-ups one can do: re-format the extracted txts to PDFs, docs or sync into
   your Evernote account, will probably implement these in a later version.
-- In the GUI version, the programme may freeze for a little while when processing, as it's still not quite optimized. Just be patient.
+
 
 
 ## Dependencies
