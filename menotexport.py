@@ -840,7 +840,7 @@ def main(dbfin, outdir, action, folder, overwrite, allpages,\
 
     if len(annofaillist)>0:
         print('\n\n\n'+'-'*int(70))
-        print('\n# <mennoteexport>: Failed to extract and export annotations:')
+        print('\n# <mennoteexport>: Failed to extract and export highlights/notes:')
         for failii in annofaillist:
             print(failii)
 
