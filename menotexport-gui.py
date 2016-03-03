@@ -17,6 +17,7 @@ GUI for Menotexport.py
 # terms of the GPLv3 license.
 
 Update time: 2016-02-28 22:09:28.
+Update time: 2016-03-03 20:38:29.
 '''
 
 
@@ -28,7 +29,6 @@ import tkMessageBox
 import menotexport
 import Queue
 import threading
-import time
 import sqlite3
 import pandas as pd
 if sys.version_info[0]>=3:
@@ -42,77 +42,66 @@ else:
 stdout=sys.stdout
 
 
-'''
-class WorkThread(threading.Thread):
-    def __init__(self,name,parent,q,lock):
-        threading.Thread.__init__(self)
-        self.name=name
-        self.q=q
-        self.parent=parent
-        self.lock=lock
-
-        self.exit=self.parent.exit
-        print('start thread')
-
-    def run(self):
-
-        while not self.exit:
-            self.lock.acquire()
-            if not self.q.empty():
-                ins=self.q.get()
-                self.lock.release()
-                if ins=='go':
-                    #print('start run thread')
-                    self.parent.psgo()
-                elif ins=='stop':
-                    pass
-                    #print('Stop run thread')
-            else:
-                self.lock.release()
-'''
-
-
-
-
-
 class Redirector(object):
-    def __init__(self,text_box):
-        self.text_box=text_box
+    def __init__(self,q):
+        self.q=q
 
     def write(self,string):
-        #self.text_box.update_idletasks()
-        self.text_box.insert(tk.END,'# '+string)
-        self.text_box.see(tk.END)
-        self.text_box.update()
+        self.q.put(string)
+
+    '''
+    def flush(self):
+        with self.q.mutex:
+            self.q.queue.clear()
+    '''
+
+class WorkThread(threading.Thread):
+    def __init__(self,name,exitflag,stateq):
+        threading.Thread.__init__(self)
+        self.name=name
+        self.exitflag=exitflag
+        self._stop=threading.Event()
+        self.stateq=stateq
+
+    def run(self):
+        print('\nStart processing...')
+        if not self._stop.is_set():
+            menotexport.main(*self.args)
+            self.stateq.put('done')
+
+    def stop(self):
+        self.exitflag=True
+        self._stop.set()
+
+
+
 
 
 class MainFrame(Frame):
-    def __init__(self,parent):
+    def __init__(self,parent,stdoutq):
         Frame.__init__(self,parent)
 
         self.parent=parent
         self.width=700
         self.height=400
         self.title='Menotexport v1.0'
+        self.stdoutq=stdoutq
 
         self.initUI()
 
         self.hasdb=False
         self.hasout=False
         self.hasaction=False
+        self.exit=False
 
         self.path_frame=self.addPathFrame()
         self.action_frame=self.addActionFrame()
         self.message_frame=self.addMessageFrame()
-        sys.stdout=Redirector(self.text)
+        self.printStr()
 
-        '''
-        self.exit=False
-        self.queue=Queue.Queue(5)
-        self.qlock=threading.Lock()
-        self.workthread=WorkThread('workthread',self,self.queue,\
-                self.qlock)
-        '''
+        self.stateq=Queue.Queue()
+        #self.workproc=Pool(1)
+
 
 
 
@@ -124,14 +113,27 @@ class MainFrame(Frame):
         self.parent.geometry('%dx%d+%d+%d' \
                 %(self.width,self.height,x,y))
 
+
     def initUI(self):
         self.parent.title(self.title)
         self.style=Style()
         #Choose from default, clam, alt, classic
-        self.style.theme_use('default')
-
+        self.style.theme_use('alt')
         self.pack(fill=tk.BOTH,expand=True)
         self.centerWindow()
+
+
+    def printStr(self):
+        while self.stdoutq.qsize() and self.exit==False:
+            try:
+                msg=self.stdoutq.get()
+                self.text.update()
+                self.text.insert(tk.END,'# '+msg)
+                self.text.see(tk.END)
+            except Queue.Empty:
+                pass
+        self.after(100,self.printStr)
+
 
     def checkReady(self):
         if self.isexport.get()==1 or self.ishighlight.get()==1\
@@ -184,7 +186,6 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
 
         self.out_entry=tk.Entry(frame)
         self.out_entry.grid(row=2,column=1,sticky=tk.W+tk.E,padx=8)
-
         self.out_button=tk.Button(frame,text='Choose',command=self.openDir)
         self.out_button.grid(row=2,column=2,padx=8,sticky=tk.E)
         
@@ -194,10 +195,10 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.out_entry.delete(0,tk.END)
         dirname=askdirectory()
         self.out_entry.insert(tk.END,dirname)
-        print('Output folder: %s' %dirname)
-
-        self.hasout=True
-        self.checkReady()
+        if len(dirname)>0:
+            print('Output folder: %s' %dirname)
+            self.hasout=True
+            self.checkReady()
 
 
     def openFile(self):
@@ -205,9 +206,9 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         ftypes=[('sqlite files','*.sqlite'),('ALl files','*')]
         filename=askopenfilename(filetypes=ftypes)
         self.db_entry.insert(tk.END,filename)
-        print('Database file: %s' %filename)
-
-        self.probeFolders()
+        if len(filename)>0:
+            print('Database file: %s' %filename)
+            self.probeFolders()
 
 
     def probeFolders(self):
@@ -232,15 +233,18 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             folders=fetchField(df,'name')
             folders.sort()
             folders.remove(None)
-            self.menfolders=['All',]+folders
-            self.foldersmenu['values']=tuple(self.menfolders)
-            self.menfolder.set('All')
+
+            self.menfolderlist=['All',]+folders
+            self.foldersmenu['values']=tuple(self.menfolderlist)
+            self.foldersmenu.current(0)
             db.close()
 
             self.hasdb=True
             self.checkReady()
-        except:
+
+        except Exception as e:
             print('Failed to recoganize the given database file.') 
+            print(e)
 
 
 
@@ -296,10 +300,10 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         folderlabel.pack(side=tk.LEFT, padx=8)
 
         self.menfolder=tk.StringVar()
-        self.menfolder.set('All')
-        self.menfolders=['All',]
+        self.menfolderlist=['All',]
         self.foldersmenu=Combobox(subframe,textvariable=\
-                self.menfolder,values=self.menfolders,state='readonly')
+                self.menfolder,values=self.menfolderlist,state='readonly')
+        self.foldersmenu.current(0)
         self.foldersmenu.bind('<<ComboboxSelected>>',self.setfolder)
         self.foldersmenu.pack(side=tk.LEFT,padx=8)
 
@@ -328,11 +332,15 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.help_button.pack(side=tk.RIGHT,padx=8)
 
 
+
     def setfolder(self,x):
         self.foldersmenu.selection_clear()
         self.menfolder=self.foldersmenu.get()
         self.foldersmenu.set(self.menfolder)
-        print('Select Mendeley folder: '+str(self.menfolder))
+        if self.menfolder=='All':
+            print('Work on all folders.')
+        else:
+            print('Select Mendeley folder: '+str(self.menfolder))
 
 
 
@@ -408,14 +416,6 @@ Menotexport v1.0\n\n
             separate=False
             
         if 'e' in action or 'm' in action or 'n' in action:
-            '''
-            self.qlock.acquire()
-            self.queue.put('go')
-            self.qlock.release()
-
-            self.workthread.start()
-            #self.workthread.join()
-            '''
             self.db_button.configure(state=tk.DISABLED)
             self.out_button.configure(state=tk.DISABLED)
             self.start_button.configure(state=tk.DISABLED)
@@ -428,27 +428,48 @@ Menotexport v1.0\n\n
 	    self.messagelabel.configure(text='Message (working...)')
 
             folder=None if self.menfolder=='All' else [self.menfolder,]
-            menotexport.main(dbfile,outdir,action,folder,True,\
-                            True,separate,True)
 
-            #--------------------After run--------------------
-            self.db_button.configure(state=tk.NORMAL)
-            self.out_button.configure(state=tk.NORMAL)
-            self.start_button.configure(state=tk.NORMAL)
-            self.help_button.configure(state=tk.NORMAL)
-            self.foldersmenu.configure(state='readonly')
-            self.check_export.configure(state=tk.NORMAL)
-            self.check_highlight.configure(state=tk.NORMAL)
-            self.check_note.configure(state=tk.NORMAL)
-            self.check_separate.configure(state=tk.NORMAL)
-	    self.messagelabel.configure(text='Message')
+            args=[dbfile,outdir,action,folder,True,True,separate,True]
+
+            self.workthread=WorkThread('work',False,self.stateq)
+            self.workthread.deamon=True
+
+            self.workthread.args=args
+            self.workthread.start()
+            self.reset()
+            '''
+            self.workproc.apply_async(menotexport.main,args,\
+                    callback=self.reset)
+            self.workproc.join()
+            '''
+
+
+
+    def reset(self):
+        while self.stateq.qsize() and self.exit==False:
+            try:
+                msg=self.stateq.get()
+                if msg=='done':
+                    self.db_button.configure(state=tk.NORMAL)
+                    self.out_button.configure(state=tk.NORMAL)
+                    self.start_button.configure(state=tk.NORMAL)
+                    self.help_button.configure(state=tk.NORMAL)
+                    self.foldersmenu.configure(state='readonly')
+                    self.check_export.configure(state=tk.NORMAL)
+                    self.check_highlight.configure(state=tk.NORMAL)
+                    self.check_note.configure(state=tk.NORMAL)
+                    self.check_separate.configure(state=tk.NORMAL)
+                    self.messagelabel.configure(text='Message')
+                    return
+            except Queue.Empty:
+                pass
+        self.after(100,self.reset)
+
 
     
     def stop(self):
-        self.exit=True
-        self.qlock.acquire()
-        self.queue.put('stop')
-        self.qlock.release()
+        #self.workthread.stop()
+        pass
         
 
     def addMessageFrame(self):
@@ -473,12 +494,17 @@ Menotexport v1.0\n\n
 
 
 
-
 def main():
+
+    stdoutq=Queue.Queue()
+    sys.stdout=Redirector(stdoutq)
+
     root=tk.Tk()
-    mainframe=MainFrame(root)
+    mainframe=MainFrame(root,stdoutq)
     mainframe.pack()
+
     root.mainloop()
+
 
 if __name__=='__main__':
     main()
