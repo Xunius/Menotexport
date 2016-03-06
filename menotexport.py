@@ -620,8 +620,8 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
 \n\t- {0}
 
 \t\t- @{1}
-\t\t\t- Tags: {2}
-\t\t\t- Ctime: {3}
+\t\t- Tags: {2}
+\t\t- Ctime: {3}
 '''.format(*map(conv,[ntstr, ntjj.citationkey,\
     tagstr, ntjj.ctime]))
 
