@@ -132,42 +132,29 @@ def getHighlights(db, results=None, folder=None):
     Update time: 2016-02-24 00:36:33.
     '''
 
-    if folder is None:
-        query =\
-        '''SELECT Files.localUrl, FileHighlightRects.page,
-                        FileHighlightRects.x1, FileHighlightRects.y1,
-                        FileHighlightRects.x2, FileHighlightRects.y2,
-                        FileHighlights.createdTime
-                FROM Files
-                LEFT JOIN FileHighlights
-                    ON FileHighlights.fileHash=Files.hash
-                LEFT JOIN FileHighlightRects
-                    ON FileHighlightRects.highlightId=FileHighlights.id
-                WHERE (FileHighlightRects.page IS NOT NULL)
-        '''
+    query =\
+    '''SELECT Files.localUrl, FileHighlightRects.page,
+                    FileHighlightRects.x1, FileHighlightRects.y1,
+                    FileHighlightRects.x2, FileHighlightRects.y2,
+                    FileHighlights.createdTime,
+                    Folders.name,
+                    DocumentFolders.folderid
+            FROM Files
+            LEFT JOIN FileHighlights
+                ON FileHighlights.fileHash=Files.hash
+            LEFT JOIN FileHighlightRects
+                ON FileHighlightRects.highlightId=FileHighlights.id
+            LEFT JOIN DocumentFolders
+                ON DocumentFolders.documentId=FileHighlights.documentId
+            LEFT JOIN Folders
+                ON Folders.id=DocumentFolders.folderid
+            WHERE (FileHighlightRects.page IS NOT NULL)
+    '''
+    if folder is not None:
 
-    else:
-        query =\
-        '''SELECT Files.localUrl, FileHighlightRects.page,
-                        FileHighlightRects.x1, FileHighlightRects.y1,
-                        FileHighlightRects.x2, FileHighlightRects.y2,
-                        FileHighlights.createdTime,
-                        DocumentFolders.folderid,
-                        Folders.name
-                FROM Files
-                LEFT JOIN FileHighlights
-                    ON FileHighlights.fileHash=Files.hash
-                LEFT JOIN FileHighlightRects
-                    ON FileHighlightRects.highlightId=FileHighlights.id
-                LEFT JOIN DocumentFolders
-                    ON DocumentFolders.documentId=FileHighlights.documentId
-                LEFT JOIN Folders
-                    ON Folders.id=DocumentFolders.folderid
-                WHERE (FileHighlightRects.page IS NOT NULL) AND 
-        '''
         fstr=['(Folders.name="%s")' %ii for ii in folder]
         fstr=' AND '.join(fstr)
-        query=query+'\n'+fstr
+        query=query+' AND\n'+fstr
 
 
     query2=\
@@ -204,6 +191,7 @@ def getHighlights(db, results=None, folder=None):
         pg = r[1]
         bbox = [r[2], r[3], r[4], r[5]]
         cdate = convert2datetime(r[6])
+        folder=r[7]
         hlight = {'rect': bbox,\
                   'cdate': cdate,\
                   'page':pg\
@@ -213,6 +201,7 @@ def getHighlights(db, results=None, folder=None):
         if pthold!=pth or ii==0:
             dataii=df[df.url==r[0]]
             tags=fetchField(dataii,'tags')
+            tags+=[folder,]
             title=fetchField(dataii,'title')[0]
             cite=fetchField(dataii,'citetationkey')[0]
 
@@ -273,37 +262,27 @@ def getNotes(db, results=None, folder=None):
     Update time: 2016-02-24 00:36:50.
     '''
 
-    if folder is None:
-        query=\
-        '''SELECT Files.localUrl, FileNotes.page,
-                        FileNotes.x, FileNotes.y,
-                        FileNotes.author, FileNotes.note,
-                        FileNotes.modifiedTime
-                FROM Files
-                LEFT JOIN FileNotes
-                    ON FileNotes.fileHash=Files.hash
-                WHERE FileNotes.page IS NOT NULL
-        '''
-    else:
-        query=\
-        '''SELECT Files.localUrl, FileNotes.page,
-                        FileNotes.x, FileNotes.y,
-                        FileNotes.author, FileNotes.note,
-                        FileNotes.modifiedTime,
-                        DocumentFolders.folderid,
-                        Folders.name
-                FROM Files
-                LEFT JOIN FileNotes
-                    ON FileNotes.fileHash=Files.hash
-                LEFT JOIN DocumentFolders
-                    ON DocumentFolders.documentId=FileNotes.documentId
-                LEFT JOIN Folders
-                    ON Folders.id=DocumentFolders.folderid
-                WHERE (FileNotes.page IS NOT NULL) AND
-        '''
+    query=\
+    '''SELECT Files.localUrl, FileNotes.page,
+                    FileNotes.x, FileNotes.y,
+                    FileNotes.author, FileNotes.note,
+                    FileNotes.modifiedTime,
+                    Folders.name,
+                    DocumentFolders.folderid
+            FROM Files
+            LEFT JOIN FileNotes
+                ON FileNotes.fileHash=Files.hash
+            LEFT JOIN DocumentFolders
+                ON DocumentFolders.documentId=FileNotes.documentId
+            LEFT JOIN Folders
+                ON Folders.id=DocumentFolders.folderid
+            WHERE (FileNotes.page IS NOT NULL)
+    '''
+
+    if folder is not None:
         fstr=['(Folders.name="%s")' %ii for ii in folder]
         fstr=' AND '.join(fstr)
-        query=query+'\n'+fstr
+        query=query+' AND\n'+fstr
 
 
     query2=\
@@ -343,6 +322,7 @@ def getNotes(db, results=None, folder=None):
         author=r[4]
         txt = r[5]
         cdate = convert2datetime(r[6])
+        folder=r[7]
         note = {'rect': bbox,\
                 'author':author,\
                 'content':txt,\
@@ -353,6 +333,7 @@ def getNotes(db, results=None, folder=None):
         if pthold!=pth or ii==0:
             dataii=df[df.url==r[0]]
             tags=fetchField(dataii,'tags')
+            tags+=[folder,]
             title=fetchField(dataii,'title')[0]
             cite=fetchField(dataii,'citetationkey')[0]
 
