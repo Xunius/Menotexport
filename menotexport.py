@@ -886,7 +886,6 @@ if __name__ == "__main__":
 
     try:
         args = parser.parse_args()
-        print args
     except:
         parser.print_help()
         sys.exit(1)
