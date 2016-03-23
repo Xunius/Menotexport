@@ -21,13 +21,13 @@ Update time: 2016-02-23 18:04:10.
 import sys
 import sqlite3
 import os
-import pdfannotation
 import PyPDF2
 import argparse
-import extracthl
 import pandas as pd
 from textwrap import TextWrapper
-import extracttags
+from lib import pdfannotation
+from lib import extracttags
+from lib import extracthl
 from datetime import datetime
 
 if sys.version_info[0]>=3:
@@ -542,14 +542,12 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
     wrapper=TextWrapper()
     wrapper.width=80
     wrapper.initial_indent=''
-    #wrapper.subsequent_indent='\t'+int(len('> '))*' '
-    wrapper.subsequent_indent='\t'
+    wrapper.subsequent_indent='\t'+int(len('> '))*' '
 
     wrapper2=TextWrapper()
     wrapper2.width=80-7
     wrapper2.initial_indent=''
-    #wrapper2.subsequent_indent='\t\t'+int(len('- Tags: '))*' '
-    wrapper2.subsequent_indent='\t\t'
+    wrapper2.subsequent_indent='\t\t'+int(len('- Tags: '))*' '
 
     hlii,ntii=anno
     try:
