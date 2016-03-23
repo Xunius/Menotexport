@@ -86,12 +86,14 @@ def exportAnno(annodict,outdir,action,verbose=True):
     wrapper=TextWrapper()
     wrapper.width=70
     wrapper.initial_indent=''
-    wrapper.subsequent_indent='\t\t'+int(len('> '))*' '
+    #wrapper.subsequent_indent='\t\t'+int(len('> '))*' '
+    wrapper.subsequent_indent='\t\t'
 
     wrapper2=TextWrapper()
     wrapper2.width=60
     wrapper2.initial_indent=''
-    wrapper2.subsequent_indent='\t\t\t'+int(len('Title: '))*' '
+    #wrapper2.subsequent_indent='\t\t\t'+int(len('Title: '))*' '
+    wrapper2.subsequent_indent='\t\t\t'
 
     with open(abpath_out, mode='a') as fout:
 
