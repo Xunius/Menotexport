@@ -547,7 +547,8 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
     wrapper2=TextWrapper()
     wrapper2.width=80-7
     wrapper2.initial_indent=''
-    wrapper2.subsequent_indent='\t\t'+int(len('- Tags: '))*' '
+    #wrapper2.subsequent_indent='\t\t'+int(len('- Tags: '))*' '
+    wrapper2.subsequent_indent='\t\t'+int(len('- '))*' '
 
     hlii,ntii=anno
     try:
