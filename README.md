@@ -47,9 +47,9 @@ to a plain text file, and format the information in a sensible structure.
 
 ## Installation
 
-- For Linux (or Mac), download the zip and unzip to any folder. Make sure you have all the dependencies listed below and Python 2.7.
+- Command line or GUI usage on Linux or Mac or Win, download the zip and unzip to any folder. Make sure you have all the dependencies listed below and Python 2.7.
 
-- For Windows, only need to get the `Menotexport-win64.zip` file. Download from dropbox:
+- For Windows specific GUI, only need to get the `Menotexport-win64.zip` file. Download from dropbox:
 - https://www.dropbox.com/s/64267kqvmlemaz8/menotexport-win64.rar?dl=0
 
 
@@ -124,7 +124,7 @@ Launch `menotexport-gui.exe`, select the Mendeley database file and an output fo
   a tag of @None.
 - Possible follow-ups one can do: re-format the extracted txts to PDFs, docs or sync into
   your Evernote account, will probably implement these in a later version.
-
+- To batch upload to **Evernote**, check out this repo: [txt2evernote](https://github.com/Xunius/txt2evernote).
 
 
 ## Dependencies
