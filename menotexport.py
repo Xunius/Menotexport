@@ -391,7 +391,7 @@ def extractNotes(path,anno,verbose=True):
     Return <nttexts>: list, Anno objs containing annotation info from a PDF.
                       Prepare to be exported to txt files.
     '''
-    from extracthl import Anno
+    from lib.extracthl import Anno
 
     notes=anno.notes
     meta=anno.meta
