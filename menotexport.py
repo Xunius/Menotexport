@@ -733,9 +733,10 @@ def main(dbfin, outdir, action, folder, overwrite, allpages,\
         print(dbfin)
 
     #----------------Check folder name----------------
-    checkok=checkFolder(db,folder)
-    if checkok!=0:
-        return
+    if folder is not None:
+        checkok=checkFolder(db,folder)
+        if checkok!=0:
+            return
 
     #------------------Get highlights------------------
     annotations = getHighlights(db,None,folder)
