@@ -203,7 +203,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
 
     def openFile(self):
         self.db_entry.delete(0,tk.END)
-        ftypes=[('sqlite files','*.sqlite'),('ALl files','*')]
+        ftypes=[('sqlite files','*.sqlite'),('ALL files','*')]
         filename=askopenfilename(filetypes=ftypes)
         self.db_entry.insert(tk.END,filename)
         if len(filename)>0:
