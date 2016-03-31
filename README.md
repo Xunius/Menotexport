@@ -49,8 +49,7 @@ to a plain text file, and format the information in a sensible structure.
 
 - Command line or GUI usage on Linux or Mac or Win, download the zip and unzip to any folder. Make sure you have all the dependencies listed below and Python 2.7.
 
-- For Windows specific GUI, only need to get the `Menotexport-win64.zip` file. Download from dropbox:
-- https://www.dropbox.com/s/64267kqvmlemaz8/menotexport-win64.rar?dl=0
+- For Windows specific GUI, only need to get the `Menotexport-win64.zip` file. Download from dropbox: https://www.dropbox.com/s/64267kqvmlemaz8/menotexport-win64.rar?dl=0
 
 
 
@@ -120,8 +119,8 @@ Launch `menotexport-gui.exe`, select the Mendeley database file and an output fo
 - Citationkeys and tags are added to the extracted texts to facilitate further information
   processes, both can be editted in Mendeley.
 - If choose to save all annotations to a single file, the programme also re-structure the extracted texts
-  and organize them by their tags before saving to a separate file. Pieces of texts from a PDF that isn't taged are given
-  a tag of @None.
+  and organize them by their tags before saving to a separate file. Pieces of texts from a PDF that isn't taged are given a tag of @None.
+- Sometimes your edits inside Mendeley may not be saved immediately to the database file. In such cases just reboot Mendeley. No needed to reboot Menotexport (if you are using the GUI) though, as each time you press the "start" button it will issue a new connection to the database.
 - Possible follow-ups one can do: re-format the extracted txts to PDFs, docs or sync into
   your Evernote account, will probably implement these in a later version.
 - To batch upload to **Evernote**, check out this repo: [txt2evernote](https://github.com/Xunius/txt2evernote).
@@ -162,4 +161,6 @@ LGPLv3.
 * [Mendeley2Zotero](https://github.com/flinz/mendeley2zotero)
 * [Adios_Mendeley](https://github.com/rdiaz02/Adios_Mendeley)
 * [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf)
+* [txt2evernote](https://github.com/Xunius/txt2evernote)
+* [tagextract](https://github.com/Xunius/tagextract)
 
