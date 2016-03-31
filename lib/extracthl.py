@@ -83,7 +83,7 @@ def findStrFromBox(anno,box,verbose=True):
     anno=sortAnnoY(anno)
     
     #----------------Loop through annos----------------
-    for hii in anno:
+    for ii,hii in enumerate(anno):
 
         #----------Create a dummy LTTextLine obj----------
         hiibox=hii['rect']
@@ -129,12 +129,16 @@ def findStrFromBox(anno,box,verbose=True):
                 joiner=u' '
 
             #---------------Jump---------------
-            if len(textii)-len(textii.rstrip(' '))>=1:
-                textii=textii.strip()
-                textii+=u' ......'
+            textii=textii.strip()
+            if ii==0 or len(texts)==0:
                 texts+=joiner+textii
             else:
-                texts+=joiner+textii
+                lastbox=anno[ii-1]['rect']
+                if checkGap(lastbox, hiibox, lineii):
+                    textii=u' ...... '+textii 
+                    texts+=joiner+textii
+                else:
+                    texts+=joiner+textii
 
                 
     texts=texts.strip()
@@ -144,6 +148,32 @@ def findStrFromBox(anno,box,verbose=True):
     return texts, num
 
 
+def checkGap(lastbox,curbox,curline):
+    '''Check whether there is a gap between 2 annotations.
+
+    '''
+    # 2 annos in the same line
+    if abs(lastbox[1]-curbox[1])<=10:
+        if curbox[0]-lastbox[2]>30:
+            return True
+
+    # 2 annos gap by at least 1 line
+    elif abs(lastbox[1]-curbox[1])>34:
+        return True
+
+    # 2 annos are in continuous lines
+    elif abs(lastbox[1]-curbox[1])>10 and \
+        abs(lastbox[1]-curbox[1])<=34:
+            # current anno doesn't start at line beginning
+        if curbox[0]-curline.bbox[0]>=10:
+            return True
+        else:
+            # last anno doesn't end with line end
+            # assuming last line has same x2 coordinate as current
+            if curline.bbox[2]-lastbox[2]>=30:
+                return True
+
+    return False
 
 
 #-------------------------Fine tune box order-------------------------
@@ -151,8 +181,8 @@ def fineTuneOrder(objs,verbose=True):
     '''Fine tune box order
 
     For a list of box objs that share similar x coordinates
-    of the top-left corner, sort using their y (+ve downwards)
-    coordinates.
+    of the top-left corner, sort using their y (+ve upwards)
+    coordinates so that larger y goes first.
     '''
 
     topleft=[(ii.bbox[0],ii.bbox[3]) for ii in objs]
