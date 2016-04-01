@@ -129,49 +129,99 @@ def findStrFromBox(anno,box,verbose=True):
                 joiner=u' '
 
             #---------------Jump---------------
-            # TODO: make a char gap and line gap detection function
+            linegap,chargap=measureGap(lines)
             textii=textii.strip()
             if ii==0 or len(texts)==0:
                 texts+=joiner+textii
             else:
-                lastbox=anno[ii-1]['rect']
-                if checkGap(lastbox, hiibox, lineii):
+                #lastbox=anno[ii-1]['rect']
+                if checkJump(lastbox, hiibox, lineii,linegap,chargap):
                     textii=u' ...... '+textii 
                     texts+=joiner+textii
                 else:
                     texts+=joiner+textii
 
+            lastbox=hiibox
                 
     texts=texts.strip()
-
-    
 
     return texts, num
 
 
-def checkGap(lastbox,curbox,curline):
+
+
+
+def measureGap(linelist):
+    '''Detect char and line gaps
+    '''
+    listmean=lambda ll: reduce(lambda x,y:x+y, ll)/float(len(ll))
+
+    try:
+        #-----------------Detect line gaps-----------------
+        lnum=min(5, len(linelist))   #Get a sample of 5 lines
+
+        #Get y coordinates of bottom left corners of each line
+        lineys=[linelist[ii].bbox[1] for ii in range(lnum)]
+        linegaps=[abs(lineys[ii+1]-lineys[ii]) for ii in range(lnum-1)]
+        linegap=listmean(linegaps)
+
+        #-----------------Detect char gaps-----------------
+        lchar=10  #Get a sample of 10 consecutive chars.
+        charfound=0
+        charxs=[]
+        idx=0
+
+        while charfound<lchar and idx<len(linelist):
+            lineii=linelist[idx]
+            for charjj in lineii._objs:
+                if type(charjj)==LTChar:
+                    charfound+=1
+                    charxs.append(charjj.bbox[0])
+                elif type(charjj)==LTAnno:
+                    charfound=0
+                    charxs=[]
+
+                if charfound>=lchar:
+                    break
+
+            idx+=1
+
+        chargaps=[abs(charxs[ii+1]-charxs[ii]) for ii in range(len(charxs)-1)]
+        chargap=listmean(chargaps)
+        chargap=int(chargap)+1
+
+    except:
+        linegap=10
+        chargap=5
+
+    return linegap, chargap
+
+
+
+
+def checkJump(lastbox,curbox,curline,linegap,chargap):
     '''Check whether there is a gap between 2 annotations.
 
     '''
     # 2 annos in the same line
-    if abs(lastbox[1]-curbox[1])<=10:
-        if curbox[0]-lastbox[2]>30:
+    if abs(lastbox[1]-curbox[1])<=linegap:
+        if curbox[0]-lastbox[2]>5*chargap:
             return True
 
     # 2 annos gap by at least 1 line
-    elif abs(lastbox[1]-curbox[1])>34:
+    elif abs(lastbox[1]-curbox[1])>=2*linegap:
         return True
 
     # 2 annos are in continuous lines
-    elif abs(lastbox[1]-curbox[1])>10 and \
-        abs(lastbox[1]-curbox[1])<=34:
+    elif abs(lastbox[1]-curbox[1])>linegap and \
+        abs(lastbox[1]-curbox[1])<2*linegap:
             # current anno doesn't start at line beginning
-        if curbox[0]-curline.bbox[0]>=10:
+        if curbox[0]-curline.bbox[0]>=5*chargap:
             return True
         else:
             # last anno doesn't end with line end
             # assuming last line has same x2 coordinate as current
-            if curline.bbox[2]-lastbox[2]>=30:
+            if curline.bbox[2]-lastbox[2]>=3*chargap:
                 return True
 
     return False
