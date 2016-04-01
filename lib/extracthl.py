@@ -25,6 +25,7 @@ from pdfminer.converter import PDFPageAggregator
 from pdfminer.layout import LTTextBox, LTTextLine, LTAnno,\
         LTTextBoxHorizontal, LTTextLineHorizontal, LTChar
 from numpy import sqrt, argsort
+import wordfix
 
 
 
@@ -144,6 +145,9 @@ def findStrFromBox(anno,box,verbose=True):
             lastbox=hiibox
                 
     texts=texts.strip()
+    #------------------Do some fixes------------------
+    if len(texts)>0:
+        texts=wordfix.fixWord(texts)
 
     return texts, num
 
