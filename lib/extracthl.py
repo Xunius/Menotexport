@@ -129,6 +129,7 @@ def findStrFromBox(anno,box,verbose=True):
                 joiner=u' '
 
             #---------------Jump---------------
+            # TODO: make a char gap and line gap detection function
             textii=textii.strip()
             if ii==0 or len(texts)==0:
                 texts+=joiner+textii
