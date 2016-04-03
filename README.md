@@ -124,6 +124,8 @@ Launch `menotexport-gui.exe`, select the Mendeley database file and an output fo
 - Possible follow-ups one can do: re-format the extracted txts to PDFs, docs or sync into
   your Evernote account, will probably implement these in a later version.
 - To batch upload to **Evernote**, check out this repo: [txt2evernote](https://github.com/Xunius/txt2evernote).
+- If you encounter an error `from pdfminer.pdfdocument import PDFDocument
+ImportError: No module named pdfdocument`, make sure the *pdfminer* module version is 2014+ and try again.
 
 
 ## Dependencies
@@ -134,7 +136,7 @@ It requires the following packages:
 - PyPDF2
 - sqlite3
 - pandas
-- pdfminer
+- pdfminer (version 2014 or later. Note that 2013 version does not work).
 - numpy
 
 It further incorporate (with minor adjustments) the pdfannotation.py file from
