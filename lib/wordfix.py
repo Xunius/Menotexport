@@ -24,7 +24,10 @@ _tilder_re=re.compile(u'\u02dc', re.UNICODE)
 _fl_re=re.compile(u'\ufb02', re.UNICODE)
 _fi_re=re.compile(u'\ufb01', re.UNICODE)
 _ft_re=re.compile(u'\ufb05', re.UNICODE)
-_single_quote_re=re.compile(u'\u2019', re.UNICODE)
+_single_quote1_re=re.compile(u'\u2018', re.UNICODE)
+_single_quote2_re=re.compile(u'\u2019', re.UNICODE)
+_double_quote1_re=re.compile(u'\u201c', re.UNICODE)
+_double_quote2_re=re.compile(u'\u201d', re.UNICODE)
 _single_dash_re=re.compile(u'\u2013', re.UNICODE)
 
 KNOWN_LIST={\
@@ -32,8 +35,11 @@ KNOWN_LIST={\
         _fl_re: u'fl',\
         _fi_re: u'fi',\
         _ft_re: u'ft',\
-        _single_quote_re: u"'",\
-        _single_dash_re: u'-'\
+        _single_quote1_re: u"'",\
+        _single_quote2_re: u"'",\
+        _double_quote1_re: u'"',\
+        _double_quote2_re: u'"',\
+        _single_dash_re: u'--'\
         }
 
 
