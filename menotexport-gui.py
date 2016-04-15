@@ -18,11 +18,12 @@ GUI for Menotexport.py
 
 Update time: 2016-02-28 22:09:28.
 Update time: 2016-03-03 20:38:29.
+Update time: 2016-04-15 13:13:31.
 '''
 
 
 
-import sys
+import sys,os
 from ttk import Style,Combobox
 from tkFileDialog import askopenfilename, askdirectory
 import tkMessageBox
@@ -82,9 +83,9 @@ class MainFrame(Frame):
         Frame.__init__(self,parent)
 
         self.parent=parent
-        self.width=700
-        self.height=400
-        self.title='Menotexport v1.0'
+        self.width=750
+        self.height=450
+        self.title='Menotexport v1.1'
         self.stdoutq=stdoutq
 
         self.initUI()
@@ -128,7 +129,7 @@ class MainFrame(Frame):
             try:
                 msg=self.stdoutq.get()
                 self.text.update()
-                self.text.insert(tk.END,'# '+msg)
+                self.text.insert(tk.END,msg)
                 self.text.see(tk.END)
             except Queue.Empty:
                 pass
@@ -204,7 +205,12 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
     def openFile(self):
         self.db_entry.delete(0,tk.END)
         ftypes=[('sqlite files','*.sqlite'),('ALL files','*')]
-        filename=askopenfilename(filetypes=ftypes)
+        initialdir='~/.local/share/data/Mendeley Ltd./Mendeley Desktop'
+        initialdir=os.path.expanduser(initialdir)
+        if os.path.isdir(initialdir):
+            filename=askopenfilename(filetypes=ftypes,initialdir=initialdir)
+        else:
+            filename=askopenfilename(filetypes=ftypes)
         self.db_entry.insert(tk.END,filename)
         if len(filename)>0:
             print('Database file: %s' %filename)
@@ -264,6 +270,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.isexport=tk.IntVar()
         self.ishighlight=tk.IntVar()
         self.isnote=tk.IntVar()
+        self.isbib=tk.IntVar()
         self.isseparate=tk.IntVar()
 
         self.check_export=tk.Checkbutton(frame,text='Export PDFs',\
@@ -277,6 +284,10 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
                 text='Extract notes',\
                 variable=self.isnote,command=self.doNote)
 
+        self.check_bib=tk.Checkbutton(frame,\
+                text='Export .bib',\
+                variable=self.isbib,command=self.doBib)
+
         self.check_separate=tk.Checkbutton(frame,\
                 text='Save separately',\
                 variable=self.isseparate,command=self.doSeparate,\
@@ -287,11 +298,12 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.check_export.grid(row=0,column=1,padx=8,sticky=tk.W)
         self.check_highlight.grid(row=0,column=2,padx=8,sticky=tk.W)
         self.check_note.grid(row=0,column=3,padx=8,sticky=tk.W)
-        self.check_separate.grid(row=0,column=4,padx=8,sticky=tk.W)
+        self.check_bib.grid(row=0,column=4,padx=8,sticky=tk.W)
+        self.check_separate.grid(row=0,column=5,padx=8,sticky=tk.W)
 
         #---------------------2nd row---------------------
         subframe=Frame(frame)
-        subframe.grid(row=1,column=0,columnspan=5,sticky=tk.W+tk.E,\
+        subframe.grid(row=1,column=0,columnspan=6,sticky=tk.W+tk.E,\
                 pady=5)
 
         #-------------------Folder options-------------------
@@ -375,6 +387,12 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
                 self.check_separate.configure(state=tk.DISABLED)
         self.checkReady()
 
+    def doBib(self):
+        if self.isbib.get()==1:
+            print('Export to .bib file.')
+        else:
+            print('Dont export .bib file.')
+        self.checkReady()
 
     def doSeparate(self):
         if self.isseparate.get()==1:
@@ -405,17 +423,19 @@ Menotexport v1.0\n\n
         outdir=self.out_entry.get()
         action=[]
         if self.isexport.get()==1:
-            action.append('e')
+            action.append('p')
         if self.ishighlight.get()==1:
             action.append('m')
         if self.isnote.get()==1:
             action.append('n')
+        if self.isbib.get()==1:
+            action.append('b')
         if self.isseparate.get()==1:
             separate=True
         else:
             separate=False
             
-        if 'e' in action or 'm' in action or 'n' in action:
+        if 'p' in action or 'm' in action or 'n' in action or 'b' in action:
             self.db_button.configure(state=tk.DISABLED)
             self.out_button.configure(state=tk.DISABLED)
             self.start_button.configure(state=tk.DISABLED)
@@ -424,12 +444,13 @@ Menotexport v1.0\n\n
             self.check_export.configure(state=tk.DISABLED)
             self.check_highlight.configure(state=tk.DISABLED)
             self.check_note.configure(state=tk.DISABLED)
+            self.check_bib.configure(state=tk.DISABLED)
             self.check_separate.configure(state=tk.DISABLED)
 	    self.messagelabel.configure(text='Message (working...)')
 
-            folder=None if self.menfolder=='All' else [self.menfolder,]
+            folder=None if self.menfolder=='All' else self.menfolder
 
-            args=[dbfile,outdir,action,folder,True,True,separate,True]
+            args=[dbfile,outdir,action,folder,separate,True]
 
             self.workthread=WorkThread('work',False,self.stateq)
             self.workthread.deamon=True
@@ -458,6 +479,7 @@ Menotexport v1.0\n\n
                     self.check_export.configure(state=tk.NORMAL)
                     self.check_highlight.configure(state=tk.NORMAL)
                     self.check_note.configure(state=tk.NORMAL)
+                    self.check_bib.configure(state=tk.NORMAL)
                     self.check_separate.configure(state=tk.NORMAL)
                     self.messagelabel.configure(text='Message')
                     return
