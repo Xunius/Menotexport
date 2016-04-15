@@ -11,6 +11,7 @@ Update time: 2016-02-23 23:04:09.
 
 import os
 from textwrap import TextWrapper
+from tools import printHeader, printInd, printNumHeader
     
 
 
@@ -24,22 +25,17 @@ def groupByTags(annodict,verbose=True):
     tags={}
 
     #----------------Loop through files----------------
-    for fii,annoii in annodict.items():
+    for idii,annoii in annodict.items():
 
-        hlii,ntii=annoii
+        hlii=annoii.highlights
+        ntii=annoii.notes
 
         if len(hlii)==0 and len(ntii)==0:
             continue
 
-        try:
-            tagsii=['@'+kk for kk in hlii[0].tags]
-        except:
-            tagsii=['@'+kk for kk in ntii[0].tags]
-
-        try:
-            citeii=hlii[0].citationkey
-        except:
-            citeii=ntii[0].citationkey
+        citeii=annoii.meta['citationkey']
+        tagsii=annoii.meta['tags']
+        tagsii=['@'+kk for kk in tagsii]
 
         citedict={'highlights': hlii,\
                   'notes': ntii}
@@ -78,8 +74,8 @@ def exportAnno(annodict,outdir,action,verbose=True):
         os.remove(abpath_out)
 
     if verbose:
-        print('\n# <extracttags>: Exporting all taged annotations to:\n')
-        print(abpath_out)
+        printHeader('Exporting all taged annotations to:',3)
+        printInd(abpath_out,4)
 
     conv=lambda x:unicode(x)
 
