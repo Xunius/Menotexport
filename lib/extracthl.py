@@ -406,12 +406,14 @@ def extractHighlights(filename,anno,verbose=True):
     '''Extract highlighted texts from a PDF
 
     '''
+    hlpages=anno.hlpages
+    if len(hlpages)==0:
+        return []
 
     #--------------Get pdfmine instances--------------
     document, interpreter, device=init(filename)
 
     #----------------Loop through pages----------------
-    hlpages=anno.hlpages
     hltexts=[]
 
     for ii,page in enumerate(PDFPage.create_pages(document)):
@@ -444,7 +446,7 @@ def extractHighlights(filename,anno,verbose=True):
                     textjj=Anno(textjj,\
                         ctime=getCtime(anno.highlights[ii+1]),\
                         title=anno.meta['title'],\
-                        page=ii+1,citationkey=anno.meta['cite'],\
+                        page=ii+1,citationkey=anno.meta['citationkey'],\
                         tags=anno.meta['tags'])
 
                     hltexts.append(textjj)
