@@ -100,7 +100,7 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 
 ## Usage
 
-**NOTE: If you obtained this tools before 2016-04-15, I've made some changes that make it behave differently.**
+**NOTE: If you obtained this tool before 2016-04-15, I've made some changes that make it behave differently.**
 
 ### Command line
 
@@ -202,8 +202,8 @@ Launch `menotexport-gui.exe`, select the Mendeley database file and an output fo
   processes, both can be editted in Mendeley.
 - If choose to save all annotations to a single file, the programme also re-structure the extracted texts
   and organize them by their tags before saving to a separate file. Pieces of texts from a PDF that isn't taged are given a tag of @None.
-- This is not necessarily a bug but might be worth noting: if you choose to process all the Mendeley folders and export the PDFs, the duplicated files in different folders will be duplicated on the disk as well, therefore taking up multiples disk spaces. Similarly the .bib file may contain duplicated entries, but their "folder" and "file" fields are different.
-- Sometimes your edits inside Mendeley may not be saved immediately to the database file. In such cases just reboot Mendeley. No needed to reboot Menotexport (if you are using the GUI) though, as each time you press the "start" button it will issue a new connection to the database.
+- This is not necessarily a bug but might be worth noting: if you choose to process all the Mendeley folders and export the PDFs, the duplicated files in different folders will be duplicated on the disk as well, therefore taking up multiples of disk spaces. Similarly the .bib file may contain duplicated entries, with different "folder" and "file" fields.
+- Sometimes your edits inside Mendeley may not be saved immediately to the database file. In such cases just reboot Mendeley. No needed to reboot Menotexport (if you are using the GUI), as each time you press the "start" button it will issue a new connection to the database.
 - Possible follow-ups one can do: re-format the extracted txts to PDFs, docs or sync into
   your Evernote account, will probably implement these in a later version.
 - To batch upload to **Evernote**, check out this repo: [txt2evernote](https://github.com/Xunius/txt2evernote).
