@@ -151,7 +151,7 @@ information is grouped by tags.
 - If `-b` and `-p`, a field `file` will be created in each entry (those that
   have attached PDFs) in the .bib file, containing the path to the exported PDF,
   in the exported location:
-  `outputdir/folder/PDF_FILE.pdf.
+  `outputdir/folder/PDF_FILE.pdf`.
 
 
 Example:
@@ -178,7 +178,7 @@ python menotexport.py -pmnb <dbfile> <outputdir>
 
 ### GUI
 
-Launch `menotexport-gui.exe`, select the Mendeley database file and an output folder. Select the actions to perform (see above), then *start*. 
+Launch `menotexport-gui.py` (or `menotexport-gui.exe`), select the Mendeley database file and an output folder. Select the actions to perform (see above), then *start*. 
 
 
 ## Caveats and further notes
