@@ -138,7 +138,7 @@ class MainFrame(Frame):
 
     def checkReady(self):
         if self.isexport.get()==1 or self.ishighlight.get()==1\
-                or self.isnote.get()==1:
+                or self.isnote.get()==1 or self.isbib.get()==1:
             self.hasaction=True
         else:
             self.hasaction=False
@@ -421,6 +421,7 @@ Menotexport v1.0\n\n
     def start(self):
         dbfile=self.db_entry.get()
         outdir=self.out_entry.get()
+        self.menfolder=self.foldersmenu.get()
         action=[]
         if self.isexport.get()==1:
             action.append('p')
