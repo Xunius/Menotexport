@@ -122,7 +122,7 @@ where
 - `dbfile`: Absolute path to the Mendeley database file. In Linux systems default location is
   `~/.local/share/data/Mendeley\ Ltd./Mendeley\ Desktop/your_email@www.mendeley.com.sqlite`
 - `outputdir`: folder to save outputs. The Mendeley library folder structure will be preserved by
-   creating sub-directories using folder names under <outputdir>.
+   creating sub-directories using folder names under `outputdir`.
 
 - If `-s`, texts for each PDF is saved to `Anno_PDFTITLE.txt` (if both `-m` and
 `-n` are given), or to `Highlights_PDFTITLE.txt` or `Notes_PDFTITLE.txt` (if
@@ -151,7 +151,7 @@ information is grouped by tags.
 - If `-b` and `-p`, a field `file` will be created in each entry (those that
   have attached PDFs) in the .bib file, containing the path to the exported PDF,
   in the exported location:
-  <outputdir>/<folder>/PDF_FILE.pdf.
+  `outputdir/folder/PDF_FILE.pdf.
 
 
 Example:
@@ -217,7 +217,7 @@ It requires the following packages:
 - PyPDF2
 - sqlite3
 - pandas
-- pdfminer
+- pdfminer (NOTE: version 2014+ is needed)
 - numpy
 - BeautifulSoup
 
