@@ -219,7 +219,7 @@ It requires the following packages:
 - pandas
 - pdfminer (NOTE: version 2014+ is needed)
 - numpy
-- BeautifulSoup
+- BeautifulSoup4
 
 It further incorporates (with minor adjustments) the pdfannotation.py file from
 the [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf) project.
