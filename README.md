@@ -242,7 +242,7 @@ the [pylatexenc](https://github.com/phfaist/pylatexenc) project.
 
 The software is tested on Linux and Windows 10 (**the win-GUI version is outdated**). Should also run on Mac.
 
-NOTE that windows user may need to manually update their sqlite3 module.
+NOTE that windows user may need to manually update their sqlite3 module(/dll?).
 
 ## Versions
 
