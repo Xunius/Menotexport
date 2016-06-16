@@ -50,7 +50,7 @@ Most of the PDF readers in Linux do not have that functionality. (Let me know if
 This tool could extract the texts from the highlights and notes in the documents in Mendeley
 to a plain text file, and format the information in a sensible structure using markdown syntax.
 
-### (**NEW**) 3. Export libray to .bib file.
+### 3. Export libray to .bib file.
 
 Exporting to .bib is natively supported in Mendeley, by going to Tools -> Options -> Bibtex. There
 you can specify exporting the whole library to a single file or in a per-folder manner. However, your
@@ -87,6 +87,16 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 	- tags            # Tags added to a document
 	- file            # Location of the attached PDF on local disk 
 	- folder          # Folder name in the Mendeley library
+
+### (**NEW**) 4. New updates in v1.2 (2016-June-16)
+
+Thanks to user feedbacks I realized that Mendeley supports embedded folder structures. This feature
+is now properly addressed in the new update: the exported PDFs, and their corresponding "file" entries in the
+exported .bib file now reflect the folder structure in Mendeley library (empty folders are omitted).
+
+You are allowed to create folders with same names in Mendeley, so long as they appear in different parent folders. In case you did do so, they will be labelled differently in the GUI version: e.g. "folder11", "folder1/folder11" and "folder2/folder11" are used to distinguish these three "folder11"s. 
+
+Mendeley 1.16.1 introduces 7 more highlight colors, these are replicated in the exported PDFs.
 
 
 
@@ -232,11 +242,15 @@ the [pylatexenc](https://github.com/phfaist/pylatexenc) project.
 
 The software is tested on Linux and Windows 10 (**the win-GUI version is outdated**). Should also run on Mac.
 
+NOTE that windows user may need to manually update their sqlite3 module.
+
 ## Versions
 
-* 0.1 first release
-* 1.0 added GUI and Windows version
-* 1.1 added export of non-annotated PDFs and export to .bib.
+* 0.1: First release
+* 1.0: Added GUI and Windows version
+* 1.1: Added export of non-annotated PDFs and export to .bib.
+* 1.2: Works with subfolders. If a folder is chosen to process, also includes all subfolders.
+	   Replicates the 8 different highlight colors introduced in Mendeley 1.16.1 version, in the exported PDFs.
 
 
 ## Licence
