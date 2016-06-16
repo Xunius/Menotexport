@@ -19,7 +19,7 @@ from pylatexenc import latexencode
 
 
 #------------------------Parse file path entry------------------------
-def parseFilePath(path,outdir,folder,verbose=True):
+def parseFilePath(path,baseoutdir,folder,verbose=True):
     '''Parse file path entry
 
     '''
@@ -30,7 +30,7 @@ def parseFilePath(path,outdir,folder,verbose=True):
     if basedir=='/pseudo_path':
         return ''
 
-    result=os.path.join(outdir,folder)
+    result=os.path.join(baseoutdir,folder)
     result=os.path.join(result,filename)
     #result=path_re.sub(':\\1',result)  #Necessary?
     result='%s:%s' %(result,ext[1:])
@@ -129,7 +129,7 @@ def parseMeta(metadict,basedir,isfile,verbose=True):
 
 
 #--------------Export documents with annotations to .bib--------------
-def exportAnno2Bib(annodict,outdir,allfolders,isfile,verbose=True):
+def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,verbose=True):
     '''Export documents with annotations to .bib
 
     annolist,outdir
@@ -158,7 +158,7 @@ def exportAnno2Bib(annodict,outdir,allfolders,isfile,verbose=True):
         doclist.append(metaii)
 
     #----------------------Export----------------------
-    faillist=exportDoc2Bib(doclist,outdir,allfolders,isfile,verbose)
+    faillist=exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,verbose)
 
     return faillist
 
@@ -168,7 +168,7 @@ def exportAnno2Bib(annodict,outdir,allfolders,isfile,verbose=True):
 
 
 #-------------Export documents without annotations to .bib-------------
-def exportDoc2Bib(doclist,outdir,allfolders,isfile,verbose=True):
+def exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,verbose=True):
     '''Export documents without annotations to .bib
 
     doclist,outdir
@@ -176,9 +176,8 @@ def exportDoc2Bib(doclist,outdir,allfolders,isfile,verbose=True):
 
     if allfolders:
         fileout='Mendeley_lib.bib'
-        basedir=outdir
     else:
-        basedir,folder=os.path.split(outdir)
+        folder=os.path.split(outdir)[-1]
         fileout='Mendeley_lib_%s.bib' %folder
 
     abpath_out=os.path.join(outdir,fileout)
