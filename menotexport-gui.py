@@ -85,7 +85,7 @@ class MainFrame(Frame):
         self.parent=parent
         self.width=750
         self.height=450
-        self.title='Menotexport v1.1'
+        self.title='Menotexport v1.2'
         self.stdoutq=stdoutq
 
         self.initUI()
@@ -221,27 +221,9 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         dbfile=self.db_entry.get()
         try:
             db=sqlite3.connect(dbfile)
-            query=\
-            '''SELECT Documents.title,
-                      DocumentFolders.folderid,
-                      Folders.name
-               FROM Documents
-               LEFT JOIN DocumentFolders
-                   ON Documents.id=DocumentFolders.documentId
-               LEFT JOIN Folders
-                   ON Folders.id=DocumentFolders.folderid
-            '''
-            ret=db.execute(query)
-            data=ret.fetchall()
-            df=pd.DataFrame(data=data,columns=['title',\
-                    'folerid','name'])
-            fetchField=lambda x, f: x[f].unique().tolist()
-            folders=fetchField(df,'name')
-            folders.sort()
-            folders.remove(None)
-
-            self.menfolderlist=['All',]+folders
-            self.foldersmenu['values']=tuple(self.menfolderlist)
+            self.menfolderlist=menotexport.getFolderList(db,None)   #(id, name)
+            self.foldernames=['All']+[ii[1] for ii in self.menfolderlist] #names to display
+            self.foldersmenu['values']=tuple(self.foldernames)
             self.foldersmenu.current(0)
             db.close()
 
@@ -318,7 +300,6 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.foldersmenu.current(0)
         self.foldersmenu.bind('<<ComboboxSelected>>',self.setfolder)
         self.foldersmenu.pack(side=tk.LEFT,padx=8)
-
         
         #-------------------Quit button-------------------
         quit_button=tk.Button(subframe,text='Quit',\
@@ -338,7 +319,6 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.start_button.pack(side=tk.RIGHT,pady=8)
 
         #-------------------Help button-------------------
-
         self.help_button=tk.Button(subframe,text='Help',\
                 command=self.showHelp)
         self.help_button.pack(side=tk.RIGHT,padx=8)
@@ -422,6 +402,12 @@ Menotexport v1.0\n\n
         dbfile=self.db_entry.get()
         outdir=self.out_entry.get()
         self.menfolder=self.foldersmenu.get()
+
+        # get (folderid, folder) for folder
+        for ii in self.menfolderlist:
+            if ii[1]==self.menfolder:
+                folder_sel=[ii[0],ii[1].split('/')[-1]]
+
         action=[]
         if self.isexport.get()==1:
             action.append('p')
@@ -449,7 +435,7 @@ Menotexport v1.0\n\n
             self.check_separate.configure(state=tk.DISABLED)
 	    self.messagelabel.configure(text='Message (working...)')
 
-            folder=None if self.menfolder=='All' else self.menfolder
+            folder=None if self.menfolder=='All' else folder_sel
 
             args=[dbfile,outdir,action,folder,separate,True]
 
