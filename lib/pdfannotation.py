@@ -24,6 +24,14 @@ YELLOW = [0.95, 0.9, 0.2]
 
 
 
+def getRGBcolor(color,verbose=True):
+    '''Convert html color to RGB (0,1)
+    '''
+    color=color.replace('#','')
+    rgb=tuple(map(ord,color.decode('hex')))
+    return [float(ii)/255 for ii in rgb]
+
+    
 
 
 def floatArray(lst):
@@ -98,7 +106,7 @@ def _popupAnnotation(parent, rect=None):
 
 
 def createHighlight(rect, contents=None, author=None,\
-                         subject=None, cdate=None, color=YELLOW,\
+                         subject=None, cdate=None, color=None,\
                          alpha=1, flag=4):
     '''Create a Highlight annotation given rect.
 
@@ -125,6 +133,13 @@ def createHighlight(rect, contents=None, author=None,\
 
     x0,y0,x1,y1=rect
     qpl=[x0, y1, x1, y1, x0, y0, x1, y0]
+    if color is None:
+        color=YELLOW
+    else:
+        try:
+            color=getRGBcolor(color)
+        except:
+            color=YELLOW
 
     retval = _baseAnno(rect, contents, author,\
             subject, cdate, color, alpha, flag)
@@ -136,7 +151,7 @@ def createHighlight(rect, contents=None, author=None,\
 
 
 def createNote(rect, contents=None, author=None, subject=None,\
-                    cdate=None, color=YELLOW, alpha=1, flag=4,\
+                    cdate=None, color=None, alpha=1, flag=4,\
                     icon=None, open_=True, state=None, state_model=None):
     '''Create a text annotation given rect as a sticky note.
 
@@ -161,6 +176,14 @@ def createNote(rect, contents=None, author=None, subject=None,\
 
     Update time: 2016-02-19 14:39:13.
     '''
+    
+    if color is None:
+        color=YELLOW
+    else:
+        try:
+            color=getRGBcolor(color)
+        except:
+            color=YELLOW
 
     retval = _baseAnno(rect, contents, author, subject, cdate,
                                 color, alpha, flag)
