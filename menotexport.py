@@ -207,12 +207,15 @@ def getFilePath(db,docid,verbose=True):
         return pth
 
 
-def getHighlights(db, results=None, folder=None):
+def getHighlights(db, results=None, folderid=None,foldername=None):
     '''Extract the coordinates of highlights from the Mendeley database
     and put results into a dictionary.
 
     <db>: sqlite3.connection to Mendeley sqlite database.
     <results>: dict or None, optional dictionary to hold the results. 
+    <folderid>: int, id of given folder. If None, don't do folder filtering.
+    <foldername>: str, name of folder corresponding to <folderid>. Used to
+                  populate meta data.
 
     Return: <results>: dictionary containing the query results, with
             the following structure:
@@ -248,6 +251,7 @@ def getHighlights(db, results=None, folder=None):
                     FileHighlightRects.x1, FileHighlightRects.y1,
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
+                    FileHighlights.color,
                     Folders.name,
                     DocumentFolders.folderid,
                     FileHighlights.documentId
@@ -262,9 +266,9 @@ def getHighlights(db, results=None, folder=None):
                 ON Folders.id=DocumentFolders.folderid
             WHERE (FileHighlightRects.page IS NOT NULL)
     '''
-    if folder is not None:
+    if folderid is not None:
 
-        fstr='(Folders.name="%s")' %folder
+        fstr='(Folders.id="%s")' %folderid
         query=query+' AND\n'+fstr
 
     if results is None:
@@ -278,10 +282,12 @@ def getHighlights(db, results=None, folder=None):
         pg = r[1]
         bbox = [r[2], r[3], r[4], r[5]]
         cdate = convert2datetime(r[6])
-        folder=r[7]
-        docid=r[9]
+        color=r[7]
+        folder=r[8]
+        docid=r[10]
         hlight = {'rect': bbox,\
                   'cdate': cdate,\
+                  'color': color,
                   'page':pg\
                   }
 
@@ -304,7 +310,7 @@ def getHighlights(db, results=None, folder=None):
                 tags=[meta['tags'],folder]
             meta['tags']=tags
             meta['path']=pth
-            meta['folder']='' if folder is None else folder
+            meta['folder']='' if folder is None else foldername
             results[docid]={'highlights':{pg:[hlight,]}}
             results[docid]['meta']=meta
 
@@ -312,11 +318,14 @@ def getHighlights(db, results=None, folder=None):
 
 
 #-------------------Get sticky notes-------------------
-def getNotes(db, results=None, folder=None):
+def getNotes(db, results=None, folderid=None,foldername=None):
     '''Extract notes from the Mendeley database
 
     <db>: sqlite3.connection to Mendeley sqlite database.
     <results>: dict or None, optional dictionary to hold the results. 
+    <folderid>: int, id of given folder. If None, don't do folder filtering.
+    <foldername>: str, name of folder corresponding to <folderid>. Used to
+                  populate meta data.
 
     Return: <results>: dictionary containing the query results. See
             more in the doc of getHighlights()
@@ -341,8 +350,8 @@ def getNotes(db, results=None, folder=None):
             WHERE (FileNotes.page IS NOT NULL)
     '''
 
-    if folder is not None:
-        fstr='(Folders.name="%s")' %folder
+    if folderid is not None:
+        fstr='(Folders.id="%s")' %folderid
         query=query+' AND\n'+fstr
 
     if results is None:
@@ -388,7 +397,7 @@ def getNotes(db, results=None, folder=None):
                 tags=[meta['tags'],folder]
             meta['tags']=tags
             meta['path']=pth
-            meta['folder']='' if folder is None else folder
+            meta['folder']='' if folder is None else foldername
             results[docid]={'notes':{pg:[note,]}}
             results[docid]['meta']=meta
 
@@ -396,11 +405,14 @@ def getNotes(db, results=None, folder=None):
 
 
 #-------------------Get side-bar notes-------------------
-def getDocNotes(db, results=None, folder=None):
+def getDocNotes(db, results=None, folderid=None,foldername=None):
     '''Extract side-bar notes from the Mendeley database
 
     <db>: sqlite3.connection to Mendeley sqlite database.
     <results>: dict or None, optional dictionary to hold the results. 
+    <folderid>: int, id of given folder. If None, don't do folder filtering.
+    <foldername>: str, name of folder corresponding to <folderid>. Used to
+                  populate meta data.
 
     Return: <results>: dictionary containing the query results. with
             See the doc in getHighlights().
@@ -427,8 +439,8 @@ def getDocNotes(db, results=None, folder=None):
             WHERE (DocumentNotes.documentId IS NOT NULL)
     '''
 
-    if folder is not None:
-        fstr='(Folders.name="%s")' %folder
+    if folderid is not None:
+        fstr='(Folders.id="%s")' %folderid
         query=query+' AND\n'+fstr
 
     if results is None:
@@ -490,7 +502,7 @@ def getDocNotes(db, results=None, folder=None):
                 tags=[meta['tags'],folder]
             meta['tags']=tags
             meta['path']=pth
-            meta['folder']='' if folder is None else folder
+            meta['folder']='' if folder is None else foldername
             results[docid]={'notes':{pg:[note,]}}
             results[docid]['meta']=meta
 
@@ -515,14 +527,14 @@ def reformatAnno(annodict):
     return result
 
 
-#---------Get a list of doc meta-data not in given list----------
-def getOtherDocs(db,folder,annodocids,verbose=True):
-    '''Get a list of doc meta-data not in given list.
+#---------Get a list of doc meta-data not in annotation list----------
+def getOtherDocs(db,folderid,foldername,annodocids,verbose=True):
+    '''Get a list of doc meta-data not in annotation list.
 
     <annodocids>: list, doc documentId.
     '''
 
-    folderdocids=getFolderDocList(db,folder)
+    folderdocids=getFolderDocList(db,folderid)
     if not set(annodocids).issubset(set(folderdocids)):
         raise Exception("Exception")
         
@@ -535,14 +547,14 @@ def getOtherDocs(db,folder,annodocids,verbose=True):
     for ii in otherdocids:
         docii=getMetaData(db,ii)
         docii['path']=getFilePath(db,ii) #Local file path, can be None
-        docii['folder']=folder
+        docii['folder']=foldername
         result.append(docii)
 
     return result
 
 
 #----------Get a list of docids from a folder--------------
-def getFolderDocList(db,folder,verbose=True):
+def getFolderDocList(db,folderid,verbose=True):
     '''Get a list of docids from a folder
     '''
 
@@ -557,8 +569,8 @@ def getFolderDocList(db,folder,verbose=True):
            ON Folders.id=DocumentFolders.folderid
     '''
 
-    if folder is not None:
-        fstr='(Folders.name="%s")' %folder
+    if folderid is not None:
+        fstr='(Folders.id="%s")' %folderid
         fstr='WHERE '+fstr
         query=query+' '+fstr
 
@@ -571,11 +583,83 @@ def getFolderDocList(db,folder,verbose=True):
     return docids
 
 
-#--------------Get list of folder names in database----------------
+#--------------Get folder id and name list in database----------------
 def getFolderList(db,folder,verbose=True):
-    '''Get folder names list in database
+    '''Get folder id and name list in database
 
+    <folder>: select folder from database.
+              If None, select all folders/subfolders.
+              If str, select folder <folder>, and all subfolders. If folder
+              name conflicts, select the one with higher level.
+              If a tuple of (id, folder), select folder with name <folder>
+              and folder id <id>, to avoid name conflicts.
+
+    Return: <folders>: list, with elements of (id, folder_tree).
+            where <folder_tree> is a str of folder name with tree structure, e.g.
+            test/testsub/testsub2.
+
+    Update time: 2016-06-16 19:38:15.
     '''
+
+    query=\
+    '''SELECT Folders.id,
+              Folders.name,
+              Folders.parentID
+       FROM Folders
+    '''
+
+    #-----------------Get all folders-----------------
+    ret=db.execute(query)
+    data=ret.fetchall()
+    df=pd.DataFrame(data=data,columns=['folderid','folder','parentID'])
+    allfolderids=fetchField(df,'folderid')
+
+    #---------------Select target folder---------------
+    if folder is None:
+        folderids=allfolderids
+    if type(folder) is str:
+        # Select the given folder, if more than 1 name match, select the
+        # one with lowest parentID.
+        seldf=df[df.folder==folder].sort_values('parentID')
+        folderids=fetchField(seldf,'folderid')
+    elif type(folder) is tuple or type(folder) is list:
+        seldf=df[(df.folderid==folder[0]) & (df.folder==folder[1])]
+        folderids=fetchField(seldf,'folderid')
+
+    #----------------Get all subfolders----------------
+    if folder is not None:
+        folderids2=[]
+        for ff in folderids:
+            folderids2.append(ff)
+            subfs=getSubFolders(df,ff)
+            folderids2.extend(subfs)
+    else:
+        folderids2=folderids
+
+    #---------------Remove empty folders---------------
+    folderids2=[ff for ff in folderids2 if not isFolderEmpty(db,ff)]
+
+    #---Get names and tree structure of all non-empty folders---
+    folders=[]
+    for ff in folderids2:
+        folders.append(getFolderTree(df,ff))
+
+    #----------------------Return----------------------
+    if folder is None:
+        return folders
+    else:
+        if len(folders)==0:
+            print("Given folder name not found in database or folder is empty.")
+            return []
+        else:
+            return folders
+
+
+#--------------------Check a folder is empty or not--------------------
+def isFolderEmpty(db,folderid,verbose=True):
+    '''Check a folder is empty or not
+    '''
+
     query=\
     '''SELECT Documents.title,
               DocumentFolders.folderid,
@@ -587,31 +671,75 @@ def getFolderList(db,folder,verbose=True):
            ON Folders.id=DocumentFolders.folderid
     '''
 
-    if folder is not None:
-        fstr='(Folders.name="%s")' %folder
-        fstr='WHERE '+fstr
-        query=query+' '+fstr
+    fstr='(Folders.id="%s")' %folderid
+    fstr='WHERE '+fstr
+    query=query+' '+fstr
 
-    #------------------Get folders------------------
     ret=db.execute(query)
     data=ret.fetchall()
-    df=pd.DataFrame(data=data,columns=['title','folderid','folder'])
-    folders=fetchField(df,'folder')
-    if None in folders:
-        folders.remove(None)
-
-    if folder is None:
-        return folders
+    if len(data)==0:
+        return True
     else:
-        if len(folders)==0:
-            print("Given folder name not found in database or folder is empty.")
-            return []
+        return False
+
+
+#-------------------Get subfolders of a given folder-------------------
+def getSubFolders(df,folderid,verbose=True):
+    '''Get subfolders of a given folder
+
+    <df>: dataframe, contains all folders (including empty ones) id, name and parentID.
+    <folderid>: int, folder id
+    '''
+    getParentId=lambda df,id: fetchField(df[df.folderid==id],'parentID')[0]
+    results=[]
+
+    for ii in range(len(df)):
+        idii,fii,pii=df.loc[ii]
+
+        cid=idii
+        while True:
+            pid=getParentId(df,cid)
+            if pid==-1:
+                break
+            if pid==folderid:
+                results.append(idii)
+                break
+            else:
+                cid=pid
+
+    results.sort()
+    return results
+
+
+#-------------Get folder tree structure of a given folder-------------
+def getFolderTree(df,folderid,verbose=True):
+    '''Get folder tree structure of a given folder
+
+    <df>: dataframe, contains all folders (including empty ones) id, name and parentID.
+    <folderid>: int, folder id
+    '''
+
+    getFolderName=lambda df,id: fetchField(df[df.folderid==id],'folder')[0]
+    getParentId=lambda df,id: fetchField(df[df.folderid==id],'parentID')[0]
+
+    folder=getFolderName(df,folderid)
+
+    #------------Back track tree structure------------
+    cid=folderid
+    while True:
+        pid=getParentId(df,cid)
+        if pid==-1:
+            break
         else:
-            return folders
+            pfolder=getFolderName(df,pid)
+            folder=u'%s/%s' %(pfolder,folder)
+        cid=pid
+
+    return folderid,folder
 
 
 
-def extractAnnos(annotations,folder,action,verbose):
+def extractAnnos(annotations,action,verbose):
 
     faillist=[]
     annotations2={}  #keys: docid, values: extracted annotations
@@ -657,16 +785,17 @@ def extractAnnos(annotations,folder,action,verbose):
     return annotations2,faillist
 
 
-
         
-def processFolder(db,outdir,annotations,folder,allfolders,action,\
+def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
         separate,verbose):
     '''Process files/docs in a folder.
 
     <db>: sqlite database.
+    <outdir>: str, output directory path.
     <annotations>: dict, keys: documentId; values: highlights, notes and meta.
                    See doc in getHighlights().
-    <folder>: string, folder name.
+    <folderid>: int, folder id.
+    <foldername>: string, folder name corresponding to <folderid>.
     <allfolders>: bool, user chooses to process all folders or one folder.
     <action>: list, possible elements: m, n, e, b.
     <separate>: bool, whether save one output for each file or all files.
@@ -685,13 +814,13 @@ def processFolder(db,outdir,annotations,folder,allfolders,action,\
 
     #------------Get raw annotation data------------
     if ishighlight:
-        annotations = getHighlights(db,annotations,folder)
+        annotations = getHighlights(db,annotations,folderid,foldername)
     if isnote:
-        annotations = getNotes(db, annotations, folder)
-        annotations = getDocNotes(db, annotations, folder)
+        annotations = getNotes(db, annotations, folderid,foldername)
+        annotations = getDocNotes(db, annotations, folderid,foldername)
 
     if len(annotations)==0:
-        print('\n# <Menotexport>: No annotations found in folder: %s' %folder)
+        print('\n# <Menotexport>: No annotations found in folder: %s' %foldername)
         if 'b' not in action and 'p' not in action:
             return
     else:
@@ -699,10 +828,10 @@ def processFolder(db,outdir,annotations,folder,allfolders,action,\
         annotations=reformatAnno(annotations)
 
     #------Get other docs without annotations------
-    otherdocs=getOtherDocs(db,folder,annotations.keys())
+    otherdocs=getOtherDocs(db,folderid,foldername,annotations.keys())
 
     #--------Make subdir using folder name--------
-    outdir_folder=os.path.join(outdir,folder)
+    outdir_folder=os.path.join(outdir,foldername)
     if not os.path.isdir(outdir_folder):
         os.makedirs(outdir_folder)
 
@@ -727,7 +856,7 @@ def processFolder(db,outdir,annotations,folder,allfolders,action,\
     if len(annotations)>0:
         if verbose:
             printHeader('Extracting annotations from PDFs ...',2)
-        annotations,flist=extractAnnos(annotations,folder,action,verbose)
+        annotations,flist=extractAnnos(annotations,action,verbose)
         annofaillist.extend(flist)
 
     #------------Export annotations to txt------------
@@ -753,19 +882,21 @@ def processFolder(db,outdir,annotations,folder,allfolders,action,\
 
         #-----------Export docs with annotations-----------
         if len(annotations)>0:
-            flist=export2bib.exportAnno2Bib(annotations,bibfolder,allfolders,isfile,verbose)
+            # <outdir> is the base folder to save outputs, specified by user
+            # <bibfolder> is the folder to save .bib file, which is <outdir> if <allfolders> is True,
+            # or <outdir>/<folder_tree> otherwise.
+            flist=export2bib.exportAnno2Bib(annotations,outdir,bibfolder,allfolders,isfile,verbose)
             bibfaillist.extend(flist)
 
         #------Export other docs without annotations------
         if len(otherdocs)>0:
-            flist=export2bib.exportDoc2Bib(otherdocs,bibfolder,allfolders,isfile,verbose)
+            flist=export2bib.exportDoc2Bib(otherdocs,outdir,bibfolder,allfolders,isfile,verbose)
             bibfaillist.extend(flist)
 
 
 
     return exportfaillist,annofaillist,bibfaillist
     
-
 
 
 #----------------Bulk export to pdf----------------
@@ -793,12 +924,13 @@ def main(dbfin,outdir,action,folder,separate,verbose=True):
     bibfaillist=[]
 
     for ii,folderii in enumerate(folderlist):
+        fidii,fnameii=folderii
         if verbose:
-            printNumHeader('Processing folder: "%s"' %folderii,\
+            printNumHeader('Processing folder: "%s"' %fnameii,\
                     ii+1,len(folderlist),1)
         annotations={}
         exportfaillistii,annofaillistii,bibfaillistii=processFolder(db,outdir,annotations,\
-            folderii,allfolders,action,separate,verbose)
+            fidii,fnameii,allfolders,action,separate,verbose)
 
         exportfaillist.extend(exportfaillistii)
         annofaillist.extend(annofaillistii)
