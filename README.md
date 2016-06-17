@@ -94,7 +94,7 @@ Thanks to user feedbacks I realized that Mendeley supports embedded folder struc
 is now properly addressed in the new update: the exported PDFs, and their corresponding "file" entries in the
 exported .bib file now reflect the folder structure in Mendeley library (empty folders are omitted).
 
-You are allowed to create folders with same names in Mendeley, so long as they appear in different parent folders. In case you did do so, they will be labelled differently in the GUI version: e.g. "folder11", "folder1/folder11" and "folder2/folder11" are used to distinguish these three "folder11"s. 
+You are allowed to create folders with same name in Mendeley, so long as they appear in different parent folders. In case you did do so, they will be labelled differently in the GUI version: e.g. "folderA", "folder1/folderA" and "folder2/folderA" are used to distinguish these three "folderA"s. 
 
 Mendeley 1.16.1 introduces 7 more highlight colors, these are replicated in the exported PDFs.
 
