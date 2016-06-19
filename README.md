@@ -92,7 +92,7 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 
 Thanks to user feedbacks I realized that Mendeley supports embedded folder structures. This feature
 is now properly addressed in the new update: the exported PDFs, and their corresponding "file" entries in the
-exported .bib file now reflect the folder structure in Mendeley library (empty folders are omitted).
+exported .bib file now reflect the folder structure in Mendeley library (empty folders are omitted, embedded folders are processed recursively).
 
 You are allowed to create folders with same name in Mendeley, so long as they appear in different parent folders. In case you did do so, they will be labelled differently in the GUI version: e.g. "folderA", "folder1/folderA" and "folder2/folderA" are used to distinguish these three "folderA"s. 
 
