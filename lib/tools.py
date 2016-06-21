@@ -43,9 +43,15 @@ def printHeader(s, level=1, length=70, prefix='# <Menotexport>:'):
     strings=wrapper.wrap('%s %s' %(prefix,s))
 
     #----------------------Print----------------------
-    print('\n'+hline)
+    try:
+        print('\n'+hline)
+    except:
+        print('\n'+hline.encode('ascii','replace'))
     for ss in strings:
-        print(ss)
+        try:
+            print(ss)
+        except:
+            print(ss.encode('ascii','replace'))
     #print(hline)
 
     return
@@ -76,9 +82,15 @@ def printNumHeader(s, idx, num, level=1, length=70, prefix='# <Menotexport>:'):
     strings=wrapper.wrap('%s %s' %(prefix,s))
 
     #----------------------Print----------------------
-    print('\n'+hline1)
+    try:
+        print('\n'+hline1)
+    except:
+        print('\n'+hline1.encode('ascii','replace'))
     for ss in strings:
-        print(ss)
+        try:
+            print(ss)
+        except:
+            print(ss.encode('ascii','replace'))
     #print(hline2)
 
     return
@@ -97,7 +109,10 @@ def printInd(s, level=1, length=70, prefix=''):
     wrapper.subsequent_indent=indstr
 
     string=wrapper.fill('%s %s' %(prefix,s))
-    print('\n'+string)
+    try:
+        print('\n'+string)
+    except:
+        print('\n'+string.encode('ascii','replace'))
 
     return 
 
