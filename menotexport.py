@@ -23,7 +23,7 @@ import sqlite3
 import argparse
 import pandas as pd
 from lib import extracttags
-from lib import extracthl
+from lib import extracthl2
 from lib import extractnt
 from lib import exportpdf
 from lib import exportannotation
@@ -280,7 +280,9 @@ def getHighlights(db, results=None, folderid=None,foldername=None):
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
         pg = r[1]
-        bbox = [r[2], r[3], r[4], r[5]]
+        bbox = [r[2], r[3], r[4], r[5]] 
+        # [x1,y1,x2,y2], (x1,y1) being bottom-left,
+        # (x2,y2) being top-right. Origin at bottom-left
         cdate = convert2datetime(r[6])
         color=r[7]
         folder=r[8]
@@ -760,7 +762,7 @@ def extractAnnos(annotations,action,verbose):
             if verbose:
                 printInd('Retrieving highlights...',4,prefix='# <Menotexport>:')
             try:
-                hltexts=extracthl.extractHighlights(fii,annoii,verbose)
+                hltexts=extracthl2.extractHighlights2(fii,annoii,verbose)
             except:
                 faillist.append(fnameii)
                 hltexts=[]
