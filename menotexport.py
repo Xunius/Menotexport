@@ -824,7 +824,7 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
     if len(annotations)==0:
         print('\n# <Menotexport>: No annotations found in folder: %s' %foldername)
         if 'b' not in action and 'p' not in action:
-            return
+            return exportfaillist,annofaillist,bibfaillist
     else:
         #---------------Reformat annotations---------------
         annotations=reformatAnno(annotations)
@@ -931,6 +931,7 @@ def main(dbfin,outdir,action,folder,separate,verbose=True):
             printNumHeader('Processing folder: "%s"' %fnameii,\
                     ii+1,len(folderlist),1)
         annotations={}
+        import pdb; pdb.set_trace()
         exportfaillistii,annofaillistii,bibfaillistii=processFolder(db,outdir,annotations,\
             fidii,fnameii,allfolders,action,separate,verbose)
 
