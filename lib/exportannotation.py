@@ -87,7 +87,8 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
     outstr=u'\n\n{0}\n# {1}'.format(int(80)*'-',conv(titleii))
 
     with open(abpath_out, mode='a') as fout:
-        outstr=outstr.encode('ascii','replace')
+        #outstr=outstr.encode('ascii','replace')
+        outstr=outstr.encode('utf8','replace')
         fout.write(outstr)
 
         #-----------------Write highlights-----------------
@@ -107,7 +108,8 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
 '''.format(*map(conv,[hlstr, hljj.citationkey,\
     tagstr, hljj.ctime]))
 
-                outstr=outstr.encode('ascii','replace')
+                #outstr=outstr.encode('ascii','replace')
+                outstr=outstr.encode('utf8','replace')
                 fout.write(outstr)
 
         #-----------------Write notes-----------------
@@ -127,7 +129,8 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
 '''.format(*map(conv,[ntstr, ntjj.citationkey,\
     tagstr, ntjj.ctime]))
 
-                outstr=outstr.encode('ascii','replace')
+                #outstr=outstr.encode('ascii','replace')
+                outstr=outstr.encode('utf8','replace')
                 fout.write(outstr)
 
         
