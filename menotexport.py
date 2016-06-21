@@ -931,7 +931,6 @@ def main(dbfin,outdir,action,folder,separate,verbose=True):
             printNumHeader('Processing folder: "%s"' %fnameii,\
                     ii+1,len(folderlist),1)
         annotations={}
-        import pdb; pdb.set_trace()
         exportfaillistii,annofaillistii,bibfaillistii=processFolder(db,outdir,annotations,\
             fidii,fnameii,allfolders,action,separate,verbose)
 
