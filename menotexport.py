@@ -976,6 +976,11 @@ def main(dbfin,outdir,action,folder,separate,verbose=True):
         if verbose:
             printHeader('All done.',2)
 
+    #-----------------Remove tmp file-----------------
+    if os.path.exists('tmp.txt'):
+	    os.remove('tmp.txt')
+
+
     return 0
 
 
