@@ -14,6 +14,7 @@ bbox of each highlight obtained from Mendeley dataset:
 
 Update time: 2016-02-23 18:04:10.
 Update time: 2016-06-21 16:53:02.
+Update time: 2016-06-22 16:26:16.
 '''
 
 
@@ -269,10 +270,6 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
     #------------------Do some fixes------------------
     if len(texts)>0:
         texts=wordfix.fixWord(texts)
-
-    #-----------------Remove tmp file-----------------
-    if os.path.exists('tmp.txt'):
-	    os.remove('tmp.txt')
 
     return texts, num
 
