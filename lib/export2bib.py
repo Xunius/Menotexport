@@ -8,7 +8,7 @@
 # You may use, distribute and modify this code under the
 # terms of the GPLv3 license.
 
-Update time: 2016-04-13 15:40:08.
+Update time: 2016-06-22 16:25:15.
 '''
 
 import os
@@ -19,7 +19,7 @@ from pylatexenc import latexencode
 
 
 #------------------------Parse file path entry------------------------
-def parseFilePath(path,baseoutdir,folder,verbose=True):
+def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
     '''Parse file path entry
 
     '''
@@ -30,10 +30,16 @@ def parseFilePath(path,baseoutdir,folder,verbose=True):
     if basedir=='/pseudo_path':
         return ''
 
-    result=os.path.join(baseoutdir,folder)
-    result=os.path.join(result,filename)
-    #result=path_re.sub(':\\1',result)  #Necessary?
-    result='%s:%s' %(result,ext[1:])
+    if iszotero:
+        abpath=os.path.join(baseoutdir,folder)
+        abpath=os.path.join(abpath,filename)
+        #result=path_re.sub(':\\1',result)  #Necessary?
+        result='%s:%s:%s' %(filename,abpath,ext[1:])
+    else:
+        abpath=os.path.join(baseoutdir,folder)
+        abpath=os.path.join(abpath,filename)
+        #result=path_re.sub(':\\1',result)  #Necessary?
+        result='%s:%s' %(abpath,ext[1:])
 
     return result
 
@@ -45,7 +51,7 @@ def parseFilePath(path,baseoutdir,folder,verbose=True):
 
 
 #-----------------------Parse document meta-data-----------------------
-def parseMeta(metadict,basedir,isfile,verbose=True):
+def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
     '''Parse document meta-data
 
     metadict
@@ -100,7 +106,7 @@ def parseMeta(metadict,basedir,isfile,verbose=True):
         if kk=='path':
             if not isfile:
                 continue
-            vv=parseFilePath(vv,basedir,metadict['folder'])
+            vv=parseFilePath(vv,basedir,metadict['folder'],iszotero)
             if vv=='':
                 continue
             else:
@@ -109,14 +115,39 @@ def parseMeta(metadict,basedir,isfile,verbose=True):
         #--------------Parse unicode to latex--------------
         if type(vv) is list:
             fieldvv=[latexencode.utf8tolatex(ii) for ii in vv]
-            if kk=='annote':
-                fieldvv=['{%s}' %ii for ii in fieldvv]
-            fieldvv=u', '.join(fieldvv)
         else:
-            fieldvv=latexencode.utf8tolatex(vv)
+            # Leave file path alone
+            if kk!='file':
+                fieldvv=latexencode.utf8tolatex(vv)
+            else:
+                fieldvv=vv
 
-        entrykk='%s = {%s}' %(kk, fieldvv)
-        entries.append(entrykk)
+        #----------Add tags to keywords if zotero----------
+        if iszotero and kk=='tags':
+            kk='keywords'
+
+        #----------------Parse annotations----------------
+        if kk=='annote':
+            if type(fieldvv) is not list:
+                fieldvv=[fieldvv,]
+
+            # For import to zotero, separate annotes
+            if iszotero:
+                for ii in fieldvv:
+                    entrykk='%s = {%s}' %('annote',ii)
+                    entries.append(entrykk)
+            else:
+                fieldvv=['{%s}' %ii for ii in fieldvv]
+                fieldvv=u', '.join(fieldvv)
+                entrykk='%s = {%s}' %(kk, fieldvv)
+                entries.append(entrykk)
+
+        #--------------------All others--------------------
+        else:
+            if type(fieldvv) is list:
+                fieldvv=u', '.join(fieldvv)
+            entrykk='%s = {%s}' %(kk, fieldvv)
+            entries.append(entrykk)
 
     entries=',\n'.join(entries)
     string=string+entries+'\n}\n'
@@ -129,7 +160,7 @@ def parseMeta(metadict,basedir,isfile,verbose=True):
 
 
 #--------------Export documents with annotations to .bib--------------
-def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,verbose=True):
+def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,iszotero,verbose=True):
     '''Export documents with annotations to .bib
 
     annolist,outdir
@@ -158,7 +189,8 @@ def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,verbose=True):
         doclist.append(metaii)
 
     #----------------------Export----------------------
-    faillist=exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,verbose)
+    faillist=exportDoc2Bib(doclist,basedir,outdir,\
+            allfolders,isfile,iszotero,verbose)
 
     return faillist
 
@@ -168,7 +200,7 @@ def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,verbose=True):
 
 
 #-------------Export documents without annotations to .bib-------------
-def exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,verbose=True):
+def exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,iszotero,verbose=True):
     '''Export documents without annotations to .bib
 
     doclist,outdir
@@ -186,7 +218,7 @@ def exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,verbose=True):
     faillist=[]
 
     for docii in doclist:
-        bibdata=parseMeta(docii,basedir,isfile)
+        bibdata=parseMeta(docii,basedir,isfile,iszotero)
         with open(abpath_out, mode='a') as fout:
             fout.write(bibdata)
         #faillist.append(docii['title'])
