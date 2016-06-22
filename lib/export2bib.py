@@ -94,6 +94,8 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
     entries=['author = {%s}' %authors,]
 
     #--------------Populate other fields--------------
+    gotkeywords=False
+
     for kk,vv in metadict.items():
         if vv is None:
             continue
@@ -130,9 +132,14 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
             else:
                 fieldvv=vv
 
-        #----------Add tags to keywords if zotero----------
-        if iszotero and kk=='tags':
+        #----------Add tags to keywords if iszotero----------
+        if iszotero and (kk=='tags' or kk=='keywords') and not gotkeywords:
+            keywords=getField(metadict,'keywords',[])
+            tags=getField(metadict,'tags',[])
+            keywords.extend(tags)
+            fieldvv=[latexencode.utf8tolatex(ii) for ii in keywords]
             kk='keywords'
+            gotkeywords=True
 
         #----------------Parse annotations----------------
         if kk=='annote':
