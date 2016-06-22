@@ -149,10 +149,10 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
             # For import to zotero, separate annotes
             if iszotero:
                 for ii in fieldvv:
-                    entrykk='%s = {%s}' %('annote',ii)
+                    entrykk='%s = { %s }' %('annote',ii)
                     entries.append(entrykk)
             else:
-                fieldvv=['{%s}' %ii for ii in fieldvv]
+                fieldvv=['{ %s }' %ii for ii in fieldvv]
                 fieldvv=u', '.join(fieldvv)
                 entrykk='%s = {%s}' %(kk, fieldvv)
                 entries.append(entrykk)
