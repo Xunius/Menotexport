@@ -88,7 +88,7 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 	- file            # Location of the attached PDF on local disk 
 	- folder          # Folder name in the Mendeley library
 
-### (**NEW**) 4. New updates in v1.2 (2016-June-16)
+### 4. Updates in v1.2: perserves sub-folder structures and adds new highlight colors
 
 Thanks to user feedbacks I realized that Mendeley supports embedded folder structures. This feature
 is now properly addressed in the new update: the exported PDFs, and their corresponding "file" entries in the
@@ -98,11 +98,24 @@ You are allowed to create folders with same name in Mendeley, so long as they ap
 
 Mendeley 1.16.1 introduces 7 more highlight colors, these are replicated in the exported PDFs.
 
+### **NEW** Updates in v1.3: improves accuracy in highlight extractions.
+
+The new version uses two text extracting utilities (*pdfminer* and *pdftotext*) to extract highlighted texts from PDFs, and creates much better outputs than the previous *pdfminer*-only version. The cost is an extra dependency to satisfy (see below), and a slight drop in execution speed. However, this new feature is optional: if you don't care about highlight extraction or don't have *pdftotext* available on the system, it will fall back to the *pdfminer*-only solution.
+
 
 
 ## Installation
 
 - For command line or GUI usage on Linux or Mac or Win, download the zip and unzip to any folder. Make sure you have all the dependencies listed below and Python 2.7.
+
+- NOTE that Windows user may need to manually update their sqlite3 dll. If you encounter the following error when connecting to the sqlite dataset:
+
+```
+Failed to recoganize the given database file.
+file is encrypted or is not a database
+```
+
+Then download the latest version of *sqlite3* from [here](https://www.sqlite.org/download.html), and copy the `sqlite3.dll` file to the `DLLs` folder in your python installation directory. Note that if you have your python environment set up using *Anaconda*, be sure to copy to the `DLLs` folder in the specific env folder.
 
 - For Windows specific GUI (**OUTDATED**), only need to get the `Menotexport-win64.zip` file. Download from dropbox: https://www.dropbox.com/s/64267kqvmlemaz8/menotexport-win64.rar?dl=0
 
@@ -223,13 +236,21 @@ Launch `menotexport-gui.py` (or `menotexport-gui.exe`), select the Mendeley data
 
 Developed in python2.7. **NOT** compatible with python3+ (*pdfminer* doesn't support python3).
 
-It requires the following packages:
+It requires the following python packages:
 - PyPDF2
 - sqlite3
 - pandas
 - pdfminer (NOTE: version 2014+ is needed)
 - numpy
 - BeautifulSoup4
+
+**(Optional but recommended)** For better performances in highlight extraction, it further requires the *pdftotext* software.
+
+- Linux: *pdftotext* comes with most popular Linux distros. In case you need to install it: 
+
+    sudo apt-get install poppler-utils
+    
+- Windows: Download the *poppler* package from [here](http://blog.alivate.com.au/poppler-windows/), unpack to any folder, then add the path to the `pdftotext.exe` file (e.g. `D:\Downloads\poppler-0.44_x86\poppler-0.44\bin`) to your PATH environmental variable. How to do this is system version dependent, please google. NOTE that the *pdftotext* in the *xpdf* package for Windows does not work: it doesn't have coordinate-based portion extraction.
 
 It further incorporates (with minor adjustments) the pdfannotation.py file from
 the [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf) project.
@@ -242,7 +263,7 @@ the [pylatexenc](https://github.com/phfaist/pylatexenc) project.
 
 The software is tested on Linux and Windows 10 (**the win-GUI version is outdated**). Should also run on Mac.
 
-NOTE that windows user may need to manually update their sqlite3 module(/dll?).
+
 
 ## Versions
 
