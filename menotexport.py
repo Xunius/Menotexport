@@ -3,7 +3,9 @@
 - Bulk export annotated PDFs from Mendeley, with notes and highlights.
 - Extract mendeley notes and highlights and save into text file(s).
 - Group highlights and notes by tags, and export to a text file.
-- Note that PDFs without annotations are not exported.
+- PDFs without annotations are also exported.
+- Export meta-data and annotations to .bib file, in a default format or in one suitable
+  for Zotero import.
 
 
 # Copyright 2016 Guang-zhi XU
@@ -14,6 +16,7 @@
 # terms of the GPLv3 license.
 
 Update time: 2016-04-15 16:25:00.
+Update time: 2016-06-22 16:26:11.
 '''
 
 __version__='Menotexport v1.3'
@@ -797,7 +800,7 @@ def extractAnnos(annotations,action,verbose):
 
         
 def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
-        separate,verbose):
+        separate,iszotero,verbose):
     '''Process files/docs in a folder.
 
     <db>: sqlite database.
@@ -809,6 +812,7 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
     <allfolders>: bool, user chooses to process all folders or one folder.
     <action>: list, possible elements: m, n, e, b.
     <separate>: bool, whether save one output for each file or all files.
+    <iszotero>: bool, whether exported .bib is reformated to cater to zotero import or not.
     '''
     
     exportfaillist=[]
@@ -895,12 +899,14 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
             # <outdir> is the base folder to save outputs, specified by user
             # <bibfolder> is the folder to save .bib file, which is <outdir> if <allfolders> is True,
             # or <outdir>/<folder_tree> otherwise.
-            flist=export2bib.exportAnno2Bib(annotations,outdir,bibfolder,allfolders,isfile,verbose)
+            flist=export2bib.exportAnno2Bib(annotations,outdir,\
+                bibfolder,allfolders,isfile,iszotero,verbose)
             bibfaillist.extend(flist)
 
         #------Export other docs without annotations------
         if len(otherdocs)>0:
-            flist=export2bib.exportDoc2Bib(otherdocs,outdir,bibfolder,allfolders,isfile,verbose)
+            flist=export2bib.exportDoc2Bib(otherdocs,outdir,\
+                bibfolder,allfolders,isfile,iszotero,verbose)
             bibfaillist.extend(flist)
 
 
@@ -910,7 +916,7 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
 
 
 #----------------Bulk export to pdf----------------
-def main(dbfin,outdir,action,folder,separate,verbose=True):
+def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
     
     try:
         db = sqlite3.connect(dbfin)
@@ -940,7 +946,7 @@ def main(dbfin,outdir,action,folder,separate,verbose=True):
                     ii+1,len(folderlist),1)
         annotations={}
         exportfaillistii,annofaillistii,bibfaillistii=processFolder(db,outdir,annotations,\
-            fidii,fnameii,allfolders,action,separate,verbose)
+            fidii,fnameii,allfolders,action,separate,iszotero,verbose)
 
         exportfaillist.extend(exportfaillistii)
         annofaillist.extend(annofaillistii)
@@ -1040,6 +1046,12 @@ if __name__ == "__main__":
             help='''Export annotations to a separate txt file
             for each PDF.
             Default to export all file annotations to a single file.''')
+    parser.add_argument('-z', '--zotero', action='store_true',\
+            default=False,\
+            help='''Exported .bib file has slightly different formating
+            to facilitate import into Zotero.
+            Only works when -b is toggled.''')
+
     parser.add_argument('-v', '--verbose', action='store_true',\
             default=True,\
             help='Print some texts.')
@@ -1054,7 +1066,7 @@ if __name__ == "__main__":
     outdir = os.path.abspath(args.outdir)
 
     main(dbfile,outdir,args.action,args.folder,\
-            args.separate,args.verbose)
+            args.separate,args.zotero,args.verbose)
 
 
 
