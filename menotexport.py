@@ -152,12 +152,15 @@ def getMetaData(db, docid):
               Documents.favourite,
               DocumentTags.tag,
               DocumentContributors.firstNames,
-              DocumentContributors.lastName
+              DocumentContributors.lastName,
+              DocumentKeywords.keyword
        FROM Documents
        LEFT JOIN DocumentTags
            ON DocumentTags.documentId=Documents.id
        LEFT JOIN DocumentContributors
            ON DocumentContributors.documentId=Documents.id
+       LEFT JOIN DocumentKeywords
+           ON DocumentKeywords.documentId=Documents.id
     '''
 
     #------------------Get file meta data------------------
@@ -167,7 +170,7 @@ def getMetaData(db, docid):
             'publication','volume','year','doi','abstract',\
             'arxivId','chapter','city','country','edition','institution',\
             'isbn','issn','month','publisher','series','type',\
-            'read','favourite','tags','firstnames','lastname']
+            'read','favourite','tags','firstnames','lastname','keywords']
 
     df=pd.DataFrame(data=data,columns=fields)
     docdata=df[df.docid==docid]
@@ -175,7 +178,6 @@ def getMetaData(db, docid):
     for ff in fields:
         fieldii=fetchField(docdata,ff)
         result[ff]=fieldii[0] if len(fieldii)==1 else fieldii
-
 
     return result
 
