@@ -236,7 +236,7 @@ Launch `menotexport-gui.py` (or `menotexport-gui.exe`), select the Mendeley data
 
 Developed in python2.7. **NOT** compatible with python3+ (*pdfminer* doesn't support python3).
 
-It requires the following python packages:
+1. It requires the following python packages:
 - PyPDF2
 - sqlite3
 - pandas
@@ -244,7 +244,7 @@ It requires the following python packages:
 - numpy
 - BeautifulSoup4
 
-**(Optional but recommended)** For better performances in highlight extraction, it further requires the *pdftotext* software.
+2. **(Optional but recommended)** For better performances in highlight extraction, it further requires the *pdftotext* software.
 
 - Linux: *pdftotext* comes with most popular Linux distros. In case you need to install it: 
 
