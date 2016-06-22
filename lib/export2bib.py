@@ -12,6 +12,7 @@ Update time: 2016-06-22 16:25:15.
 '''
 
 import os
+import platform
 import tools
 import re
 from pylatexenc import latexencode
@@ -30,14 +31,21 @@ def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
     if basedir=='/pseudo_path':
         return ''
 
+    abpath=os.path.join(baseoutdir,folder)
+    abpath=os.path.join(abpath,filename)
+    abpath=os.path.abspath(abpath)
+
+
     if iszotero:
-        abpath=os.path.join(baseoutdir,folder)
-        abpath=os.path.join(abpath,filename)
         #result=path_re.sub(':\\1',result)  #Necessary?
+        # Make the path recognizable by zotero on windows
+	if platform.system().lower()=='windows':
+	    pathsplit=abpath.split(':')
+	    drive=pathsplit[0]
+	    pathnodrive=''.join(pathsplit[1:])
+	    abpath='file\\:///%s\\:%s' %(drive,pathnodrive)
         result='%s:%s:%s' %(filename,abpath,ext[1:])
     else:
-        abpath=os.path.join(baseoutdir,folder)
-        abpath=os.path.join(abpath,filename)
         #result=path_re.sub(':\\1',result)  #Necessary?
         result='%s:%s' %(abpath,ext[1:])
 
