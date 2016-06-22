@@ -23,7 +23,6 @@ import sqlite3
 import argparse
 import pandas as pd
 from lib import extracttags
-from lib import extracthl2
 from lib import extractnt
 from lib import exportpdf
 from lib import exportannotation
@@ -759,10 +758,18 @@ def extractAnnos(annotations,action,verbose):
             printInd(fnameii,4)
 
         if 'm' in action:
-            if verbose:
-                printInd('Retrieving highlights...',4,prefix='# <Menotexport>:')
+            from lib import extracthl2
+
             try:
-                hltexts=extracthl2.extractHighlights2(fii,annoii,verbose)
+	        #------ Check if pdftotext is available--------
+	        if extracthl2.checkPdftotext():
+		    if verbose:
+			printInd('Retrieving highlights using pdftotext ...',4,prefix='# <Menotexport>:')
+                    hltexts=extracthl2.extractHighlights2(fii,annoii,verbose)
+	        else:
+		    if verbose:
+			printInd('Retrieving highlights using pdfminer ...',4,prefix='# <Menotexport>:')
+                    hltexts=extracthl2.extractHighlights(fii,annoii,verbose)
             except:
                 faillist.append(fnameii)
                 hltexts=[]
