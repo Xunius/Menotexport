@@ -6,7 +6,9 @@ GUI for Menotexport.py
 - Bulk export annotated PDFs from Mendeley, with notes and highlights.
 - Extract mendeley notes and highlights and save into text file(s).
 - Group highlights and notes by tags, and export to a text file.
-- Note that PDFs without annotations are not exported.
+- PDFs without annotations are also exported.
+- Export meta-data and annotations to .bib file, in a default format or in one suitable
+  for Zotero import.
 
 
 # Copyright 2016 Guang-zhi XU
@@ -19,6 +21,7 @@ GUI for Menotexport.py
 Update time: 2016-02-28 22:09:28.
 Update time: 2016-03-03 20:38:29.
 Update time: 2016-04-15 13:13:31.
+Update time: 2016-06-22 16:48:56.
 '''
 
 
@@ -254,6 +257,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.isnote=tk.IntVar()
         self.isbib=tk.IntVar()
         self.isseparate=tk.IntVar()
+        self.iszotero=tk.IntVar()
 
         self.check_export=tk.Checkbutton(frame,text='Export PDFs',\
                 variable=self.isexport,command=self.doExport)
@@ -275,17 +279,23 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
                 variable=self.isseparate,command=self.doSeparate,\
                 state=tk.DISABLED)
 
+        self.check_iszotero=tk.Checkbutton(frame,\
+                text='For import to Zotero',\
+                variable=self.iszotero,command=self.doIszotero,\
+                state=tk.DISABLED)
+
         frame.columnconfigure(0,weight=1)
 
         self.check_export.grid(row=0,column=1,padx=8,sticky=tk.W)
         self.check_highlight.grid(row=0,column=2,padx=8,sticky=tk.W)
         self.check_note.grid(row=0,column=3,padx=8,sticky=tk.W)
-        self.check_bib.grid(row=0,column=4,padx=8,sticky=tk.W)
-        self.check_separate.grid(row=0,column=5,padx=8,sticky=tk.W)
+        self.check_bib.grid(row=1,column=1,padx=8,sticky=tk.W)
+        self.check_separate.grid(row=1,column=2,padx=8,sticky=tk.W)
+        self.check_iszotero.grid(row=1,column=3,padx=8,sticky=tk.W)
 
         #---------------------2nd row---------------------
         subframe=Frame(frame)
-        subframe.grid(row=1,column=0,columnspan=6,sticky=tk.W+tk.E,\
+        subframe.grid(row=2,column=0,columnspan=6,sticky=tk.W+tk.E,\
                 pady=5)
 
         #-------------------Folder options-------------------
@@ -370,8 +380,10 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
     def doBib(self):
         if self.isbib.get()==1:
             print('Export to .bib file.')
+            self.check_iszotero.configure(state=tk.NORMAL)
         else:
             print('Dont export .bib file.')
+            self.check_iszotero.configure(state=tk.DISABLED)
         self.checkReady()
 
     def doSeparate(self):
@@ -380,17 +392,23 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         else:
             print('Save all annotations to single file.')
 
+    def doIszotero(self):
+        if self.iszotero.get()==1:
+            print('Save .bib file in Zotero preferred format.')
+        else:
+            print('Save .bib file to default format.')
+
 
 
     def showHelp(self):
         helpstr='''
-Menotexport v1.0\n\n
+%s\n\n
 - Export PDFs: Bulk export PDFs with annotations to <output folder>.\n
 - Extract highlights: Extract highlighted texts and output to a txt file in <output folder>.\n
 - Extract highlights: Extract notes and output to a txt file in <output folder>.\n
 - Save separately: If on, save each PDF's annotations to a separate txt.\n
 - See README.md for more info.\n
-'''
+''' %self.title
 
         tkMessageBox.showinfo(title='Help', message=helpstr)
         print(self.menfolder.get())
@@ -421,6 +439,11 @@ Menotexport v1.0\n\n
             separate=True
         else:
             separate=False
+        if self.iszotero.get()==1:
+            iszotero=True
+        else:
+            iszotero=False
+
             
         if 'p' in action or 'm' in action or 'n' in action or 'b' in action:
             self.db_button.configure(state=tk.DISABLED)
@@ -433,11 +456,12 @@ Menotexport v1.0\n\n
             self.check_note.configure(state=tk.DISABLED)
             self.check_bib.configure(state=tk.DISABLED)
             self.check_separate.configure(state=tk.DISABLED)
+            self.check_iszotero.configure(state=tk.DISABLED)
 	    self.messagelabel.configure(text='Message (working...)')
 
             folder=None if self.menfolder=='All' else folder_sel
 
-            args=[dbfile,outdir,action,folder,separate,True]
+            args=[dbfile,outdir,action,folder,separate,iszotero,True]
 
             self.workthread=WorkThread('work',False,self.stateq)
             self.workthread.deamon=True
@@ -468,6 +492,7 @@ Menotexport v1.0\n\n
                     self.check_note.configure(state=tk.NORMAL)
                     self.check_bib.configure(state=tk.NORMAL)
                     self.check_separate.configure(state=tk.NORMAL)
+                    self.check_iszotero.configure(state=tk.NORMAL)
                     self.messagelabel.configure(text='Message')
                     return
             except Queue.Empty:
