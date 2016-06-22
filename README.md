@@ -272,6 +272,7 @@ The software is tested on Linux and Windows 10 (**the win-GUI version is outdate
 * 1.1: Added export of non-annotated PDFs and export to .bib.
 * 1.2: Works with subfolders. If a folder is chosen to process, also includes all subfolders.
 	   Replicates the 8 different highlight colors introduced in Mendeley 1.16.1 version, in the exported PDFs.
+* 1.3: Call *pdftotext* to work with *pdfminer* for better highlight extraction, if *pdftotext* not available, fall back         to old approach. Some other improvements in highlight extraction.
 
 
 ## Licence
