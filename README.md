@@ -238,20 +238,22 @@ Developed in python2.7. **NOT** compatible with python3+ (*pdfminer* doesn't sup
 
 1. It requires the following python packages:
 
-- PyPDF2
-- sqlite3
-- pandas
-- pdfminer (NOTE: version 2014+ is needed)
-- numpy
-- BeautifulSoup4
+    - PyPDF2
+    - sqlite3
+    - pandas
+    - pdfminer (NOTE: version 2014+ is needed)
+    - numpy
+    - BeautifulSoup4
 
 2. **(Optional but recommended)** For better performances in highlight extraction, it further requires the *pdftotext* software.
 
-- Linux: *pdftotext* comes with most popular Linux distros. In case you need to install it: 
+    - Linux: *pdftotext* comes with most popular Linux distros. In case you need to install it: 
 
-    sudo apt-get install poppler-utils
+        ```
+        sudo apt-get install poppler-utils
+        ```
     
-- Windows: Download the *poppler* package from [here](http://blog.alivate.com.au/poppler-windows/), unpack to any folder, then add the path to the `pdftotext.exe` file (e.g. `D:\Downloads\poppler-0.44_x86\poppler-0.44\bin`) to your PATH environmental variable. How to do this is system version dependent, please google. NOTE that the *pdftotext* in the *xpdf* package for Windows does not work: it doesn't have coordinate-based portion extraction.
+    - Windows: Download the *poppler* package from [here](http://blog.alivate.com.au/poppler-windows/), unpack to any folder, then add the path to the `pdftotext.exe` file (e.g. `D:\Downloads\poppler-0.44_x86\poppler-0.44\bin`) to your PATH environmental variable. How to do this is system version dependent, please google. NOTE that the *pdftotext* in the *xpdf* package for Windows does not work: it doesn't have coordinate-based portion extraction.
 
 It further incorporates (with minor adjustments) the pdfannotation.py file from
 the [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf) project.
