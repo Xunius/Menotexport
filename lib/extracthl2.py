@@ -35,6 +35,22 @@ from subprocess import Popen, PIPE
 import tools
 import time
 import wordfix
+import os
+
+
+#------Test availability of pdftotext-------------
+def checkPdftotext():
+    try:
+        pp=Popen(['pdftotext'],stdout=PIPE,stderr=PIPE)
+	re=pp.communicate()
+	if '-x' in re[1] and '-y' in re[1]:
+            isavail=True
+        else:
+            isavail=False
+    except:
+        isavail=False
+    return isavail
+
 
 
 
@@ -205,7 +221,7 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
                     args=['pdftotext','-f',hii['page'],'-l',hii['page'],'-r',720,\
                             '-x',coord2str(hiibox[0]),'-y',coord2str(pheight-hiibox[3]),\
                             '-W',coord2str(hiibox[2]-hiibox[0]),'-H',coord2str(hiibox[3]-hiibox[1]),\
-                            filename,'tmp.txt']
+                            os.path.abspath(filename),'tmp.txt']
                     args=map(str,args)
 
                     pp=Popen(args)
@@ -255,10 +271,8 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
         texts=wordfix.fixWord(texts)
 
     #-----------------Remove tmp file-----------------
-    args2=['rm','-f','tmp.txt']
-    pp2=Popen(args2,stdout=PIPE,stderr=PIPE)
-    while pp2.poll() !=0:
-        time.sleep(0.01)
+    if os.path.exists('tmp.txt'):
+	    os.remove('tmp.txt')
 
     return texts, num
 
@@ -628,7 +642,7 @@ def extractHighlights(filename,anno,verbose=True):
                 if type(objj)!=LTTextBox and\
                         type(objj)!=LTTextBoxHorizontal:
                     continue
-                textjj,numjj=findStrFromBox(anno.highlights[ii+1],objj)
+                textjj,numjj=findStrFromBox(annoii,objj)
 
                 if numjj>0:
                     #--------------Attach text with meta--------------
