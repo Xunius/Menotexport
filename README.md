@@ -237,6 +237,7 @@ Launch `menotexport-gui.py` (or `menotexport-gui.exe`), select the Mendeley data
 Developed in python2.7. **NOT** compatible with python3+ (*pdfminer* doesn't support python3).
 
 1. It requires the following python packages:
+
 - PyPDF2
 - sqlite3
 - pandas
