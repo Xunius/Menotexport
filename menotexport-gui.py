@@ -85,7 +85,7 @@ class MainFrame(Frame):
         self.parent=parent
         self.width=750
         self.height=450
-        self.title='Menotexport v1.2'
+        self.title='Menotexport v1.3'
         self.stdoutq=stdoutq
 
         self.initUI()
