@@ -101,7 +101,7 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
             continue
         if kk in ['type','firstnames','lastname','docid']:
             continue
-        if kk in ['year','month']:
+        if kk in ['year','month','day']:
             # Convert float to int to str
             try:
                 vv=str(int(vv))
@@ -141,6 +141,7 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
             if type(tags) is not list:
                 tags=[tags,]
             keywords.extend(tags)
+	    keywords=list(set(keywords))
             fieldvv=[latexencode.utf8tolatex(ii) for ii in keywords]
             kk='keywords'
             gotkeywords=True
