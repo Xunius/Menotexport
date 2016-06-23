@@ -79,6 +79,7 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 	- isbn
 	- issn
 	- month
+	- day
 	- publisher
 	- series
 	- type
@@ -99,12 +100,15 @@ You are allowed to create folders with same name in Mendeley, so long as they ap
 
 Mendeley 1.16.1 introduces 7 more highlight colors, these are replicated in the exported PDFs.
 
-### **NEW** Updates in v1.3: improves accuracy in highlight extractions; Exports to a format suitable for import to Zotero.
+### 5. Updates in v1.3: improves accuracy in highlight extractions; Exports to a format suitable for import to Zotero.
 
 The new version uses two text extracting utilities (*pdfminer* and *pdftotext*) to extract highlighted texts from PDFs, and creates much better outputs than the previous *pdfminer*-only version. The cost is an extra dependency to satisfy (see below), and a slight drop in execution speed. However, this new feature is optional: if you don't care about highlight extraction or don't have *pdftotext* available on the system, it will fall back to the *pdfminer*-only solution.
 
-A new flag "-z" is added to re-format the exported .bib file, making it suitable to import into Zotero. Therefore to migrate over to Zotero, specify "Export PDFs", "Extract highlights", "Extract notes" and "Export to .bib" (by giving a "-pmnb" flag), process a folder or the entire Mendeley library, then point the "import" function of Zotero to the exported .bib file. Document entries with meta-data, notes (highlighted texts + notes), tags and the attached PDFs (if they exist) will be added.   
+A new flag "-z" is added to re-format the exported .bib file, making it suitable to import into Zotero. Therefore to migrate over to Zotero, specify "Export PDFs", "Extract highlights", "Extract notes" and "Export to .bib" (by giving a "-pmnb" flag), process a folder or the entire Mendeley library, then point the "import" function of Zotero to the exported .bib file. Document entries with meta-data, notes (highlighted texts + notes), tags and the attached PDFs (if they exist) will be added. 
 
+### **NEW** updates in v1.4: Export to .ris format.
+
+Add export meta-data and annotations to .ris file. If `-z` flag is toggled, the output can be properly recognized by Zotero, and a migration to Zotero via the .ris approach can be achieved by a process with `-pnmrz` options.
 
 
 ## Installation
@@ -131,7 +135,7 @@ Then download the latest version of *sqlite3* from [here](https://www.sqlite.org
 ### Command line
 
 ```
-python menotexport.py [-h] [-p] [-m] [-n] [-b] [-s] [-z] [-f folder] dbfile outputdir
+python menotexport.py [-h] [-p] [-m] [-n] [-b] [-r] [-s] [-z] [-f folder] dbfile outputdir
 ```
 
 where
@@ -141,9 +145,10 @@ where
 - `-m`: Extract markups (highlighted texts), also affects the outputs of the `-b` option.
 - `-n`: Extract notes (sticky notes and side-bar notes), also affects the outputs of the `-b` option.
 - `-b`: Export to .bib file. 
+- `-r`: Export to .ris file.
 - `-s`: Save extracted texts to a separate txt file for each PDF. Default to
       save all texts to a single file.
-- `-z`: Re-format the exported .bib file to a format suitable to import into Zotero. Only works when `-b` is toggled.
+- `-z`: Re-format the exported .bib and/or .ris file to a format suitable to import into Zotero. Only works when `-b` and/or `-r` are toggled.
 - `-f`: Select to process only a Mendeley folder. Note this is case sensitive and match has to be literal.
         If not given, process all folders in the Mendeley library.
 - `dbfile`: Absolute path to the Mendeley database file. In Linux systems default location is
@@ -280,6 +285,7 @@ The software is tested on Linux and Windows 10 (**the win-GUI version is outdate
 * 1.2: Works with subfolders. If a folder is chosen to process, also includes all subfolders.
 	   Replicates the 8 different highlight colors introduced in Mendeley 1.16.1 version, in the exported PDFs.
 * 1.3: Call *pdftotext* to work with *pdfminer* for better highlight extraction, if *pdftotext* not available, fall back         to old approach. Some other improvements in highlight extraction. Add special formatting of the .bib file for           Zotero import.
+* 1.4: Add export to .ris format.
 
 
 ## Licence
