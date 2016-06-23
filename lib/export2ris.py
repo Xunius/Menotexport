@@ -46,7 +46,9 @@ KEYWORD_DICT={'title': 'TI',\
               'abstract': 'AB',\
               'edition': 'ET',\
               'ISBN': 'SN',\
+              'isbn': 'SN',\
               'ISSN': 'SN',\
+              'issn': 'SN',\
               'publisher': 'PB',\
               'keywords': 'KW',\
               'path': 'L1',\
@@ -71,6 +73,7 @@ def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
     abpath=os.path.join(abpath,filename)
     abpath=os.path.abspath(abpath)
 
+    '''
     if iszotero:
         #result=path_re.sub(':\\1',result)  #Necessary?
         # Make the path recognizable by zotero on windows
@@ -83,7 +86,8 @@ def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
         result=abpath
     else:
         #result=path_re.sub(':\\1',result)  #Necessary?
-        result=abpath
+    '''
+    result=abpath
 
     return result
 
@@ -121,7 +125,7 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
         authors=['%s, %s' %(ii[0],ii[1]) for ii in zip(last,first)]
 
     for ii in authors:
-        entries.append('A1 - %s' %ii)
+        entries.append('AU - %s' %ii)
     #authors=latexencode.utf8tolatex(authors)
     
     #---------------------Get time---------------------
@@ -136,6 +140,8 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
             # vv is nan
             ii=''
         time.append(ii)
+    if year!='':
+	entries.append('PY - %s' %time[0])
     time='%s/%s/%s/' %(time[0],time[1],time[2])
     entries.append('DA - %s' %time)
     entries.append('Y1 - %s' %time)
@@ -188,9 +194,16 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
             if type(tags) is not list:
                 tags=[tags,]
             keywords.extend(tags)
+	    keywords=list(set(keywords))
             kk='keywords'
             vv=keywords
             gotkeywords=True
+
+	#-----------Specifiy issn and isbn-----------------
+	if kk.lower()=='issn':
+	    vv='issn %s' %vv
+	if kk.lower()=='isbn':
+	    vv='isbn %s' %vv
 
         #--------------------All others--------------------
         kk=KEYWORD_DICT.get(kk,None)
