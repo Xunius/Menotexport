@@ -19,7 +19,7 @@ Update time: 2016-04-15 16:25:00.
 Update time: 2016-06-22 16:26:11.
 '''
 
-__version__='Menotexport v1.3'
+__version__='Menotexport v1.4'
 
 #---------------------Imports---------------------
 import sys,os
@@ -31,6 +31,7 @@ from lib import extractnt
 from lib import exportpdf
 from lib import exportannotation
 from lib import export2bib
+from lib import export2ris
 from lib.tools import printHeader, printInd, printNumHeader
 #from html2text import html2text
 from bs4 import BeautifulSoup
@@ -145,6 +146,7 @@ def getMetaData(db, docid):
               Documents.isbn,
               Documents.issn,
               Documents.month,
+              Documents.day,
               Documents.publisher,
               Documents.series,
               Documents.type,
@@ -169,7 +171,7 @@ def getMetaData(db, docid):
     fields=['docid','citationkey','title','issue','pages',\
             'publication','volume','year','doi','abstract',\
             'arxivId','chapter','city','country','edition','institution',\
-            'isbn','issn','month','publisher','series','type',\
+            'isbn','issn','month','day','publisher','series','type',\
             'read','favourite','tags','firstnames','lastname','keywords']
 
     df=pd.DataFrame(data=data,columns=fields)
@@ -820,6 +822,7 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
     exportfaillist=[]
     annofaillist=[]
     bibfaillist=[]
+    risfaillist=[]
 
     ishighlight=False
     isnote=False
@@ -838,7 +841,7 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
     if len(annotations)==0:
         print('\n# <Menotexport>: No annotations found in folder: %s' %foldername)
         if 'b' not in action and 'p' not in action:
-            return exportfaillist,annofaillist,bibfaillist
+            return exportfaillist,annofaillist,bibfaillist,risfaillist
     else:
         #---------------Reformat annotations---------------
         annotations=reformatAnno(annotations)
@@ -911,9 +914,32 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
                 bibfolder,allfolders,isfile,iszotero,verbose)
             bibfaillist.extend(flist)
 
+    #----------Export meta and anno to ris file----------
+    if 'r' in action:
+
+        if verbose:
+            printHeader('Exporting meta-data and annotations to .ris file...',2)
+
+        risfolder=outdir if allfolders else outdir_folder
+        isfile=True if 'p' in action else False
+
+        #-----------Export docs with annotations-----------
+        if len(annotations)>0:
+            # <outdir> is the base folder to save outputs, specified by user
+            # <bibfolder> is the folder to save .bib file, which is <outdir> if <allfolders> is True,
+            # or <outdir>/<folder_tree> otherwise.
+            flist=export2ris.exportAnno2Ris(annotations,outdir,\
+                risfolder,allfolders,isfile,iszotero,verbose)
+            risfaillist.extend(flist)
+
+        #------Export other docs without annotations------
+        if len(otherdocs)>0:
+            flist=export2ris.exportDoc2Ris(otherdocs,outdir,\
+                risfolder,allfolders,isfile,iszotero,verbose)
+            risfaillist.extend(flist)
 
 
-    return exportfaillist,annofaillist,bibfaillist
+    return exportfaillist,annofaillist,bibfaillist,risfaillist
     
 
 
@@ -940,6 +966,7 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
     exportfaillist=[]
     annofaillist=[]
     bibfaillist=[]
+    risfaillist=[]
 
     for ii,folderii in enumerate(folderlist):
         fidii,fnameii=folderii
@@ -947,12 +974,14 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
             printNumHeader('Processing folder: "%s"' %fnameii,\
                     ii+1,len(folderlist),1)
         annotations={}
-        exportfaillistii,annofaillistii,bibfaillistii=processFolder(db,outdir,annotations,\
+        exportfaillistii,annofaillistii,bibfaillistii,risfaillist=\
+                processFolder(db,outdir,annotations,\
             fidii,fnameii,allfolders,action,separate,iszotero,verbose)
 
         exportfaillist.extend(exportfaillistii)
         annofaillist.extend(annofaillistii)
         bibfaillist.extend(bibfaillistii)
+        risfaillist.extend(risfaillist)
 
     #-----------------Close connection-----------------
     if verbose:
@@ -963,6 +992,7 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
     exportfaillist=list(set(exportfaillist))
     annofaillist=list(set(annofaillist))
     bibfaillist=list(set(bibfaillist))
+    risfaillist=list(set(risfaillist))
 
     printHeader('Summary',1)
     if len(exportfaillist)>0:
@@ -980,7 +1010,13 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
         for failii in bibfaillist:
             printInd(failii,2)
 
-    if len(exportfaillist)==0 and len(annofaillist)==0 and len(bibfaillist)==0:
+    if len(risfaillist)>0:
+        printHeader('Failed to export to .ris files:',2)
+        for failii in risfaillist:
+            printInd(failii,2)
+
+    if len(exportfaillist)==0 and len(annofaillist)==0 and len(bibfaillist)==0 and\
+            len(risfaillist)==0:
         if verbose:
             printHeader('All done.',2)
 
@@ -1014,29 +1050,38 @@ if __name__ == "__main__":
             action='append_const', \
             const='p',\
             help='''Bulk export all PDFs (with highlights and notes if they have any).
-            Can be used with -m, -n and -b''')
+            Can be used with -m, -n, -b and -r''')
     parser.add_argument('-m', '--markup', dest='action',\
             action='append_const', \
             const='m',\
         help='''Export highlights to a txt file: highlights.txt.
-            Can be used with -p, -n and -b.
+            Can be used with -p, -n, -b and -r.
                 If used with -n, highlights and notes are combined
                 in annotations.txt.''')
     parser.add_argument('-n', '--note', dest='action',\
             action='append_const', \
             const='n',\
         help='''Export notes to a txt file: notes.txt.
-            Can be used with -p, -m and -b.
+            Can be used with -p, -m, -b and -r.
                 If used with -m, highlights and notes are combined
                 in annotations.txt.''')
     parser.add_argument('-b', '--bib', dest='action',\
             action='append_const', \
             const='b',\
         help='''Export all meta-data and annotations to .bib files.
-            Can be used with -p, -m and -n.
+            Can be used with -p, -m, -n and -r.
             If a folder is specified via the -f (--folder) option,
             save the .bib file into a sub-directory named after <folder>.
             If choose to process all folders, save the .bib file
+            to <outdir>.''')
+    parser.add_argument('-r', '--ris', dest='action',\
+            action='append_const', \
+            const='r',\
+        help='''Export meta-data and annotations to .ris files.
+            Can be used with -p, -m, -n and -b.
+            If a folder is specified via the -f (--folder) option,
+            save the .ris file into a sub-directory named after <folder>.
+            If choose to process all folders, save the .ris file
             to <outdir>.''')
 
     parser.add_argument('-f', '--folder', dest='folder',\
@@ -1050,9 +1095,9 @@ if __name__ == "__main__":
             Default to export all file annotations to a single file.''')
     parser.add_argument('-z', '--zotero', action='store_true',\
             default=False,\
-            help='''Exported .bib file has slightly different formating
+            help='''Exported .bib or .ris file has slightly different formating
             to facilitate import into Zotero.
-            Only works when -b is toggled.''')
+            Only works when -b and/or -r are toggled.''')
 
     parser.add_argument('-v', '--verbose', action='store_true',\
             default=True,\
