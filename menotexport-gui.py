@@ -431,7 +431,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
 ''' %self.title
 
         tkMessageBox.showinfo(title='Help', message=helpstr)
-        print(self.menfolder.get())
+        #print(self.menfolder.get())
 
 
 
@@ -477,6 +477,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             self.check_highlight.configure(state=tk.DISABLED)
             self.check_note.configure(state=tk.DISABLED)
             self.check_bib.configure(state=tk.DISABLED)
+            self.check_ris.configure(state=tk.DISABLED)
             self.check_separate.configure(state=tk.DISABLED)
             self.check_iszotero.configure(state=tk.DISABLED)
 	    self.messagelabel.configure(text='Message (working...)')
