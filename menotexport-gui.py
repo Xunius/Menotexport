@@ -88,7 +88,7 @@ class MainFrame(Frame):
         self.parent=parent
         self.width=750
         self.height=450
-        self.title='Menotexport v1.3'
+        self.title=menotexport.__version__
         self.stdoutq=stdoutq
 
         self.initUI()
@@ -256,6 +256,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.ishighlight=tk.IntVar()
         self.isnote=tk.IntVar()
         self.isbib=tk.IntVar()
+        self.isris=tk.IntVar()
         self.isseparate=tk.IntVar()
         self.iszotero=tk.IntVar()
 
@@ -274,6 +275,10 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
                 text='Export .bib',\
                 variable=self.isbib,command=self.doBib)
 
+        self.check_ris=tk.Checkbutton(frame,\
+                text='Export .ris',\
+                variable=self.isris,command=self.doRis)
+
         self.check_separate=tk.Checkbutton(frame,\
                 text='Save separately',\
                 variable=self.isseparate,command=self.doSeparate,\
@@ -289,7 +294,8 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.check_export.grid(row=0,column=1,padx=8,sticky=tk.W)
         self.check_highlight.grid(row=0,column=2,padx=8,sticky=tk.W)
         self.check_note.grid(row=0,column=3,padx=8,sticky=tk.W)
-        self.check_bib.grid(row=1,column=1,padx=8,sticky=tk.W)
+        self.check_bib.grid(row=0,column=4,padx=8,sticky=tk.W)
+        self.check_ris.grid(row=1,column=1,padx=8,sticky=tk.W)
         self.check_separate.grid(row=1,column=2,padx=8,sticky=tk.W)
         self.check_iszotero.grid(row=1,column=3,padx=8,sticky=tk.W)
 
@@ -383,7 +389,18 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             self.check_iszotero.configure(state=tk.NORMAL)
         else:
             print('Dont export .bib file.')
-            self.check_iszotero.configure(state=tk.DISABLED)
+            if self.isris.get()==0:
+                self.check_iszotero.configure(state=tk.DISABLED)
+        self.checkReady()
+
+    def doRis(self):
+        if self.isris.get()==1:
+            print('Export to .ris file.')
+            self.check_iszotero.configure(state=tk.NORMAL)
+        else:
+            print('Dont export .ris file.')
+            if self.isbib.get()==0:
+                self.check_iszotero.configure(state=tk.DISABLED)
         self.checkReady()
 
     def doSeparate(self):
@@ -394,18 +411,21 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
 
     def doIszotero(self):
         if self.iszotero.get()==1:
-            print('Save .bib file in Zotero preferred format.')
+            print('Save .bib/.ris file in Zotero preferred format.')
         else:
-            print('Save .bib file to default format.')
+            print('Save .bib/.ris file to default format.')
 
 
 
     def showHelp(self):
         helpstr='''
 %s\n\n
-- Export PDFs: Bulk export PDFs with annotations to <output folder>.\n
-- Extract highlights: Extract highlighted texts and output to a txt file in <output folder>.\n
-- Extract highlights: Extract notes and output to a txt file in <output folder>.\n
+- Export PDFs: Bulk export PDFs.\n
+- Extract highlights: Extract highlighted texts and output to txt files.\n
+- Extract notes: Extract notes and output to txt files.\n
+- Export .bib: Export meta-data and annotations to .bib files.\n
+- Export .ris: Export meta-data and annotations to .ris files.\n
+- For import to Zotero: Exported .bib and/or .ris files have suitable format to import to Zotero.\n
 - Save separately: If on, save each PDF's annotations to a separate txt.\n
 - See README.md for more info.\n
 ''' %self.title
@@ -435,6 +455,8 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             action.append('n')
         if self.isbib.get()==1:
             action.append('b')
+        if self.isris.get()==1:
+            action.append('r')
         if self.isseparate.get()==1:
             separate=True
         else:
@@ -445,7 +467,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             iszotero=False
 
             
-        if 'p' in action or 'm' in action or 'n' in action or 'b' in action:
+        if 'p' in action or 'm' in action or 'n' in action or 'b' in action or 'r' in action:
             self.db_button.configure(state=tk.DISABLED)
             self.out_button.configure(state=tk.DISABLED)
             self.start_button.configure(state=tk.DISABLED)
