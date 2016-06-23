@@ -39,11 +39,11 @@ def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
     if iszotero:
         #result=path_re.sub(':\\1',result)  #Necessary?
         # Make the path recognizable by zotero on windows
-	if platform.system().lower()=='windows':
-	    pathsplit=abpath.split(':')
-	    drive=pathsplit[0]
-	    pathnodrive=''.join(pathsplit[1:])
-	    abpath='file\\:///%s\\:%s' %(drive,pathnodrive)
+        if platform.system().lower()=='windows':
+            pathsplit=abpath.split(':')
+            drive=pathsplit[0]
+            pathnodrive=''.join(pathsplit[1:])
+            abpath='file\\:///%s\\:%s' %(drive,pathnodrive)
         result='%s:%s:%s' %(filename,abpath,ext[1:])
     else:
         #result=path_re.sub(':\\1',result)  #Necessary?
@@ -135,7 +135,11 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
         #----------Add tags to keywords if iszotero----------
         if iszotero and (kk=='tags' or kk=='keywords') and not gotkeywords:
             keywords=getField(metadict,'keywords',[])
+            if type(keywords) is not list:
+                keywords=[keywords,]
             tags=getField(metadict,'tags',[])
+            if type(tags) is not list:
+                tags=[tags,]
             keywords.extend(tags)
             fieldvv=[latexencode.utf8tolatex(ii) for ii in keywords]
             kk='keywords'
