@@ -82,6 +82,7 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 	- publisher
 	- series
 	- type
+	- keywords
 	- read            # Read or not
 	- favourite       # Marked as Favourite or starred in Mendeley 
 	- tags            # Tags added to a document
