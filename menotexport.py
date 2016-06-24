@@ -253,12 +253,31 @@ def getHighlights(db, results=None, folderid=None,foldername=None):
     Update time: 2016-02-24 00:36:33.
     '''
 
-    query =\
+    query_new =\
     '''SELECT Files.localUrl, FileHighlightRects.page,
                     FileHighlightRects.x1, FileHighlightRects.y1,
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
-                    FileHighlights.color,
+                    Folders.name,
+                    DocumentFolders.folderid,
+                    FileHighlights.documentId,
+                    FileHighlights.color
+            FROM Files
+            LEFT JOIN FileHighlights
+                ON FileHighlights.fileHash=Files.hash
+            LEFT JOIN FileHighlightRects
+                ON FileHighlightRects.highlightId=FileHighlights.id
+            LEFT JOIN DocumentFolders
+                ON DocumentFolders.documentId=FileHighlights.documentId
+            LEFT JOIN Folders
+                ON Folders.id=DocumentFolders.folderid
+            WHERE (FileHighlightRects.page IS NOT NULL)
+    '''
+    query_old =\
+    '''SELECT Files.localUrl, FileHighlightRects.page,
+                    FileHighlightRects.x1, FileHighlightRects.y1,
+                    FileHighlightRects.x2, FileHighlightRects.y2,
+                    FileHighlights.createdTime,
                     Folders.name,
                     DocumentFolders.folderid,
                     FileHighlights.documentId
@@ -276,13 +295,19 @@ def getHighlights(db, results=None, folderid=None,foldername=None):
     if folderid is not None:
 
         fstr='(Folders.id="%s")' %folderid
-        query=query+' AND\n'+fstr
+        query_new=query_new+' AND\n'+fstr
+        query_old=query_old+' AND\n'+fstr
 
     if results is None:
         results={}
 
     #------------------Get highlights------------------
-    ret = db.execute(query)
+    try:
+	ret = db.execute(query_new)
+	hascolor=True
+    except:
+	ret = db.execute(query_old)
+	hascolor=False
 
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
@@ -291,9 +316,12 @@ def getHighlights(db, results=None, folderid=None,foldername=None):
         # [x1,y1,x2,y2], (x1,y1) being bottom-left,
         # (x2,y2) being top-right. Origin at bottom-left
         cdate = convert2datetime(r[6])
-        color=r[7]
-        folder=r[8]
-        docid=r[10]
+        folder=r[7]
+        docid=r[9]
+	if hascolor:
+	    color=r[10]
+        else:
+	    color=None
         hlight = {'rect': bbox,\
                   'cdate': cdate,\
                   'color': color,
