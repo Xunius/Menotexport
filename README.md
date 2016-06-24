@@ -124,7 +124,11 @@ file is encrypted or is not a database
 
 Then download the latest version of *sqlite3* from [here](https://www.sqlite.org/download.html), and copy the `sqlite3.dll` file to the `DLLs` folder in your python installation directory. Note that if you have your python environment set up using *Anaconda*, be sure to copy to the `DLLs` folder in the specific env folder.
 
-- For Windows (**windows 10, updated on 24-June-2016**) specific GUI, only need to get the `Menotexport-win10-64.rar` file. Download from dropbox: https://dl.dropboxusercontent.com/u/74222489/Menotexport-win10-64.rar
+### Pre-build binary for Windows 
+
+  - For Windows 10 (**updated on 24-June-2016**), download `Menotexport-win10-64.rar` from dropbox: https://dl.dropboxusercontent.com/u/74222489/Menotexport-win10-64.rar, unpack, then launch `menotexport-gui.exe`.
+
+  - For Windows 7 (**updated on 24-June-2016**), download `Menotexport-win7-64.rar` from dropbox: https://dl.dropboxusercontent.com/u/74222489/Menotexport-win7-64.rar, unpack, then launch `menotexport-gui.exe`.
 
 
 
