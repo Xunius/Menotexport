@@ -17,6 +17,9 @@ import tools
 import re
 from pylatexenc import latexencode
 
+import logging
+logging.basicConfig()
+
 
 
 #------------------------Parse file path entry------------------------
