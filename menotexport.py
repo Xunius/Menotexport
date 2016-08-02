@@ -851,6 +851,7 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
     annofaillist=[]
     bibfaillist=[]
     risfaillist=[]
+    reviewlist=[]
 
     ishighlight=False
     isnote=False
@@ -869,7 +870,7 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
     if len(annotations)==0:
         print('\n# <Menotexport>: No annotations found in folder: %s' %foldername)
         if 'b' not in action and 'p' not in action:
-            return exportfaillist,annofaillist,bibfaillist,risfaillist
+            return exportfaillist,annofaillist,bibfaillist,risfaillist,reviewlist
     else:
         #---------------Reformat annotations---------------
         annotations=reformatAnno(annotations)
@@ -967,7 +968,7 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
             risfaillist.extend(flist)
 
 
-    return exportfaillist,annofaillist,bibfaillist,risfaillist
+    return exportfaillist,annofaillist,bibfaillist,risfaillist,reviewlist
     
 
 
@@ -995,6 +996,7 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
     annofaillist=[]
     bibfaillist=[]
     risfaillist=[]
+    reviewlist=[]
 
     for ii,folderii in enumerate(folderlist):
         fidii,fnameii=folderii
@@ -1002,14 +1004,15 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
             printNumHeader('Processing folder: "%s"' %fnameii,\
                     ii+1,len(folderlist),1)
         annotations={}
-        exportfaillistii,annofaillistii,bibfaillistii,risfaillist=\
+        exportfaillistii,annofaillistii,bibfaillistii,risfaillistii,reviewlistii=\
                 processFolder(db,outdir,annotations,\
             fidii,fnameii,allfolders,action,separate,iszotero,verbose)
 
         exportfaillist.extend(exportfaillistii)
         annofaillist.extend(annofaillistii)
         bibfaillist.extend(bibfaillistii)
-        risfaillist.extend(risfaillist)
+        risfaillist.extend(risfaillistii)
+        reviewlist.extend(reviewlistii)
 
     #-----------------Close connection-----------------
     if verbose:
@@ -1021,6 +1024,7 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
     annofaillist=list(set(annofaillist))
     bibfaillist=list(set(bibfaillist))
     risfaillist=list(set(risfaillist))
+    reviewlist=list(set(reviewlist))
 
     printHeader('Summary',1)
     if len(exportfaillist)>0:
@@ -1043,8 +1047,13 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
         for failii in risfaillist:
             printInd(failii,2)
 
+    if len(reviewlist)>0:
+        printHeader('Documents need review:',2)
+        for failii in reviewlist:
+            printInd(failii,2)
+
     if len(exportfaillist)==0 and len(annofaillist)==0 and len(bibfaillist)==0 and\
-            len(risfaillist)==0:
+            len(risfaillist)==0 and len(reviewlist)==0:
         if verbose:
             printHeader('All done.',2)
 
