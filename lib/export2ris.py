@@ -151,10 +151,13 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
     if pages!='':
         pmatch=page_re.match(pages)
         if pmatch is None:
-            entries.append('SP - %s' %str(pages))
+            #entries.append('SP - %s' %str(pages))
+            entries.append('SP - %s' %tools.deu(pages))
         else:
-            entries.append('SP - %s' %str(pmatch.group(1)))
-            entries.append('EP - %s' %str(pmatch.group(2)))
+            #entries.append('SP - %s' %str(pmatch.group(1)))
+            #entries.append('EP - %s' %str(pmatch.group(2)))
+            entries.append('SP - %s' %tools.deu(pmatch.group(1)))
+            entries.append('EP - %s' %tools.deu(pmatch.group(2)))
 
     #-----------------Get city/country-----------------
     loc=u''
@@ -221,7 +224,7 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
     entries.append('ER -\n')
     string='\n'.join(entries)
     string=string+'\n'
-    string=string.encode('utf8','replace')
+    string=tools.enu(string)
 
     return string
 
