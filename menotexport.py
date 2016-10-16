@@ -1268,38 +1268,43 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
     #----------------Get folder list----------------
     folderlist=getFolderList(db,folder)
     allfolders=True if folder is None else False
-    if len(folderlist)==0:
-        return 1
 
     #---------------Get canonical doc ids--------------
     if folder is None:
         canonical_doc_ids=getCanonicals(db)
 
-    #---------------Loop through folders---------------
+    if len(folderlist)==0 and len(canonical_doc_ids)==0:
+        printHeader('It looks like no docs are found in the library. Quit.')
+        return 1
+
+    #---------------Process--------------------------
     exportfaillist=[]
     annofaillist=[]
     bibfaillist=[]
     risfaillist=[]
 
-    for ii,folderii in enumerate(folderlist):
-        fidii,fnameii=folderii
-        if verbose:
-            printNumHeader('Processing folder: "%s"' %fnameii,\
-                    ii+1,len(folderlist),1)
-        annotations={}
-        exportfaillistii,annofaillistii,bibfaillistii,risfaillistii=\
-                processFolder(db,outdir,annotations,\
-            fidii,fnameii,allfolders,action,separate,iszotero,verbose)
+    #---------------Loop through folders---------------
+    if len(folderlist)>0:
+        for ii,folderii in enumerate(folderlist):
+            fidii,fnameii=folderii
+            if verbose:
+                printNumHeader('Processing folder: "%s"' %fnameii,\
+                        ii+1,len(folderlist),1)
+            annotations={}
+            exportfaillistii,annofaillistii,bibfaillistii,risfaillistii=\
+                    processFolder(db,outdir,annotations,\
+                fidii,fnameii,allfolders,action,separate,iszotero,verbose)
 
-        exportfaillist.extend(exportfaillistii)
-        annofaillist.extend(annofaillistii)
-        bibfaillist.extend(bibfaillistii)
-        risfaillist.extend(risfaillistii)
+            exportfaillist.extend(exportfaillistii)
+            annofaillist.extend(annofaillistii)
+            bibfaillist.extend(bibfaillistii)
+            risfaillist.extend(risfaillistii)
 
     #---------------Process canonical docs ------------
     if folder is None and len(canonical_doc_ids)>0:
         if verbose:
             printHeader('Processing docs under "My Library"')
+        annotations={}
         exportfaillistii,annofaillistii,bibfaillistii,risfaillistii=\
                 processCanonicals(db,outdir,annotations,\
                 canonical_doc_ids,allfolders,action,separate,iszotero,verbose)
