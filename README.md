@@ -126,10 +126,7 @@ Then download the latest version of *sqlite3* from [here](https://www.sqlite.org
 
 ### Pre-build binary for Windows 
 
-  - For Windows 10 (**updated on 24-June-2016**), download `Menotexport-win10-64.rar` from dropbox: https://dl.dropboxusercontent.com/u/74222489/Menotexport-win10-64.rar, unpack, then launch `menotexport-gui.exe`.
-
-  - For Windows 7 (**updated on 24-June-2016**), download `Menotexport-win7-64.rar` from dropbox: https://dl.dropboxusercontent.com/u/74222489/Menotexport-win7-64.rar, unpack, then launch `menotexport-gui.exe`.
-
+  - For Windows 7 and Windows 10 (64bit) (**updated on 17-Oct-2016**), download `menotexport-gui-win7-win10.rar` from dropbox: https://dl.dropboxusercontent.com/u/74222489/menotexport-gui-win7-win10.rar, unpack, then launch `menotexport-gui.exe`.
 
 
 ## Usage
@@ -255,7 +252,7 @@ Developed in python2.7. **NOT** compatible with python3+ (*pdfminer* doesn't sup
     - PyPDF2
     - sqlite3
     - pandas
-    - pdfminer (NOTE: version 2014+ is needed, the one in the Ubuntu repository has been out of date. Please check to make sure. If you get an error of "ImportError: No module named pdfdocument", you probably got an older version.)
+    - pdfminer (NOTE: version 2014+ is needed, the one in the Ubuntu repository has been out of date at the time of writing. Please check to make sure. If you get an error of "ImportError: No module named pdfdocument", you probably got an older version.)
     - numpy
     - BeautifulSoup4
 
@@ -278,7 +275,7 @@ the [pylatexenc](https://github.com/phfaist/pylatexenc) project.
 
 ## Platform/OS
 
-The software is tested on Linux and Windows 10 (**the win-GUI version is outdated**). Should also run on Mac.
+The software is tested on Linux and Windows 7, 10. Should also run on Mac.
 
 
 
@@ -291,6 +288,7 @@ The software is tested on Linux and Windows 10 (**the win-GUI version is outdate
 	   Replicates the 8 different highlight colors introduced in Mendeley 1.16.1 version, in the exported PDFs.
 * 1.3: Call *pdftotext* to work with *pdfminer* for better highlight extraction, if *pdftotext* not available, fall back         to old approach. Some other improvements in highlight extraction. Add special formatting of the .bib file for           Zotero import.
 * 1.4: Add export to .ris format.
+
        "Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, are now properly processed, and the results are saved to a directory "Canonical-My Library".
 
 
