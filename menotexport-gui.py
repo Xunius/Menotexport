@@ -68,7 +68,7 @@ class WorkThread(threading.Thread):
         self.stateq=stateq
 
     def run(self):
-        print('\nStart processing...')
+        print('\n# <Menotexport>: Start processing...')
         if not self._stop.is_set():
             menotexport.main(*self.args)
             self.stateq.put('done')
@@ -148,7 +148,7 @@ class MainFrame(Frame):
 
         if self.hasdb and self.hasout and self.hasaction:
             self.start_button.configure(state=tk.NORMAL)
-            print('Menotexport Ready.')
+            print('# <Menotexport>: Menotexport Ready.')
         else:
             self.start_button.configure(state=tk.DISABLED)
 
@@ -200,7 +200,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         dirname=askdirectory()
         self.out_entry.insert(tk.END,dirname)
         if len(dirname)>0:
-            print('Output folder: %s' %dirname)
+            print('# <Menotexport>: Output folder: %s' %dirname)
             self.hasout=True
             self.checkReady()
 
@@ -216,7 +216,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             filename=askopenfilename(filetypes=ftypes)
         self.db_entry.insert(tk.END,filename)
         if len(filename)>0:
-            print('Database file: %s' %filename)
+            print('# <Menotexport>: Database file: %s' %filename)
             self.probeFolders()
 
 
@@ -234,7 +234,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             self.checkReady()
 
         except Exception as e:
-            print('Failed to recoganize the given database file.') 
+            print('# <Menotexport>: Failed to recoganize the given database file.') 
             print(e)
 
 
@@ -346,17 +346,17 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.menfolder=self.foldersmenu.get()
         self.foldersmenu.set(self.menfolder)
         if self.menfolder=='All':
-            print('Work on all folders.')
+            print('# <Menotexport>: Work on all folders.')
         else:
-            print('Select Mendeley folder: '+str(self.menfolder))
+            print('# <Menotexport>: Select Mendeley folder: '+str(self.menfolder))
 
 
 
     def doExport(self):
         if self.isexport.get()==1:
-            print('Export annotated PDFs.')
+            print('# <Menotexport>: Export annotated PDFs.')
         else:
-            print('Dont export annotated PDFs.')
+            print('# <Menotexport>: Dont export annotated PDFs.')
 
         self.checkReady()
 
@@ -364,20 +364,20 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
 
     def doHighlight(self):
         if self.ishighlight.get()==1:
-            print('Extract highlighted texts.')
+            print('# <Menotexport>: Extract highlighted texts.')
             self.check_separate.configure(state=tk.NORMAL)
         else:
-            print('Dont extract highlighted texts.')
+            print('# <Menotexport>: Dont extract highlighted texts.')
             if self.isnote.get()==0:
                 self.check_separate.configure(state=tk.DISABLED)
         self.checkReady()
 
     def doNote(self):
         if self.isnote.get()==1:
-            print('Extract notes.')
+            print('# <Menotexport>: Extract notes.')
             self.check_separate.configure(state=tk.NORMAL)
         else:
-            print('Dont extract notes.')
+            print('# <Menotexport>: Dont extract notes.')
             self.check_separate.state=tk.DISABLED
             if self.ishighlight.get()==0:
                 self.check_separate.configure(state=tk.DISABLED)
@@ -385,35 +385,35 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
 
     def doBib(self):
         if self.isbib.get()==1:
-            print('Export to .bib file.')
+            print('# <Menotexport>: Export to .bib file.')
             self.check_iszotero.configure(state=tk.NORMAL)
         else:
-            print('Dont export .bib file.')
+            print('# <Menotexport>: Dont export .bib file.')
             if self.isris.get()==0:
                 self.check_iszotero.configure(state=tk.DISABLED)
         self.checkReady()
 
     def doRis(self):
         if self.isris.get()==1:
-            print('Export to .ris file.')
+            print('# <Menotexport>: Export to .ris file.')
             self.check_iszotero.configure(state=tk.NORMAL)
         else:
-            print('Dont export .ris file.')
+            print('# <Menotexport>: Dont export .ris file.')
             if self.isbib.get()==0:
                 self.check_iszotero.configure(state=tk.DISABLED)
         self.checkReady()
 
     def doSeparate(self):
         if self.isseparate.get()==1:
-            print('Save annotations separately.')
+            print('# <Menotexport>: Save annotations separately.')
         else:
-            print('Save all annotations to single file.')
+            print('# <Menotexport>: Save all annotations to single file.')
 
     def doIszotero(self):
         if self.iszotero.get()==1:
-            print('Save .bib/.ris file in Zotero preferred format.')
+            print('# <Menotexport>: Save .bib/.ris file in Zotero preferred format.')
         else:
-            print('Save .bib/.ris file to default format.')
+            print('# <Menotexport>: Save .bib/.ris file to default format.')
 
 
 
