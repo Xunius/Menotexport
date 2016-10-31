@@ -6,7 +6,7 @@
 
 Menotexport is a simple python solution to help extracts and exports annotations (highlighted
 texts, sticky notes and notes) you made in the build-in PDF reader of Mendeley, bulk-export
-PDFs with annotations, and bulk-export meta-data with annotations to .bib file.
+PDFs with annotations, and bulk-export meta-data with annotations to .bib or .ris file.
 
 *Mendeley is a desktop and web program for managing and sharing research
 papers.* It offers free desktop clients for Windows, OSX and Linux. But the
@@ -21,16 +21,15 @@ the relevant PDFs, but to a separate database file. Therefore these annotations 
 not be viewered in other PDF readers other than Mendeley itself.
 
 The native but awkward solution to export a PDF with its annotations is: in
-Mendeley, open that PDF in the Mendeley PDF reader, go to Files -> Export PDF
-with annotations. However to export all your collections, this has to be repeated
+Mendeley, open that PDF in the Mendeley PDF reader, go to `Files` -> `Export PDF
+with annotations`. However to export all your collections, this has to be repeated
 manually for each individual PDF in your library. To make it worse, the annotations
 exported in this manner are **NOT** editable: they are saved as static texts, you can't even
 delete a sticky note.
 
 This tool can bulk export all PDFs with annotations while keeping your Mendeley
 folder structure, and the annotations are readable and editable by other PDF
-softwares. ~~NOTE that PDFs with no annotations are not exported.~~ PDFs with
-no annotations are simply copied to the target location, so you have the
+softwares.  PDFs with no annotations are simply copied to the target location, so you have the
 complete library structure.
 
 ### 2. Extract annotation texts.
@@ -45,14 +44,14 @@ Some versions of *Foxit Reader* can do that (on windows, not on the Linux versio
 
 Pro versions of *Adobe Reader* **may** have that too.
 
-Most of the PDF readers in Linux do not have that functionality. (Let me know if you find one).
+Most of the PDF readers in Linux do not have that functionality. (Please let me know if you find one).
 
 This tool could extract the texts from the highlights and notes in the documents in Mendeley
 to a plain text file, and format the information in a sensible structure using markdown syntax.
 
 ### 3. Export libray to .bib file.
 
-Exporting to .bib is natively supported in Mendeley, by going to Tools -> Options -> Bibtex. There
+Exporting to .bib is natively supported in Mendeley, by going to `Tools` -> `Options` -> `Bibtex`. There
 you can specify exporting the whole library to a single file or in a per-folder manner. However, your
 whole annotations won't be included. This tool helps you pack-up as much information as possible to
 a .bib file, which might be helpful for people who want to migrate to another management tool without
@@ -90,32 +89,81 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 	- file            # Location of the attached PDF on local disk 
 	- folder          # Folder name in the Mendeley library
 
-### 4. Updates in v1.2: perserves sub-folder structures and adds new highlight colors
+## Some other features
 
-Thanks to user feedbacks I realized that Mendeley supports embedded folder structures. This feature
-is now properly addressed in the new update: the exported PDFs, and their corresponding "file" entries in the
-exported .bib file now reflect the folder structure in Mendeley library (empty folders are omitted, embedded folders are processed recursively).
+### 1. Export perserves sub-folder structures
 
-You are allowed to create folders with same name in Mendeley, so long as they appear in different parent folders. In case you did do so, they will be labelled differently in the GUI version: e.g. "folderA", "folder1/folderA" and "folder2/folderA" are used to distinguish these three "folderA"s. 
+Thanks to user feedbacks I realized that Mendeley supports embedded folder
+structures. This feature is now properly addressed: the exported PDFs, and
+their corresponding "file" entries in the exported .bib (or .ris) file now
+reflect the folder structure in Mendeley library (empty folders are omitted,
+embedded folders are processed recursively).
+
+You are allowed to create folders with the same name in Mendeley, so long as
+they appear in different parent folders. In case you did do so, they will be
+labelled differently in the GUI version: e.g. "folderA", "folder1/folderA" and
+"folder2/folderA" are used to distinguish these three "folderA"s. 
+
+### 2. New highlight colors in Mendeley
 
 Mendeley 1.16.1 introduces 7 more highlight colors, these are replicated in the exported PDFs.
 
-### 5. Updates in v1.3: improves accuracy in highlight extractions; Exports to a format suitable for import to Zotero.
+### 3. Extra utility to help improve accuracy in highlight extractions;
 
-The new version uses two text extracting utilities (*pdfminer* and *pdftotext*) to extract highlighted texts from PDFs, and creates much better outputs than the previous *pdfminer*-only version. The cost is an extra dependency to satisfy (see below), and a slight drop in execution speed. However, this new feature is optional: if you don't care about highlight extraction or don't have *pdftotext* available on the system, it will fall back to the *pdfminer*-only solution.
+Two text extracting utilities (*pdfminer* and *pdftotext*) are used to extract
+highlighted texts from PDFs. The user can choose to install the relevant utility
+to enable the *pdftotext* functions (installation details see below) to creates
+better outputs than the default *pdfminer* results. The cost is an
+extra dependency to satisfy (see below), and a slight drop in execution speed.
+However, this new feature is optional: if you don't care about highlight
+extraction or don't have *pdftotext* available on the system, it will fall back
+to the *pdfminer*-only solution.
 
-A new flag "-z" is added to re-format the exported .bib file, making it suitable to import into Zotero. Therefore to migrate over to Zotero, specify "Export PDFs", "Extract highlights", "Extract notes" and "Export to .bib" (by giving a "-pmnb" flag), process a folder or the entire Mendeley library, then point the "import" function of Zotero to the exported .bib file. Document entries with meta-data, notes (highlighted texts + notes), tags and the attached PDFs (if they exist) will be added. 
+### 4. Zotero-ready output format
 
-### **NEW** updates in v1.4: Export to .ris format.
+Use the "-z" flag (command-line version), or toggle the "For import to Zotero" option (GUI
+version) to re-format the exported .bib file, making it suitable to import into
+Zotero. Therefore to migrate over to Zotero, specify "Export PDFs", "Extract
+highlights", "Extract notes" and "Export to .bib" (by giving a "-pmnb" flag),
+process a folder or the entire Mendeley library, then point the "import"
+function of Zotero to the exported .bib file. Document entries with meta-data,
+notes (highlighted texts + notes), tags and the attached PDFs (if they exist)
+will be added. 
 
-Add export meta-data and annotations to .ris file. If `-z` flag is toggled, the output can be properly recognized by Zotero, and a migration to Zotero via the .ris approach can be achieved by a process with `-pnmrz` options.
+### 5. Export to .ris format.
+
+Export meta-data and annotations to .ris file. If `-z` flag is toggled, the
+output can be properly recognized by Zotero, and a migration to Zotero via the
+.ris approach can be achieved by a process with `-pnmrz` options.
 
 
 ## Installation
 
-- For command line or GUI usage on Linux or Mac or Win, download the zip and unzip to any folder. Make sure you have all the dependencies listed below and Python 2.7.
+### Install via `conda`.
 
-- NOTE that Windows user may need to manually update their sqlite3 dll. If you encounter the following error when connecting to the sqlite dataset:
+For command line or GUI usage on Linux (64bit), recommend installing using conda:
+
+```
+conda create -n menotexport python=2.7
+conda install -c guangzhi menotexport
+```
+
+### Pre-build binary GUI for Windows 
+
+For Windows 7 and Windows 10 (64bit) (**updated on 17-Oct-2016**), download `menotexport-gui-win7-win10.rar` from dropbox: https://dl.dropboxusercontent.com/u/74222489/menotexport-gui-win7-win10.rar, unpack, then launch `menotexport-gui.exe`.
+
+
+### Install dependencies and use source code
+
+If the above approaches all fail, the last choise is:
+
+
+- For command line or GUI usage on Linux or Mac or Win, download the zip and
+  unzip to any folder. Make sure you have all the dependencies listed below and
+  Python 2.7.
+
+- NOTE that Windows user may need to manually update their sqlite3 dll. If you
+  encounter the following error when connecting to the sqlite dataset:
 
 ```
 Failed to recoganize the given database file.
@@ -124,9 +172,6 @@ file is encrypted or is not a database
 
 Then download the latest version of *sqlite3* from [here](https://www.sqlite.org/download.html), and copy the `sqlite3.dll` file to the `DLLs` folder in your python installation directory. Note that if you have your python environment set up using *Anaconda*, be sure to copy to the `DLLs` folder in the specific env folder.
 
-### Pre-build binary for Windows 
-
-  - For Windows 7 and Windows 10 (64bit) (**updated on 17-Oct-2016**), download `menotexport-gui-win7-win10.rar` from dropbox: https://dl.dropboxusercontent.com/u/74222489/menotexport-gui-win7-win10.rar, unpack, then launch `menotexport-gui.exe`.
 
 
 ## Usage
@@ -211,7 +256,9 @@ python menotexport.py -pmnbz <dbfile> <outputdir>
 
 ### GUI
 
-Launch `menotexport-gui.py` (or `menotexport-gui.exe`), select the Mendeley database file and an output folder. Select the actions to perform (see above), then *start*. 
+Launch `menotexport-gui.py` (or `menotexport-gui.exe`), select the Mendeley
+database file and an output folder. Select the actions to perform (see above),
+then *start*. 
 
 
 ## Caveats and further notes
