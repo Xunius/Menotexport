@@ -153,7 +153,8 @@ For the installation of *conda*, see their [official site](https://www.continuum
 
 ### 2. Pre-build binary GUI for Windows 
 
-For Windows 7 and Windows 10 (64bit) (**updated on 17-Oct-2016**), download `menotexport-gui-win7-win10.rar` from dropbox: https://dl.dropboxusercontent.com/u/74222489/menotexport-gui-win7-win10.rar, unpack, then launch `menotexport-gui.exe`.
+For Windows 7 and Windows 10 (64bit) (**updated on 31-Oct-2016**), download `menotexport-gui-win7-win10.zip` from Onedrive:
+https://1drv.ms/u/s!AjPhQHKDm7rqiDUBxnngHyYKCAFE or from Dropbox: https://dl.dropboxusercontent.com/u/74222489/menotexport-gui-win7-win10.zip, unpack, then launch `menotexport-gui.exe`.
 
 
 ### 3. Install the dependencies and use source code
