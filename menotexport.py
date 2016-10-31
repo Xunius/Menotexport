@@ -741,22 +741,17 @@ def getFolderDocList(db,folderid,verbose=True):
 def getCanonicals(db,verbose=True):
 
     query=\
-    '''SELECT DocumentCanonicalIds.documentId,
-              Documents.id,
+    '''SELECT Documents.id,
               DocumentFolders.folderId
-       FROM DocumentCanonicalIds
-       LEFT JOIN Documents
-           ON Documents.id=DocumentCanonicalIds.documentId
+       FROM Documents
        LEFT JOIN DocumentFolders
-           ON DocumentFolders.documentId=DocumentCanonicalIds.documentId
-       WHERE (Documents.id=DocumentCanonicalIds.documentId)
-       AND (DocumentFolders.folderId IS NULL)
+           ON DocumentFolders.documentId=Documents.id
+       WHERE (DocumentFolders.folderId IS NULL)
     '''
 
-    #-----------------Get all folders-----------------
     ret=db.execute(query)
     data=ret.fetchall()
-    df=pd.DataFrame(data=data,columns=['docid','docid2','folderid'])
+    df=pd.DataFrame(data=data,columns=['docid','folderid'])
     canonical_doc_ids=fetchField(df,'docid')
 
     return [int(ii) for ii in canonical_doc_ids]
