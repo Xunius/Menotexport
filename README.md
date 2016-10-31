@@ -145,10 +145,11 @@ For command line or GUI usage on Linux (64bit), recommend installing using *cond
 
 ```
 conda create -n menotexport python=2.7
+source activate menotexport
 conda install -c guangzhi menotexport
 ```
 
-For the installation process of *conda*, refer to their [official site](https://www.continuum.io/downloads).
+For the installation of *conda*, see their [official site](https://www.continuum.io/downloads).
 
 ### 2. Pre-build binary GUI for Windows 
 
