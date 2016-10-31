@@ -139,23 +139,25 @@ output can be properly recognized by Zotero, and a migration to Zotero via the
 
 ## Installation
 
-### Install via `conda`.
+### 1. Install via `conda`.
 
-For command line or GUI usage on Linux (64bit), recommend installing using conda:
+For command line or GUI usage on Linux (64bit), recommend installing using *conda*:
 
 ```
 conda create -n menotexport python=2.7
 conda install -c guangzhi menotexport
 ```
 
-### Pre-build binary GUI for Windows 
+For the installation process of *conda*, refer to their [official site](https://www.continuum.io/downloads).
+
+### 2. Pre-build binary GUI for Windows 
 
 For Windows 7 and Windows 10 (64bit) (**updated on 17-Oct-2016**), download `menotexport-gui-win7-win10.rar` from dropbox: https://dl.dropboxusercontent.com/u/74222489/menotexport-gui-win7-win10.rar, unpack, then launch `menotexport-gui.exe`.
 
 
-### Install dependencies and use source code
+### 3. Install the dependencies and use source code
 
-If the above approaches all fail, the last choise is:
+If all above approaches fail, the last choise is:
 
 
 - For command line or GUI usage on Linux or Mac or Win, download the zip and
