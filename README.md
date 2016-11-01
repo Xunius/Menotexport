@@ -91,7 +91,7 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 
 ## Some other features
 
-### 1. Export perserves sub-folder structures
+### 1. Export preserves sub-folder structures
 
 Thanks to user feedbacks I realized that Mendeley supports embedded folder
 structures. This feature is now properly addressed: the exported PDFs, and
@@ -112,7 +112,7 @@ Mendeley 1.16.1 introduces 7 more highlight colors, these are replicated in the 
 
 Two text extracting utilities (*pdfminer* and *pdftotext*) are used to extract
 highlighted texts from PDFs. The user can choose to install the relevant utility
-to enable the *pdftotext* functions (installation details see below) to creates
+to enable the *pdftotext* functions (installation details see below) to create
 better outputs than the default *pdfminer* results. The cost is an
 extra dependency to satisfy (see below), and a slight drop in execution speed.
 However, this new feature is optional: if you don't care about highlight
