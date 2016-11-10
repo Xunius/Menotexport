@@ -385,7 +385,7 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
             if folder is not None:
                 if meta['tags'] is None:
                     tags=[folder,]
-                elif type(meta['tags']) is list and folder not in meta['tag']:
+                elif type(meta['tags']) is list and folder not in meta['tags']:
                     tags=meta['tags']+[folder,]
                 else:
                     tags=[meta['tags'],folder]
