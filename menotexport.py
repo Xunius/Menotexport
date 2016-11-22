@@ -387,6 +387,8 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                     tags=[folder,]
                 elif type(meta['tags']) is list and folder not in meta['tags']:
                     tags=meta['tags']+[folder,]
+                elif type(meta['tags']) is list and folder in meta['tags']:
+                    tags=meta['tags']
                 else:
                     tags=[meta['tags'],folder]
             else:
@@ -496,8 +498,10 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
             if folder is not None:
                 if meta['tags'] is None:
                     tags=[folder,]
-                elif type(meta['tags']) is list:
+                elif type(meta['tags']) is list and folder not in meta['tags']:
                     tags=meta['tags']+[folder,]
+                elif type(meta['tags']) is list and folder in meta['tags']:
+                    tags=meta['tags']
                 else:
                     tags=[meta['tags'],folder]
             else:
@@ -625,8 +629,10 @@ def getDocNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
             if folder is not None:
                 if meta['tags'] is None:
                     tags=[folder,]
-                elif type(meta['tags']) is list:
+                elif type(meta['tags']) is list and folder not in meta['tags']:
                     tags=meta['tags']+[folder,]
+                elif type(meta['tags']) is list and folder in meta['tags']:
+                    tags=meta['tags']
                 else:
                     tags=[meta['tags'],folder]
             else:
@@ -875,7 +881,7 @@ def getSubFolders(df,folderid,verbose=True):
         cid=idii
         while True:
             pid=getParentId(df,cid)
-            if pid==-1:
+            if pid==-1 or pid==0:
                 break
             if pid==folderid:
                 results.append(idii)
@@ -904,7 +910,7 @@ def getFolderTree(df,folderid,verbose=True):
     cid=folderid
     while True:
         pid=getParentId(df,cid)
-        if pid==-1:
+        if pid==-1 or pid==0:
             break
         else:
             pfolder=getFolderName(df,pid)
