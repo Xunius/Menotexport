@@ -153,7 +153,7 @@ For the installation of *conda*, see their [official site](https://www.continuum
 
 ### 2. Pre-build binary GUI for Windows 
 
-For Windows 7 and Windows 10 (64bit) (**updated on 13-Nov-2016**), download `Menotexport-gui-win7-win10.zip` from Onedrive: https://1drv.ms/u/s!AjPhQHKDm7rqiDaDIUiSkXBfAV7Q or from Dropbox: https://dl.dropboxusercontent.com/u/74222489/Menotexport-gui-win7-win10.zip, unpack, then launch `menotexport-gui.exe`.
+For Windows 7 and Windows 10 (64bit) (**updated on 22-Nov-2016**), download `menotexport-gui-win7-win10.zip` from Dropbox: https://dl.dropboxusercontent.com/u/74222489/menotexport-gui-win7-win10-64bit.zip, unpack, then launch `menotexport-gui.exe`.
 
 
 ### 3. Install the dependencies and use source code
@@ -266,6 +266,8 @@ then *start*.
 
 ## Caveats and further notes
 
+
+- **NOTE** that if your folders contain "/" in theirs names, it will trigger an error. Please remove "/" before using this tool.
 - The bulk PDF export works with **quite good** accuracy, most highlights and notes are
   reproduced as they should be. **NOTE** that users have reported mis-alignments in highlighted texts
   when the exported PDF is opened in *Qiqqa*, I'm not sure it's more due to *Qiqqa* or this tool.
