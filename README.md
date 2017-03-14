@@ -149,7 +149,7 @@ source activate menotexport
 conda install -c guangzhi menotexport
 ```
 
-For the installation of *conda*, see their [official site](https://www.continuum.io/downloads).
+For the installation of *conda* (*Anaconda* or a lighter-weight version of *Miniconda*), see their [official site](https://www.continuum.io/downloads).
 
 ### 2. Pre-build binary GUI for Windows 
 
