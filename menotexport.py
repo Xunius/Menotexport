@@ -390,7 +390,9 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                 elif type(meta['tags']) is list and folder in meta['tags']:
                     tags=meta['tags']
                 else:
-                    tags=[meta['tags'],folder]
+                    #tags=[meta['tags'],folder]
+                    # there shouldn't be anything else, should it?
+                    pass
             else:
                 tags=meta['tags'] or []
             meta['tags']=tags
@@ -503,7 +505,9 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
                 elif type(meta['tags']) is list and folder in meta['tags']:
                     tags=meta['tags']
                 else:
-                    tags=[meta['tags'],folder]
+                    #tags=[meta['tags'],folder]
+                    # see above
+                    pass
             else:
                 tags=meta['tags'] or []
             meta['tags']=tags
@@ -634,7 +638,8 @@ def getDocNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
                 elif type(meta['tags']) is list and folder in meta['tags']:
                     tags=meta['tags']
                 else:
-                    tags=[meta['tags'],folder]
+                    #tags=[meta['tags'],folder]
+                    pass
             else:
                 tags=meta['tags'] or []
             meta['tags']=tags
