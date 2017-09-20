@@ -11,6 +11,7 @@
 Update time: 2016-04-12 22:09:38.
 '''
 
+import tools
 
 #-----------------Extract notes-----------------
 def extractNotes(path,anno,verbose=True):
@@ -35,7 +36,9 @@ def extractNotes(path,anno,verbose=True):
     for pp in anno.ntpages:
 
         for noteii in notes[pp]:
+            note_color=tools.color_labels.get(noteii['color'], noteii['color'])
             textjj=Anno(noteii['content'], ctime=noteii['cdate'],\
+                    color=note_color,\
                     title=meta['title'],\
                     page=pp,citationkey=meta['citationkey'], note_author=noteii['author'],\
                     tags=meta['tags'])

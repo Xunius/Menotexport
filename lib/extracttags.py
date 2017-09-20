@@ -74,7 +74,7 @@ def exportAnno(annodict,outdir,action,verbose=True):
         os.remove(abpath_out)
 
     if verbose:
-        printHeader('Exporting all taged annotations to:',3)
+        printHeader('Exporting all tagged annotations to:',3)
         printInd(abpath_out,4)
 
     conv=lambda x:unicode(x)

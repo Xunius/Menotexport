@@ -244,12 +244,14 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                                 }
             where hl1={'rect': bbox,
                        'cdate': cdate,
-                       'page':pg}
+                       'page':pg,
+                       'color': color}
                   note={'rect': bbox,
                         'author':author,
                         'content':txt,
                         'cdate': cdate,
-                        'page':pg}
+                        'page':pg,
+                        'color': color}
     
     Update time: 2016-02-24 00:36:33.
     '''
@@ -426,6 +428,7 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
                     FileNotes.author, FileNotes.note,
                     FileNotes.modifiedTime,
                     FileNotes.documentId,
+                    FileNotes.color,
                     DocumentFolders.folderid,
                     Folders.name
             FROM Files
@@ -443,7 +446,8 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
                     FileNotes.x, FileNotes.y,
                     FileNotes.author, FileNotes.note,
                     FileNotes.modifiedTime,
-                    FileNotes.documentId
+                    FileNotes.documentId,
+                    FileNotes.color
             FROM Files
             LEFT JOIN FileNotes
                 ON FileNotes.fileHash=Files.hash
@@ -474,8 +478,9 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
         txt = r[5]
         cdate = convert2datetime(r[6])
         docid=r[7]
+        color=r[8]
         if filterdocid is None:
-            folder=r[9]
+            folder=r[10]
         else:
             folder=None
 
@@ -483,7 +488,8 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
                 'author':author,\
                 'content':txt,\
                 'cdate': cdate,\
-                'page':pg\
+                'page':pg,\
+                'color':color\
                   }
 
         #------------Save to dict------------

@@ -44,6 +44,8 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
             - @citationkey
             - Tags: @tag1, @tag2, @tag3...
             - Ctime: creation time
+            - Page: page number (ordinal)
+            - Colour: highlight colour
     
     -----------------------------------------------------
     # Title of another PDF
@@ -56,6 +58,8 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
             - @citationkey
             - Tags: @tag1, @tag2, @tag3...
             - Ctime: creation time
+            - Page: page number (ordinal)
+            - Colour: highlight colour
 
     Use tabs in indention, and markup syntax: ">" for highlights, and "-" for notes.
 
@@ -105,8 +109,10 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
 \t\t- @{1}
 \t\t- Tags: {2}
 \t\t- Ctime: {3}
+\t\t- Page: {4}
+\t\t- Color: {5}
 '''.format(*map(conv,[hlstr, hljj.citationkey,\
-    tagstr, hljj.ctime]))
+    tagstr, hljj.ctime, hljj.page, hljj.color]))
 
                 #outstr=outstr.encode('ascii','replace')
                 outstr=outstr.encode('utf8','replace')
@@ -126,8 +132,10 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
 \t\t- @{1}
 \t\t- Tags: {2}
 \t\t- Ctime: {3}
+\t\t- Page: {4}
+\t\t- Color: {5}
 '''.format(*map(conv,[ntstr, ntjj.citationkey,\
-    tagstr, ntjj.ctime]))
+    tagstr, ntjj.ctime, ntjj.page, ntjj.color]))
 
                 #outstr=outstr.encode('ascii','replace')
                 outstr=outstr.encode('utf8','replace')
