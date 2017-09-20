@@ -32,11 +32,12 @@ import wordfix
 
 #------Store highlighted texts with metadata------
 class Anno(object):
-    def __init__(self,text,ctime=None,title=None,author=None,\
+    def __init__(self,text,ctime=None,color=None,title=None,author=None,\
             note_author=None,page=None,citationkey=None,tags=None):
 
         self.text=text
         self.ctime=ctime
+        self.color=color
         self.title=title
         self.author=author
         self.note_author=note_author
@@ -56,8 +57,9 @@ Annotation text:    %s
 Creation time:      %s
 Paper title:        %s
 Annotation author:  %s
-Page:               %s
 Citation key:       %s
+Annotation color:   %s
+Page:               %s
 Tags:               %s
 ''' %(self.text, self.ctime, self.title,\
       self.note_author, self.page, self.citationkey,\

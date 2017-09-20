@@ -33,6 +33,7 @@ from pdfminer.layout import LTTextBox, LTTextLine, LTAnno,\
 from numpy import sqrt, argsort
 
 from subprocess import Popen, PIPE
+from collections import Counter
 import tools
 import time
 import wordfix
@@ -58,11 +59,12 @@ def checkPdftotext():
 
 #------Store highlighted texts with metadata------
 class Anno(object):
-    def __init__(self,text,ctime=None,title=None,author=None,\
+    def __init__(self,text,ctime=None,color=None,title=None,author=None,\
             note_author=None,page=None,citationkey=None,tags=None):
 
         self.text=text
         self.ctime=ctime
+        self.color=color
         self.title=title
         self.author=author
         self.note_author=note_author
@@ -83,10 +85,11 @@ Creation time:      %s
 Paper title:        %s
 Annotation author:  %s
 Page:               %s
+Annotation color:   %s
 Citation key:       %s
 Tags:               %s
 ''' %(self.text, self.ctime, self.title,\
-      self.note_author, self.page, self.citationkey,\
+      self.note_author, self.page, self.color, self.citationkey,\
       ', '.join(self.tags))
         
         reprstr=reprstr.encode('ascii','replace')
@@ -591,6 +594,14 @@ def getCtime(annos,verbose=True):
     return ctimes[-1]
 
 
+#----------------Get the color of annos----------------
+def getColor(annos):
+    '''Get the most common color for a list of annos
+    '''
+
+    colors = Counter([ii['color'] for ii in annos])
+    most_common_color_code = colors.most_common(1)[0][0]
+    return tools.color_labels.get(most_common_color_code, most_common_color_code)
 
 
 
@@ -645,6 +656,7 @@ def extractHighlights(filename,anno,verbose=True):
                     #--------------Attach text with meta--------------
                     textjj=Anno(textjj,\
                         ctime=getCtime(anno.highlights[ii+1]),\
+                        color=getColor(anno.highlights[ii+1]),\
                         title=anno.meta['title'],\
                         page=ii+1,citationkey=anno.meta['citationkey'],\
                         tags=anno.meta['tags'])
@@ -719,6 +731,7 @@ def extractHighlights2(filename,anno,verbose=True):
                     #--------------Attach text with meta--------------
                     textjj=Anno(textjj,\
                         ctime=getCtime(annoii),\
+                        color=getColor(annoii),\
                         title=anno.meta['title'],\
                         page=ii+1,citationkey=anno.meta['citationkey'],\
                         tags=anno.meta['tags'])
