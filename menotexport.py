@@ -392,7 +392,8 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                 else:
                     #tags=[meta['tags'],folder]
                     # there shouldn't be anything else, should it?
-                    pass
+                    #pass
+                    tags=[]
             else:
                 tags=meta['tags'] or []
             meta['tags']=tags
@@ -507,7 +508,8 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
                 else:
                     #tags=[meta['tags'],folder]
                     # see above
-                    pass
+                    #pass
+                    tags=[]
             else:
                 tags=meta['tags'] or []
             meta['tags']=tags
@@ -639,7 +641,8 @@ def getDocNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
                     tags=meta['tags']
                 else:
                     #tags=[meta['tags'],folder]
-                    pass
+                    #pass
+                    tags=[]
             else:
                 tags=meta['tags'] or []
             meta['tags']=tags
