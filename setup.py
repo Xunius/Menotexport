@@ -8,7 +8,7 @@ setup(name='Menotexport',
         author='Guangzhi XU',
         author_email='xugzhi1987@gmail.com',
         url='https://github.com/Xunius/Menotexport',
-        packages=['lib','lib.pylatexenc','annotation_template.py'],
+        packages=['lib','lib.pylatexenc'],
         scripts=['menotexport.py','menotexport-gui.py'],
         license='GPL-3'
         )
