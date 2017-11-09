@@ -141,7 +141,7 @@ output can be properly recognized by Zotero, and a migration to Zotero via the
 Annotations (notes+highlights) can be formatted in the way you like.
 
 In the base folder there is a file `annotation_template.py` which contains a working
-example of template to format the output of the exported annotations.
+example template to format the output of the exported annotations.
 
 Currently, these variables are available in building a template:
 
