@@ -19,7 +19,7 @@ Update time: 2016-04-15 16:25:00.
 Update time: 2016-06-22 16:26:11.
 '''
 
-__version__='Menotexport v1.4'
+__version__='Menotexport v1.4.1'
 
 #---------------------Imports---------------------
 import sys,os
@@ -122,6 +122,18 @@ def converturl2abspath(url):
             return path
 
 
+def getUserName(db):
+    '''Query db to get user name'''
+
+    query=\
+    '''SELECT Profiles.firstName, Profiles.lastName
+    FROM Profiles
+    '''
+    ret=db.execute(query)
+    ret=[ii for ii in ret]
+    return ' '.join(ret[0])
+
+    
 def getMetaData(db, docid):
     '''Get meta-data of a doc by documentId.
     '''
@@ -180,6 +192,10 @@ def getMetaData(db, docid):
     for ff in fields:
         fieldii=fetchField(docdata,ff)
         result[ff]=fieldii[0] if len(fieldii)==1 else fieldii
+
+    #-----------------Append user name-----------------
+    username=getUserName(db)
+    result['user_name']=username
 
     return result
 
@@ -976,6 +992,9 @@ def extractAnnos(annotations,action,verbose):
         else:
             nttexts=[]
 
+        #------------Attach ori texts to notes------------
+        nttexts=extractnt.attachRefTextsToNotes(nttexts,hltexts)
+
         annoii.highlights=hltexts
         annoii.notes=nttexts
         annotations2[idii]=annoii
@@ -1440,6 +1459,15 @@ if __name__ == "__main__":
             help='''Exported .bib or .ris file has slightly different formating
             to facilitate import into Zotero.
             Only works when -b and/or -r are toggled.''')
+
+    parser.add_argument('-t', '--template', dest='action',
+            action='append_const',
+            const='t',
+            help='''**Feature in progress**.
+            Use custom template to format the exported annotations.
+            The template file is /menotexport_install_folder/annotation_template.py.
+            See instructions in that file on how to modify template.
+            ''')
 
     parser.add_argument('-v', '--verbose', action='store_true',\
             default=True,\
