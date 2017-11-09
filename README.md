@@ -136,6 +136,29 @@ Export meta-data and annotations to .ris file. If `-z` flag is toggled, the
 output can be properly recognized by Zotero, and a migration to Zotero via the
 .ris approach can be achieved by a process with `-pnmrz` options.
 
+### **NEW** 6. Custom template formatting for exported annotations (not quite mature yet).
+
+Annotations (notes+highlights) can be formatted in the way you like.
+
+In the base folder there is a file `annotation_template.py` which contains a working
+example of template to format the output of the exported annotations.
+
+Currently, these variables are available in building a template:
+
+* text : note content for a note, or highlighted texts for a highlight.
+* page : page number of the note/highlight in the PDF file, not necessarily the same as printed out at the page margin.
+* title: title of the document.
+* tags : tag list.
+* ctime: creation time.
+* author : author(s) of the document.
+* note_author: your name.
+* citationkey: citation key.
+* num : an integer id of the note/highlight, counting restarts in each document.
+
+Put any of them in curly brackets to use them, e.g. `{title}`. NOTE not spaces in brackets. More instructions can be found in the template file.
+
+For deeper modification of the output formatting, you can hack into this file: `/lib/exportannotation.py`.
+
 
 ## Installation
 
@@ -333,16 +356,15 @@ The software is tested on Linux and Windows 7, 10. Should also run on Mac.
 
 ## Versions
 
-* 0.1: First release
-* 1.0: Added GUI and Windows version
-* 1.1: Added export of non-annotated PDFs and export to .bib.
+* 1.4.1: Add custom annotation templation support (not mature yet). Fix auto-renaming function fixed.
+* 1.4: Add export to .ris format.
+"Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, are now properly processed, and the results are saved to a directory "Canonical-My Library".
+* 1.3: Call *pdftotext* to work with *pdfminer* for better highlight extraction, if *pdftotext* not available, fall back         to old approach. Some other improvements in highlight extraction. Add special formatting of the .bib file for           Zotero import.
 * 1.2: Works with subfolders. If a folder is chosen to process, also includes all subfolders.
 	   Replicates the 8 different highlight colors introduced in Mendeley 1.16.1 version, in the exported PDFs.
-* 1.3: Call *pdftotext* to work with *pdfminer* for better highlight extraction, if *pdftotext* not available, fall back         to old approach. Some other improvements in highlight extraction. Add special formatting of the .bib file for           Zotero import.
-* 1.4: Add export to .ris format.
-
-       "Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, are now properly processed, and the results are saved to a directory "Canonical-My Library".
-
+* 1.1: Added export of non-annotated PDFs and export to .bib.
+* 1.0: Added GUI and Windows version
+* 0.1: First release
 
 ## Licence
 
