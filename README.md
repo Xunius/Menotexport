@@ -143,6 +143,11 @@ Annotations (notes+highlights) can be formatted in the way you like.
 In the base folder there is a file `annotation_template.py` which contains a working
 example template to format the output of the exported annotations.
 
+To use custom template:
+
+* in command line: add the `-t` option.
+* in GUI: toggle the "use custom template (experimental)" button.
+
 Currently, these variables are available in building a template:
 
 * text : note content for a note, or highlighted texts for a highlight.
