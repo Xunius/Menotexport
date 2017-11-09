@@ -19,7 +19,7 @@ Update time: 2016-04-15 16:25:00.
 Update time: 2016-06-22 16:26:11.
 '''
 
-__version__='Menotexport v1.4.1'
+__version__='Menotexport v1.4.4'
 
 #---------------------Imports---------------------
 import sys,os
