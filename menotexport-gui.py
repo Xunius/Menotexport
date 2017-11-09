@@ -86,8 +86,8 @@ class MainFrame(Frame):
         Frame.__init__(self,parent)
 
         self.parent=parent
-        self.width=750
-        self.height=450
+        self.width=850
+        self.height=650
         self.title=menotexport.__version__
         self.stdoutq=stdoutq
 
@@ -259,6 +259,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         self.isris=tk.IntVar()
         self.isseparate=tk.IntVar()
         self.iszotero=tk.IntVar()
+        self.iscustomtemp=tk.IntVar()
 
         self.check_export=tk.Checkbutton(frame,text='Export PDFs',\
                 variable=self.isexport,command=self.doExport)
@@ -289,19 +290,25 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
                 variable=self.iszotero,command=self.doIszotero,\
                 state=tk.DISABLED)
 
+        self.check_custom_template=tk.Checkbutton(frame,\
+                text='Use custom_annotation template (experimental)',\
+                variable=self.iscustomtemp,command=self.doCustomTemp,\
+                state=tk.DISABLED)
+
         frame.columnconfigure(0,weight=1)
 
-        self.check_export.grid(row=0,column=1,padx=8,sticky=tk.W)
-        self.check_highlight.grid(row=0,column=2,padx=8,sticky=tk.W)
-        self.check_note.grid(row=0,column=3,padx=8,sticky=tk.W)
-        self.check_bib.grid(row=0,column=4,padx=8,sticky=tk.W)
-        self.check_ris.grid(row=1,column=1,padx=8,sticky=tk.W)
-        self.check_separate.grid(row=1,column=2,padx=8,sticky=tk.W)
-        self.check_iszotero.grid(row=1,column=3,padx=8,sticky=tk.W)
+        self.check_export.grid(row=1,column=1,padx=8,sticky=tk.W)
+        self.check_highlight.grid(row=1,column=2,padx=8,sticky=tk.W)
+        self.check_note.grid(row=1,column=3,padx=8,sticky=tk.W)
+        self.check_bib.grid(row=2,column=1,padx=8,sticky=tk.W)
+        self.check_ris.grid(row=2,column=2,padx=8,sticky=tk.W)
+        self.check_separate.grid(row=2,column=3,padx=8,sticky=tk.W)
+        self.check_iszotero.grid(row=3,column=1,padx=8,sticky=tk.W)
+        self.check_custom_template.grid(row=3,column=2,padx=8,sticky=tk.W)
 
         #---------------------2nd row---------------------
         subframe=Frame(frame)
-        subframe.grid(row=2,column=0,columnspan=6,sticky=tk.W+tk.E,\
+        subframe.grid(row=4,column=0,columnspan=6,sticky=tk.W+tk.E,\
                 pady=5)
 
         #-------------------Folder options-------------------
@@ -366,21 +373,26 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         if self.ishighlight.get()==1:
             print('# <Menotexport>: Extract highlighted texts.')
             self.check_separate.configure(state=tk.NORMAL)
+            self.check_custom_template.configure(state=tk.NORMAL)
         else:
             print('# <Menotexport>: Dont extract highlighted texts.')
             if self.isnote.get()==0:
                 self.check_separate.configure(state=tk.DISABLED)
+                self.check_custom_template.configure(state=tk.DISABLED)
         self.checkReady()
 
     def doNote(self):
         if self.isnote.get()==1:
             print('# <Menotexport>: Extract notes.')
             self.check_separate.configure(state=tk.NORMAL)
+            self.check_custom_template.configure(state=tk.NORMAL)
         else:
             print('# <Menotexport>: Dont extract notes.')
             self.check_separate.state=tk.DISABLED
             if self.ishighlight.get()==0:
                 self.check_separate.configure(state=tk.DISABLED)
+                self.check_custom_template.configure(state=tk.DISABLED)
+        self.checkReady()
         self.checkReady()
 
     def doBib(self):
@@ -415,6 +427,12 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
         else:
             print('# <Menotexport>: Save .bib/.ris file to default format.')
 
+    def doCustomTemp(self):
+        if self.iscustomtemp.get()==1:
+            print('# <Menotexport>: Use custom template for exported annotations.')
+        else:
+            print('# <Menotexport>: Use default template for exported annotations.')
+
 
 
     def showHelp(self):
@@ -427,6 +445,8 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
 - Export .ris: Export meta-data and annotations to .ris files.\n
 - For import to Zotero: Exported .bib and/or .ris files have suitable format to import to Zotero.\n
 - Save separately: If on, save each PDF's annotations to a separate txt.\n
+- Use custom annotation template: Use a custom template to format the exported annotations.
+  See annotation_template.py for details.
 - See README.md for more info.\n
 ''' %self.title
 
@@ -465,6 +485,8 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             iszotero=True
         else:
             iszotero=False
+        if self.iscustomtemp.get()==1:
+            action.append('t')
 
             
         if 'p' in action or 'm' in action or 'n' in action or 'b' in action or 'r' in action:
@@ -480,6 +502,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             self.check_ris.configure(state=tk.DISABLED)
             self.check_separate.configure(state=tk.DISABLED)
             self.check_iszotero.configure(state=tk.DISABLED)
+            self.check_custom_template.configure(state=tk.DISABLED)
 	    self.messagelabel.configure(text='Message (working...)')
 
             folder=None if self.menfolder=='All' else folder_sel
@@ -516,6 +539,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
                     self.check_bib.configure(state=tk.NORMAL)
                     self.check_separate.configure(state=tk.NORMAL)
                     self.check_iszotero.configure(state=tk.NORMAL)
+                    self.check_custom_template.configure(state=tk.NORMAL)
                     self.messagelabel.configure(text='Message')
                     return
             except Queue.Empty:
