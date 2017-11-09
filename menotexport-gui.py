@@ -291,7 +291,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
                 state=tk.DISABLED)
 
         self.check_custom_template=tk.Checkbutton(frame,\
-                text='Use custom_annotation template (experimental)',\
+                text='Use custom template (experimental)',\
                 variable=self.iscustomtemp,command=self.doCustomTemp,\
                 state=tk.DISABLED)
 
