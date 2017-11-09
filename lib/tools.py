@@ -146,6 +146,22 @@ def readFile(abpath_in,verbose=True):
 
 
 
+def getAuthorList(meta_dict):
+    '''Get author list string from annotation metadata dict'''
+
+    first=meta_dict['firstnames']
+    last=meta_dict['lastname']
+    if first is None or last is None:
+        authors=''
+    if type(first) is not list and type(last) is not list:
+        authors='%s, %s' %(last, first)
+    else:
+        authors=['%s, %s' %(ii[0],ii[1]) for ii in zip(last,first)]
+        authors=' and '.join(authors)
+
+    return authors
+
+
 
 def autoRename(abpath):
     '''Auto rename a file to avoid overwriting an existing file
@@ -180,14 +196,23 @@ def autoRename(abpath):
             ^(.+?)       # File name
             ([- _])      # delimiter between file name and number
             \\((\\d+)\\) # number in ()
+            (.*)         # ext
             $''',\
             re.X)
-    if rename_re.match(basename):
-        newname=rename_re.sub(rename_sub,basename)
-        newname='%s%s' %(newname,ext)
-    else:
-        newname='%s_(1)%s' %(basename,ext)
 
+    newname='%s_(1)%s' %(basename,ext)
+    while True:
+        newpath=os.path.join(folder,newname)
+
+        if not os.path.exists(newpath):
+            break
+        else:
+            if rename_re.match(newname):
+                newname=rename_re.sub(rename_sub,newname)
+                newname='%s%s' %(newname,ext)
+            else:
+                raise Exception("Exception")
+                
     newname=os.path.join(folder,newname)
     return newname
 

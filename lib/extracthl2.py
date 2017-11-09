@@ -54,12 +54,11 @@ def checkPdftotext():
 
 
 
-
-
 #------Store highlighted texts with metadata------
 class Anno(object):
     def __init__(self,text,ctime=None,title=None,author=None,\
-            note_author=None,page=None,citationkey=None,tags=None):
+            note_author=None,page=None,citationkey=None,tags=None,
+            bbox=None):
 
         self.text=text
         self.ctime=ctime
@@ -69,6 +68,7 @@ class Anno(object):
         self.page=page
         self.citationkey=citationkey
         self.tags=tags
+        self.bbox=bbox
 
         if tags is None:
             self.tags='None'
@@ -81,13 +81,15 @@ class Anno(object):
 Annotation text:    %s
 Creation time:      %s
 Paper title:        %s
+Author:             %s
 Annotation author:  %s
 Page:               %s
 Citation key:       %s
 Tags:               %s
-''' %(self.text, self.ctime, self.title,\
-      self.note_author, self.page, self.citationkey,\
-      ', '.join(self.tags))
+Bbox:               %s
+''' %(self.text, self.ctime, self.title, self.author,
+      self.note_author, self.page, self.citationkey,
+      ', '.join(self.tags),self.bbox)
         
         reprstr=reprstr.encode('ascii','replace')
 
@@ -175,9 +177,6 @@ def findStrFromBox(anno,box,verbose=True):
         texts=wordfix.fixWord(texts)
 
     return texts, num
-
-
-
 
 
 #-------Locate and extract strings from a page layout obj-------
@@ -273,9 +272,6 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
 
     return texts, num
 
-
-
-
 #----------------Merge overlapping highlights in a line----------------
 def mergeLine(anno,verbose=True):
     '''Merge overlapping highlights in a line
@@ -346,8 +342,6 @@ def mergeLine(anno,verbose=True):
     return new_anno
 
 
-
-
 def measureGap(linelist):
     '''Detect char and line gaps
     '''
@@ -392,8 +386,6 @@ def measureGap(linelist):
         chargap=5
 
     return linegap, chargap
-
-
 
 
 def checkJump(lastbox,curbox,curline,linegap,chargap):
@@ -453,8 +445,6 @@ def fineTuneOrder(objs,verbose=True):
     return result
 
 
-
-
 #---------------------Sort box elements diagnoally---------------------
 def sortDiag(layout,verbose=True):
     '''Sort box elements diagnoally
@@ -481,8 +471,6 @@ def sortDiag(layout,verbose=True):
     return objs
 
 
-
-
 #-------------------------Sort objs vertically-------------------------
 def sortY(objs,verbose=True):
     '''Sort objs vertically
@@ -500,8 +488,6 @@ def sortY(objs,verbose=True):
     result=[objdict[ii] for ii in keys]
 
     return result
-
-
 
 
 #------------------------Sort objs horizontally------------------------
@@ -523,8 +509,6 @@ def sortX(objs,verbose=True):
     return result
 
 
-
-    
 #-------------------------Sort annos vertically-------------------------
 def sortAnnoY(objs,verbose=True):
     '''Sort objs vertically
@@ -543,9 +527,6 @@ def sortAnnoY(objs,verbose=True):
     result=[objdict[ii] for ii in keys]
 
     return result
-
-
-
 
 
 #------------------------Initiate analysis objs------------------------
@@ -576,8 +557,6 @@ def init(filename,verbose=True):
     interpreter = PDFPageInterpreter(rsrcmgr, device)
 
     return document, interpreter, device
-    
-
 
 
 #----------------Get the latest creation time of annos----------------
@@ -589,9 +568,6 @@ def getCtime(annos,verbose=True):
     ctimes=[ii['cdate'] for ii in annos]
     ctimes.sort()
     return ctimes[-1]
-
-
-
 
 
 #----------------Extract highlighted texts from a PDF--------
@@ -660,11 +636,6 @@ def extractHighlights(filename,anno,verbose=True):
     return hltexts
 
 
-
-
-
-
-
 #----------------Extract highlighted texts from a PDF--------
 def extractHighlights2(filename,anno,verbose=True):
     '''Extract highlighted texts from a PDF
@@ -717,11 +688,17 @@ def extractHighlights2(filename,anno,verbose=True):
 
                 if numjj>0:
                     #--------------Attach text with meta--------------
+                    authors=tools.getAuthorList(anno.meta)
+
                     textjj=Anno(textjj,\
                         ctime=getCtime(annoii),\
                         title=anno.meta['title'],\
-                        page=ii+1,citationkey=anno.meta['citationkey'],\
-                        tags=anno.meta['tags'])
+                        page=ii+1,
+                        citationkey=anno.meta['citationkey'],\
+                        tags=anno.meta['tags'],
+                        bbox=objj.bbox,
+                        author=authors,
+                        note_author=anno.meta['user_name'])
 
                     hltexts.append(textjj)
 
@@ -730,6 +707,9 @@ def extractHighlights2(filename,anno,verbose=True):
                 if anno_total==anno_found:
                     break
 
+    #----------------Number highlights----------------
+    for ii,hlii in enumerate(hltexts):
+        hlii.num=ii+1
 
     return hltexts
 
