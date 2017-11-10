@@ -171,30 +171,8 @@ def _exportAnnoFileTemplated(abpath_out,anno,verbose=True):
     wrapper.initial_indent=''
     wrapper.subsequent_indent=atemp.INDENT_EACH_ENTRY
 
-    '''
-    wrapper2=TextWrapper()
-    #wrapper2.width=80-7
-    wrapper2.width=atemp.WRAP_EACH_ENTRY-len(atemp.INDENT_EACH_ENTRY)
-    wrapper2.initial_indent=''
-    #wrapper2.subsequent_indent='\t\t'
-    wrapper2.subsequent_indent=atemp.WRAP_EACH_ENTRY-len(atemp.INDENT_EACH_ENTRY)
-    '''
-
     hls=anno.highlights
     nts=anno.notes
-
-    try:
-        titleii=hls[0].title
-    except:
-        titleii=nts[0].title
-
-    #outstr=u'\n\n{0}\n# {1}\n\n'.format(int(80)*'-',conv(titleii))
-    outstr=u'''\
-------------------------------------------------------------------
-{0}
-
-'''.format(conv(titleii))
-
 
     def getFieldsDict(ntjj):
         dictjj={}
@@ -212,16 +190,29 @@ def _exportAnnoFileTemplated(abpath_out,anno,verbose=True):
         if hasattr(ntjj,'ori_text'):
             dictjj['ori_text']=wrapper.fill(ntjj.ori_text)
 
-        #for kk,vv in dictjj.items():
-            #dictjj[kk]=wrapper.fill(str(vv))
-
         return dictjj
 
-    with open(abpath_out, mode='a') as fout:
-        #outstr=outstr.encode('ascii','replace')
-        outstr=outstr.encode('utf8','replace')
-        fout.write(outstr)
 
+    with open(abpath_out, mode='a') as fout:
+
+        #------------Get dict for output string------------
+        outstr_dict={}
+        for kk,vv in anno.meta.items():
+            if kk=='tags':
+                vv=', '.join(['@'+kk for kk in vv])
+            if kk=='keywords' and vv is not None:
+                vv='; '.join(vv)
+            if kk in ['firstnames','lastname']:
+                continue
+
+            outstr_dict[kk]=wrapper.fill(conv(vv))
+
+        outstr_dict['author']=wrapper.fill(tools.getAuthorList(anno.meta))
+        outstr_dict['notes_with_highlights']=u''
+        outstr_dict['notes']=u''
+        outstr_dict['highlights']=u''
+
+        #-------Get notes associated with highlights-------
         nts_with_hl=[ntii for ntii in nts if hasattr(ntii,'ori_text')]
         nts_without_hl=list(set(nts).difference(nts_with_hl))
         nts_with_hl_texts=[ntii.ori_text for ntii in nts_with_hl]
@@ -232,12 +223,8 @@ def _exportAnnoFileTemplated(abpath_out,anno,verbose=True):
 
         #-----------Write notes with highlights-----------
         if len(nts_with_hl)>0:
-            fout.write(u'''\
----------------------------
-# Highlights linked with comments
 
-''')
-
+            str_nts=u''
             #-------------Loop through notes-------------
             # Re-number notes
             for ii,ntii in enumerate(nts_with_hl):
@@ -250,18 +237,13 @@ def _exportAnnoFileTemplated(abpath_out,anno,verbose=True):
                     ntjjstr=atemp.HIGHLIGHT_NOTE_ENTRY_TEMPLATE.format(**dictjj)
                 except:
                     print TEMPLATE_EXCEPT_MESSAGE
-                ntjjstr=ntjjstr.encode('utf8','replace')
-                fout.write(ntjjstr)
+                str_nts+=ntjjstr
+            outstr_dict['notes_with_highlights']=str_nts
 
         #------------------Write comments------------------
         if len(nts_without_hl)>0:
-            #fout.write('# Comments\n')
-            fout.write(u'''\
----------------------------
-# Comments
 
-''')
-
+            str_nts=u''
             #-------------Loop through notes-------------
             # Re-number notes
             for ii,ntii in enumerate(nts_without_hl):
@@ -274,18 +256,14 @@ def _exportAnnoFileTemplated(abpath_out,anno,verbose=True):
                     ntjjstr=atemp.NOTE_ONLY_ENTRY_TEMPLATE.format(**dictjj)
                 except:
                     print TEMPLATE_EXCEPT_MESSAGE
-                ntjjstr=ntjjstr.encode('utf8','replace')
-                fout.write(ntjjstr)
+                str_nts+=ntjjstr
+            outstr_dict['notes']=ntjjstr
+
 
         #-----------------Write highlights-----------------
         if len(hls_without_nt)>0:
-            #fout.write(' # Highlights\n')
-            fout.write(u'''\
----------------------------
-# Highlights
 
-''')
-
+            str_nts=u''
             #-------------Loop through highlights-------------
             # Re-number highlights
             for ii,ntii in enumerate(hls_without_nt):
@@ -298,8 +276,12 @@ def _exportAnnoFileTemplated(abpath_out,anno,verbose=True):
                     ntjjstr=atemp.HIGHLIGHT_ONLY_ENTRY_TEMPLATE.format(**dictjj)
                 except:
                     print TEMPLATE_EXCEPT_MESSAGE
-                ntjjstr=ntjjstr.encode('utf8','replace')
-                fout.write(ntjjstr)
+                str_nts+=ntjjstr
+            outstr_dict['highlights']=ntjjstr
+
+        outstr=atemp.OVERALL_TEMPLATE.format(**outstr_dict)
+        outstr=outstr.encode('utf8','replace')
+        fout.write(outstr)
         
 
     
