@@ -181,7 +181,9 @@ For the installation of *conda* (*Anaconda* or a lighter-weight version of *Mini
 
 ### 2. Pre-build binary GUI for Windows 
 
-For Windows 7 and Windows 10 (64bit) (**updated on 08-July-2017**), download `menotexport-gui-win7-win10.zip` from Google Drive: https://drive.google.com/open?id=0B8wpnLHH0j1hTTM5cTE2TXg2b1k, unpack, then launch `menotexport-gui.exe`.
+For Windows 7 and Windows 10 (64bit) (**version 1.4, updated on 08-July-2017**), download `menotexport-gui-win7-win10.zip` from Google Drive: https://drive.google.com/open?id=0B8wpnLHH0j1hTTM5cTE2TXg2b1k, unpack, then launch `menotexport-gui.exe`.
+
+Version 1.4.4 (uploaded 10-Nov-2017, not fully tested yet, please provide feedbacks if this works correctly): https://drive.google.com/open?id=1rd-mOKspare4bkKWEMmm-2uwH04p-sIq. 
 
 
 ### 3. Install the dependencies and use source code
