@@ -321,7 +321,7 @@ then *start*.
   your Evernote account, will probably implement these in a later version.
 - To batch upload to **Evernote**, check out this repo: [txt2evernote](https://github.com/Xunius/txt2evernote).
 - "Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, are now properly processed, and the results are saved to a directory "Canonical-My Library".
-
+- A note for myself: when building the windows exe, downgrade setuptools to 19.2, use pandas=0.16, don't use pyinstaller inside anaconda otherwise the result package will be 10x bigger, may need to install pyinstaller from its git. 
 
 ## Dependencies
 
@@ -361,7 +361,7 @@ The software is tested on Linux and Windows 7, 10. Should also run on Mac.
 
 ## Versions
 
-* 1.4.1: Add custom annotation templation support (not mature yet). Fix auto-renaming function fixed.
+* 1.4.4: Add custom annotation templation support (not mature yet). Fix auto-renaming function fixed.
 * 1.4: Add export to .ris format.
 "Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, are now properly processed, and the results are saved to a directory "Canonical-My Library".
 * 1.3: Call *pdftotext* to work with *pdfminer* for better highlight extraction, if *pdftotext* not available, fall back         to old approach. Some other improvements in highlight extraction. Add special formatting of the .bib file for           Zotero import.
