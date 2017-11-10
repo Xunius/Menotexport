@@ -30,7 +30,8 @@ from pdfminer.layout import LAParams
 from pdfminer.converter import PDFPageAggregator
 from pdfminer.layout import LTTextBox, LTTextLine, LTAnno,\
         LTTextBoxHorizontal, LTTextLineHorizontal, LTChar
-from numpy import sqrt, argsort
+#from numpy import sqrt, argsort
+from math import sqrt
 
 from subprocess import Popen, PIPE
 import tools
@@ -464,7 +465,8 @@ def sortDiag(layout,verbose=True):
     h=layout.height
 
     dists=[dist(jj.bbox[0],jj.bbox[3],w,h) for jj in layout._objs]
-    idx=argsort(dists)
+    #idx=argsort(dists)
+    idx=sorted(range(len(dists)),key=dists.__getitem__)
 
     objs=[layout._objs[ii] for ii in idx]
 
