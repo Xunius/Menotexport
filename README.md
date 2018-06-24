@@ -2,6 +2,28 @@
 
 **Menotexport (Mendeley-Note-Export) extracts and exports highlights, notes and PDFs from your Mendeley database**
 
+### IMPORTANT NOTE:
+
+It seems that Mendeley has decided to put an encryption in version 1.19 on the database file from which various information (your highlights, notes, all metadata of the documents) is retrieved by this tool.
+
+Some relavent info on this:
+
+* [zotero forum](https://www.zotero.org/support/kb/mendeley_import)
+* [Mendeley release note](https://www.mendeley.com/release-notes/v1_19)
+* [a blog sharing a workaround](https://hk.saowen.com/a/2238ee56dccb0df24eb98973c499f19ebdf1058e36ea713689b049c32563a9db)
+* [issue report](https://github.com/Xunius/Menotexport/issues/25)
+
+I haven't got time to look into this, and I have little experience handling sqlite data encryption/decryption. So if anyone can offer any suggestion it will be greatly appreciated.
+
+Also if you encounter an error when trying to run this tool on your local database file:
+```
+# <Menotexport>: Failed to recoganize the given database file.
+file is not a database
+```
+
+before we figure out an easy to bypass this, please consider backing up your database file, and using an older version of Mendeley before 1.19. Sorry for the trouble.
+
+
 ## What does this do?
 
 Menotexport is a simple python solution to help extracts and exports annotations (highlighted
