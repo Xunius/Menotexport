@@ -17,6 +17,7 @@
 
 Update time: 2016-04-15 16:25:00.
 Update time: 2016-06-22 16:26:11.
+Update time: 2018-06-24 13:21:26.
 '''
 
 __version__='Menotexport v1.4.4'
@@ -36,6 +37,7 @@ from lib.tools import printHeader, printInd, printNumHeader
 #from html2text import html2text
 from bs4 import BeautifulSoup
 from datetime import datetime
+import re
 
 if sys.version_info[0]>=3:
     #---------------------Python3---------------------
@@ -94,6 +96,24 @@ class FileAnno(object):
 
         self.pages=list(set(self.hlpages+self.ntpages))
         self.pages.sort()
+
+def makedirs(path):
+    '''Make dir and remove invalid windows path characters
+
+    ':' is illegal in Mac and windows. Strategy: remove, although legal in Linux.
+    '''
+    if not os.path.exists(path):
+        try:
+            os.makedirs(path)
+        except WindowsError as e:
+            drive,remain=os.path.splitdrive(path)
+            remain=re.sub(r'[<>:"|?*]','_',remain)
+            remain=remain.strip()
+            path=os.path.join(drive,remain)
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+    return
 
 
 def convert2datetime(s):
@@ -1054,7 +1074,8 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
     #--------Make subdir using folder name--------
     outdir_folder=os.path.join(outdir,foldername)
     if not os.path.isdir(outdir_folder):
-        os.makedirs(outdir_folder)
+        #os.makedirs(outdir_folder)
+        makedirs(outdir_folder)
 
     #-------------------Export PDFs-------------------
     if 'p' in action:
@@ -1192,7 +1213,8 @@ def processCanonicals(db,outdir,annotations,docids,allfolders,action,\
     #--------Make subdir using folder name--------
     outdir_folder=os.path.join(outdir,'Canonical-My library')
     if not os.path.isdir(outdir_folder):
-        os.makedirs(outdir_folder)
+        #os.makedirs(outdir_folder)
+        makedirs(outdir_folder)
 
     #-------------------Export PDFs-------------------
     if 'p' in action:
