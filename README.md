@@ -21,7 +21,7 @@ Also if you encounter an error when trying to run this tool on your local databa
 file is not a database
 ```
 
-before we figure out an easy to bypass this, please consider backing up your database file, and using an older version of Mendeley before 1.19. Sorry for the trouble.
+before we figure out an easy to bypass this, please consider backing up your database file, and trying an older version of Mendeley before 1.19. Sorry for the trouble.
 
 
 ## What does this do?
