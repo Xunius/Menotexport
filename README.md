@@ -13,7 +13,7 @@ Some relavent info on this:
 * [a blog sharing a workaround](https://hk.saowen.com/a/2238ee56dccb0df24eb98973c499f19ebdf1058e36ea713689b049c32563a9db)
 * [issue report](https://github.com/Xunius/Menotexport/issues/25)
 
-I haven't got time to look into this, and I have little experience handling sqlite data encryption/decryption. So if anyone can offer any suggestion it will be greatly appreciated.
+I haven't got time to look into this, and I have little experience handling sqlite data encryption/decryption. So if anyone can offer any suggestion it will be greatly appreciated, including any advises on potential legal issues distributing a tool like this that bypasses their encryption.
 
 Also if you encounter an error when trying to run this tool on your local database file:
 ```
