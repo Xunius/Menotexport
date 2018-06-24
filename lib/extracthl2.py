@@ -576,6 +576,10 @@ def getCtime(annos,verbose=True):
 def extractHighlights(filename,anno,verbose=True):
     '''Extract highlighted texts from a PDF
 
+    Deprecated. Previously used for highlight text extraction using
+    pdfminer. Now use extractHighlights2() and a 'method' argument
+    to control which one to use, pdftotext or pdfminer.
+
     '''
     hlpages=anno.hlpages
     if len(hlpages)==0:
@@ -621,13 +625,20 @@ def extractHighlights(filename,anno,verbose=True):
 
                 if numjj>0:
                     #--------------Attach text with meta--------------
+                    authors=tools.getAuthorList(anno.meta)
+
                     textjj=Anno(textjj,\
-                        ctime=getCtime(anno.highlights[ii+1]),\
+                        ctime=getCtime(annoii),\
                         title=anno.meta['title'],\
-                        page=ii+1,citationkey=anno.meta['citationkey'],\
-                        tags=anno.meta['tags'])
+                        page=ii+1,
+                        citationkey=anno.meta['citationkey'],\
+                        tags=anno.meta['tags'],
+                        bbox=objj.bbox,
+                        author=authors,
+                        note_author=anno.meta['user_name'])
 
                     hltexts.append(textjj)
+
 
                 #----------------Break if all found----------------
                 anno_found+=numjj
@@ -639,7 +650,7 @@ def extractHighlights(filename,anno,verbose=True):
 
 
 #----------------Extract highlighted texts from a PDF--------
-def extractHighlights2(filename,anno,verbose=True):
+def extractHighlights2(filename,anno,method,verbose=True):
     '''Extract highlighted texts from a PDF
 
     Extract texts from PDF using pdftotext
@@ -686,7 +697,11 @@ def extractHighlights2(filename,anno,verbose=True):
                 if type(objj)!=LTTextBox and\
                         type(objj)!=LTTextBoxHorizontal:
                     continue
-                textjj,numjj=findStrFromBox2(annoii,objj,filename,page_height)
+
+                if method=='pdftotext':
+                    textjj,numjj=findStrFromBox2(annoii,objj,filename,page_height)
+                elif method=='pdfminer':
+                    textjj,numjj=findStrFromBox(annoii,objj)
 
                 if numjj>0:
                     #--------------Attach text with meta--------------

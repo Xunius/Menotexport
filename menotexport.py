@@ -970,11 +970,13 @@ def extractAnnos(annotations,action,verbose):
 	        if extracthl2.checkPdftotext():
 		    if verbose:
 			printInd('Retrieving highlights using pdftotext ...',4,prefix='# <Menotexport>:')
-                    hltexts=extracthl2.extractHighlights2(fii,annoii,verbose)
+                    hltexts=extracthl2.extractHighlights2(fii,annoii,
+                            'pdftotext',verbose)
 	        else:
 		    if verbose:
 			printInd('Retrieving highlights using pdfminer ...',4,prefix='# <Menotexport>:')
-                    hltexts=extracthl2.extractHighlights(fii,annoii,verbose)
+                    hltexts=extracthl2.extractHighlights2(fii,annoii,
+                            'pdfminer',verbose)
             except:
                 faillist.append(fnameii)
                 hltexts=[]
