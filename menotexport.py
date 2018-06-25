@@ -97,6 +97,7 @@ class FileAnno(object):
         self.pages=list(set(self.hlpages+self.ntpages))
         self.pages.sort()
 
+
 def makedirs(path):
     '''Make dir and remove invalid windows path characters
 
@@ -105,7 +106,7 @@ def makedirs(path):
     if not os.path.exists(path):
         try:
             os.makedirs(path)
-        except WindowsError as e:
+        except WindowsError:
             drive,remain=os.path.splitdrive(path)
             remain=re.sub(r'[<>:"|?*]','_',remain)
             remain=remain.strip()
@@ -217,6 +218,10 @@ def getMetaData(db, docid):
     username=getUserName(db)
     result['user_name']=username
 
+    #------------------Add local url------------------
+    url=getFilePath(db,docid)
+    result['path']=url
+
     return result
 
 
@@ -235,7 +240,17 @@ def getFilePath(db,docid,verbose=True):
        LEFT JOIN Documents
            ON Documents.id=DocumentFiles.documentId
     '''
+    query2=\
+    '''SELECT Files.localUrl
+       FROM Files
+       LEFT JOIN DocumentFiles
+           ON DocumentFiles.hash=Files.hash
+       LEFT JOIN Documents
+           ON Documents.id=DocumentFiles.documentId
+       WHERE (Documents.id=%s)
+    ''' %docid
 
+    '''
     ret=db.execute(query)
     data=ret.fetchall()
     df=pd.DataFrame(data=data,columns=['url','hash','docid'])
@@ -245,9 +260,22 @@ def getFilePath(db,docid,verbose=True):
     if len(pathdata)==0:
         return None
     else:
-        url=fetchField(pathdata,'url')[0]
-        pth = converturl2abspath(url)
+        url=fetchField(pathdata,'url')
+        pth = [converturl2abspath(urlii) for urlii in url]
+        if len(pth)==1:
+            pth=pth[0]
         return pth
+    '''
+    ret=db.execute(query2)
+    data=ret.fetchall()
+    if len(data)==0:
+        return None
+    else:
+        pth=[converturl2abspath(urlii[0]) for urlii in data]
+        if len(pth)==1:
+            pth=pth[0]
+        return pth
+
 
 
 def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None):
@@ -649,7 +677,7 @@ def getDocNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
         pth=getFilePath(db,docid) or '/pseudo_path/%s.pdf' %title
 
         bbox = [50, 700, 80, 730] 
-        # needs a rectangle however size does not matter
+        # needs a rectangle, size does not matter
         note = {'rect': bbox,\
                 'author':'Mendeley user',\
                 'content':docnote,\
@@ -727,11 +755,12 @@ def getOtherDocs(db,folderid,foldername,annodocids,verbose=True):
     result=[]
     for ii in otherdocids:
         docii=getMetaData(db,ii)
-        docii['path']=getFilePath(db,ii) #Local file path, can be None
+        #docii['path']=getFilePath(db,ii) #Local file path, can be None
         docii['folder']=foldername
         result.append(docii)
 
     return result
+
 
 #---------Get a list of doc meta-data not in annotation list----------
 def getOtherCanonicalDocs(db,alldocids,annodocids,verbose=True):
@@ -748,7 +777,7 @@ def getOtherCanonicalDocs(db,alldocids,annodocids,verbose=True):
     result=[]
     for ii in otherdocids:
         docii=getMetaData(db,ii)
-        docii['path']=getFilePath(db,ii) #Local file path, can be None
+        #docii['path']=getFilePath(db,ii) #Local file path, can be None
         docii['folder']='Canonical'
         result.append(docii)
 
@@ -786,8 +815,6 @@ def getFolderDocList(db,folderid,verbose=True):
 
 
 
-
-#--------------Get canonical document ids----------------
 def getCanonicals(db,verbose=True):
 
     query=\
@@ -805,8 +832,6 @@ def getCanonicals(db,verbose=True):
     canonical_doc_ids=fetchField(df,'docid')
 
     return [int(ii) for ii in canonical_doc_ids]
-
-
 
 
 #--------------Get folder id and name list in database----------------
@@ -846,7 +871,12 @@ def getFolderList(db,folder,verbose=True):
     if type(folder) is str:
         # Select the given folder, if more than 1 name match, select the
         # one with lowest parentID.
-        seldf=df[df.folder==folder].sort_values('parentID')
+        try:
+            seldf=df[df.folder==folder].sort_values('parentID')
+        except:
+            # 0.16.2 version of pandas doens't have sort_values()?
+            # don't remember having this issue before.
+            seldf=df[df.folder==folder].sort('parentID')
         folderids=fetchField(seldf,'folderid')
     elif type(folder) is tuple or type(folder) is list:
         seldf=df[(df.folderid==folder[0]) & (df.folder==folder[1])]
@@ -1024,15 +1054,12 @@ def extractAnnos(annotations,action,verbose):
     return annotations2,faillist
 
 
-        
-def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
+def processFolder(db,outdir,folderid,foldername,allfolders,action,\
         separate,iszotero,verbose):
     '''Process files/docs in a folder.
 
     <db>: sqlite database.
     <outdir>: str, output directory path.
-    <annotations>: dict, keys: documentId; values: highlights, notes and meta.
-                   See doc in getHighlights().
     <folderid>: int, folder id.
     <foldername>: string, folder name corresponding to <folderid>.
     <allfolders>: bool, user chooses to process all folders or one folder.
@@ -1053,12 +1080,15 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
     if 'n' in action or 'p' in action:
         isnote=True
 
+    annotations={}
+    
     #------------Get raw annotation data------------
     if ishighlight:
+        __import__('pdb').set_trace()
         annotations = getHighlights(db,annotations,folderid,foldername)
     if isnote:
-        annotations = getNotes(db, annotations, folderid,foldername)
-        annotations = getDocNotes(db, annotations, folderid,foldername)
+        annotations = getNotes(db,annotations,folderid,foldername)
+        annotations = getDocNotes(db,annotations,folderid,foldername)
 
     if len(annotations)==0:
         printHeader('No annotations found in folder: %s' %foldername,2)
@@ -1161,7 +1191,7 @@ def processFolder(db,outdir,annotations,folderid,foldername,allfolders,action,\
             risfaillist.extend(flist)
 
 
-    return exportfaillist,annofaillist,bibfaillist,risfaillist
+    return annotations,exportfaillist,annofaillist,bibfaillist,risfaillist
 
     
 def processCanonicals(db,outdir,annotations,docids,allfolders,action,\
@@ -1342,9 +1372,8 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
             if verbose:
                 printNumHeader('Processing folder: "%s"' %fnameii,\
                         ii+1,len(folderlist),1)
-            annotations={}
-            exportfaillistii,annofaillistii,bibfaillistii,risfaillistii=\
-                    processFolder(db,outdir,annotations,\
+            annotations,exportfaillistii,annofaillistii,bibfaillistii,risfaillistii=\
+                    processFolder(db,outdir,\
                 fidii,fnameii,allfolders,action,separate,iszotero,verbose)
 
             exportfaillist.extend(exportfaillistii)
