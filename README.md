@@ -24,6 +24,14 @@ file is not a database
 before we figure out an easy to bypass this, please consider backing up your database file, and trying an older version of Mendeley before 1.19. Sorry for the trouble.
 
 
+### More rants
+
+I thought I messed up my sync, but no, it appears to be a much larger scale issue with Mendeley: lots of people are losing their PDFs after syncing. See [this twitter](https://twitter.com/mendeleysupport/status/1002557134519840769?lang=en) and [their support page](https://service.elsevier.com/app/answers/detail/a_id/27709/supporthub/mendeley/p/10941/).
+
+I was trying their re-activation workaround, but guess what, they say that sync setting is deprecated in my version (1.17.10) and I need to upgrade to the latest, which encrypts your LOCAL data. WTF Mendeley?!
+
+Lesson learnt: backup your data regularly, and better still, ditch Mendeley.
+
 ## What does this do?
 
 Menotexport is a simple python solution to help extracts and exports annotations (highlighted
