@@ -410,7 +410,8 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
         cdate = convert2datetime(r[6])
 	author=r[8]
 	if not author.strip():
-            author=r[9]+" "+r[10]
+            # Join r[9] and r[10], if not "None", separated by space
+            author=' '.join(filter(None, r[9:11]))
         docid=r[7]
         if filterdocid is None:
             folder=r[12]
@@ -542,7 +543,8 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
         # needs a rectangle however size does not matter
         author=r[4]
 	if not author.strip():
-            author=r[8]+" "+r[9]
+            # Join r[8] and r[9], if not "None", separated by space
+            author=' '.join(filter(None, r[8:10]))
         txt = r[5]
         cdate = convert2datetime(r[6])
         docid=r[7]
