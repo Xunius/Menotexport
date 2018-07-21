@@ -147,7 +147,7 @@ def getUserName(db):
 
     query=\
     '''SELECT Profiles.firstName, Profiles.lastName
-    FROM Profiles
+    FROM Profiles WHERE Profiles.isSelf="true"
     '''
     ret=db.execute(query)
     ret=[ii for ii in ret]
