@@ -279,6 +279,7 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                      documentId2: ...
                                 }
             where hl1={'rect': bbox,
+                       'author': author,
                        'cdate': cdate,
                        'page':pg}
                   note={'rect': bbox,
@@ -296,6 +297,9 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
                     FileHighlights.documentId,
+                    FileHighlights.author,
+                    Profiles.firstName,
+                    Profiles.lastName,
                     DocumentFolders.folderid,
                     Folders.name,
                     FileHighlights.color
@@ -304,6 +308,8 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                 ON FileHighlights.fileHash=Files.hash
             LEFT JOIN FileHighlightRects
                 ON FileHighlightRects.highlightId=FileHighlights.id
+            LEFT JOIN Profiles
+                ON Profiles.uuid=FileHighlights.profileUuid
             LEFT JOIN DocumentFolders
                 ON DocumentFolders.documentId=FileHighlights.documentId
             LEFT JOIN Folders
@@ -316,6 +322,9 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
                     FileHighlights.documentId,
+                    FileHighlights.author,
+                    Profiles.firstName,
+                    Profiles.lastName,
                     DocumentFolders.folderid,
                     Folders.name
             FROM Files
@@ -323,6 +332,8 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                 ON FileHighlights.fileHash=Files.hash
             LEFT JOIN FileHighlightRects
                 ON FileHighlightRects.highlightId=FileHighlights.id
+            LEFT JOIN Profiles
+                ON Profiles.uuid=FileHighlights.profileUuid
             LEFT JOIN DocumentFolders
                 ON DocumentFolders.documentId=FileHighlights.documentId
             LEFT JOIN Folders
@@ -336,12 +347,17 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
                     FileHighlights.documentId,
+                    FileHighlights.author,
+                    Profiles.firstName,
+                    Profiles.lastName,
                     FileHighlights.color
             FROM Files
             LEFT JOIN FileHighlights
                 ON FileHighlights.fileHash=Files.hash
             LEFT JOIN FileHighlightRects
                 ON FileHighlightRects.highlightId=FileHighlights.id
+            LEFT JOIN Profiles
+                ON Profiles.uuid=FileHighlights.profileUuid
             WHERE (FileHighlightRects.page IS NOT NULL)
     '''
 
@@ -350,12 +366,17 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                     FileHighlightRects.x1, FileHighlightRects.y1,
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
-                    FileHighlights.documentId
+                    FileHighlights.documentId,
+                    FileHighlights.author,
+                    Profiles.firstName,
+                    Profiles.lastName
             FROM Files
             LEFT JOIN FileHighlights
                 ON FileHighlights.fileHash=Files.hash
             LEFT JOIN FileHighlightRects
                 ON FileHighlightRects.highlightId=FileHighlights.id
+            LEFT JOIN Profiles
+                ON Profiles.uuid=FileHighlights.profileUuid
             WHERE (FileHighlightRects.page IS NOT NULL)
     '''
 
@@ -387,21 +408,26 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
         # [x1,y1,x2,y2], (x1,y1) being bottom-left,
         # (x2,y2) being top-right. Origin at bottom-left
         cdate = convert2datetime(r[6])
+	author=r[8]
+	if not author.strip():
+            # Join r[9] and r[10], if not "None", separated by space
+            author=' '.join(filter(None, r[9:11]))
         docid=r[7]
         if filterdocid is None:
-            folder=r[9]
+            folder=r[12]
             if hascolor:
-                color=r[10]
+                color=r[13]
             else:
                 color=None
         else:
             folder=None
             if hascolor:
-                color=r[8]
+                color=r[11]
             else:
                 color=None
 
         hlight = {'rect': bbox,\
+                  'author': author,\
                   'cdate': cdate,\
                   'color': color,
                   'page':pg\
@@ -463,11 +489,15 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
                     FileNotes.author, FileNotes.note,
                     FileNotes.modifiedTime,
                     FileNotes.documentId,
+                    Profiles.firstName,
+                    Profiles.lastName,
                     DocumentFolders.folderid,
                     Folders.name
             FROM Files
             LEFT JOIN FileNotes
                 ON FileNotes.fileHash=Files.hash
+            LEFT JOIN Profiles
+                ON Profiles.uuid=FileNotes.profileUuid
             LEFT JOIN DocumentFolders
                 ON DocumentFolders.documentId=FileNotes.documentId
             LEFT JOIN Folders
@@ -480,10 +510,14 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
                     FileNotes.x, FileNotes.y,
                     FileNotes.author, FileNotes.note,
                     FileNotes.modifiedTime,
-                    FileNotes.documentId
+                    FileNotes.documentId,
+                    Profiles.firstName,
+                    Profiles.lastName
             FROM Files
             LEFT JOIN FileNotes
                 ON FileNotes.fileHash=Files.hash
+            LEFT JOIN Profiles
+                ON Profiles.uuid=FileNotes.profileUuid
             WHERE (FileNotes.page IS NOT NULL)
     '''
 
@@ -508,11 +542,14 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
         bbox = [r[2], r[3], r[2]+30, r[3]+30] 
         # needs a rectangle however size does not matter
         author=r[4]
+	if not author.strip():
+            # Join r[8] and r[9], if not "None", separated by space
+            author=' '.join(filter(None, r[8:10]))
         txt = r[5]
         cdate = convert2datetime(r[6])
         docid=r[7]
         if filterdocid is None:
-            folder=r[9]
+            folder=r[11]
         else:
             folder=None
 
