@@ -14,6 +14,7 @@ def deu(text):
     else:
         return text
 
+
 def enu(text):
     if isinstance(text,unicode):
         return text.encode('utf8','replace')
@@ -55,6 +56,7 @@ def printHeader(s, level=1, length=70, prefix='# <Menotexport>:'):
     #print(hline)
 
     return
+
 
 def printNumHeader(s, idx, num, level=1, length=70, prefix='# <Menotexport>:'):
     from textwrap import TextWrapper
@@ -117,7 +119,6 @@ def printInd(s, level=1, length=70, prefix=''):
     return 
 
 
-#-------------------Read in text file and store data-------------------
 def readFile(abpath_in,verbose=True):
     '''Read in text file and store data
 
@@ -145,7 +146,6 @@ def readFile(abpath_in,verbose=True):
     return lines
 
 
-
 def getAuthorList(meta_dict):
     '''Get author list string from annotation metadata dict'''
 
@@ -160,7 +160,6 @@ def getAuthorList(meta_dict):
         authors=' and '.join(authors)
 
     return authors
-
 
 
 def autoRename(abpath):
@@ -217,8 +216,6 @@ def autoRename(abpath):
     return newname
 
 
-
-#---------------Save result to file---------------
 def saveFile(abpath_out,text,overwrite=True,verbose=True):
 
     if os.path.isfile(abpath_out):
@@ -237,4 +234,21 @@ def saveFile(abpath_out,text,overwrite=True,verbose=True):
     return
         
 
-        
+
+def makedirs(path):
+    '''Make dir and remove invalid windows path characters
+
+    ':' is illegal in Mac and windows. Strategy: remove, although legal in Linux.
+    '''
+    if not os.path.exists(path):
+        try:
+            os.makedirs(path)
+        except WindowsError:
+            drive,remain=os.path.splitdrive(path)
+            remain=re.sub(r'[<>:"|?*]','_',remain)
+            remain=remain.strip()
+            path=os.path.join(drive,remain)
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+    return

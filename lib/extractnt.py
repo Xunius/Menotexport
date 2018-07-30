@@ -30,16 +30,14 @@ def extractNotes(path,anno,verbose=True):
     notes=anno.notes
     meta=anno.meta
     nttexts=[]
+    authors=tools.getAuthorList(anno.meta)
 
-    #----------------Loop through pages----------------
     if len(anno.ntpages)==0:
         return nttexts
 
+    #----------------Loop through pages----------------
     for pp in anno.ntpages:
-
         for noteii in notes[pp]:
-            authors=tools.getAuthorList(anno.meta)
-
             textjj=Anno(noteii['content'], ctime=noteii['cdate'],\
                     title=meta['title'],\
                     page=pp,
@@ -47,10 +45,11 @@ def extractNotes(path,anno,verbose=True):
                     citationkey=meta['citationkey'],
                     note_author=anno.meta['user_name'],\
                     tags=meta['tags'],
-                    bbox=noteii['rect'])
+                    bbox=noteii['rect'],
+                    path=path)
             nttexts.append(textjj)
 
-    #----------------Number highlights----------------
+    #----------------Number notes----------------
     for ii,ntii in enumerate(nttexts):
         ntii.num=ii+1
 
