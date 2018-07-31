@@ -889,6 +889,12 @@ def extractAnnos(annotations,action,verbose):
     if 'm' in action:
         from lib import extracthl2
 
+    #------ Check if pdftotext is available--------
+    if extracthl2.checkPdftotext():
+        has_pdftotext=True
+    else:
+        has_pdftotext=False
+
     faillist=[]
     annotations2={}  #keys: docid, values: extracted annotations
 
@@ -911,8 +917,7 @@ def extractAnnos(annotations,action,verbose):
 
             if 'm' in action:
                 try:
-                    #------ Check if pdftotext is available--------
-                    if extracthl2.checkPdftotext():
+                    if has_pdftotext:
                         if verbose:
                             printInd('Retrieving highlights using pdftotext ...',4,prefix='# <Menotexport>:')
                         hltexts=extracthl2.extractHighlights2(fjj,annojj,

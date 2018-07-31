@@ -244,6 +244,7 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
                     #tii=tools.readFile('tmp.txt',False)
 
                     tii=pp.communicate()[0]
+                    tii=tools.deu(tii)
                     textii.append(tii)
 
                     # break to avoid double sampling. Lines from lineii may
