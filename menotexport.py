@@ -42,11 +42,12 @@ from lib import exportpdf
 from lib import exportannotation
 from lib import export2bib
 from lib import export2ris
+from lib import extracthl2
 from lib.tools import printHeader, printInd, printNumHeader, makedirs
 #from html2text import html2text
 from bs4 import BeautifulSoup
 from datetime import datetime
-#import re
+import re
 
 if sys.version_info[0]>=3:
     #---------------------Python3---------------------
@@ -543,11 +544,24 @@ def getDocNotes(db,filterdocid,results=None):
             (DocumentNotes.documentId=%s)
     ''' %filterdocid
 
+    # TODO: fetch "general notes" from Documents.notes in some versions
+    # of Mendeley
+    query2=\
+    '''SELECT Documents.note
+            FROM Documents
+            WHERE (Documents.id IS NOT NULL) AND
+            (Documents.id=%s)
+    ''' %filterdocid
+
     if results is None:
         results={}
 
     #------------------Get notes------------------
     ret = db.execute(query)
+    #ret2 = db.execute(query2)
+    #aa=ret2.fetchall()
+    #if len(aa)>0:
+        #__import__('pdb').set_trace()
 
     for ii,r in enumerate(ret):
         docnote=r[0]
@@ -885,9 +899,6 @@ def extractAnnos(annotations,action,verbose):
                            with highlight texts extracted.
            <faillist>: list, paths of failed pdfs.
     '''
-
-    if 'm' in action:
-        from lib import extracthl2
 
     #------ Check if pdftotext is available--------
     if extracthl2.checkPdftotext():
@@ -1251,6 +1262,28 @@ def processCanonicals(db,outdir,annotations,docids,allfolders,action,\
 
 
     return exportfaillist,annofaillist,bibfaillist,risfaillist
+
+
+def matchDOI(db):
+    query=\
+    '''SELECT Documents.note
+            FROM Documents
+            WHERE (Documents.note IS NOT NULL)
+    '''
+
+    ret=db.execute(query)
+    aa=ret.fetchall()
+
+    pattern=re.compile(r'(?:doi:)?\s?(10.[1-9][0-9]{3}/.*$)',
+            re.DOTALL|re.UNICODE)
+    for ii in aa:
+        m=pattern.match(ii[0])
+        if m is not None:
+            print ii[0],m.groups()
+
+    return
+
+
 
 
 #----------------Main----------------
