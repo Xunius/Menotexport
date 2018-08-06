@@ -7,13 +7,12 @@
 # GPLv3 licence. See the COPYING file for details
 
 Update time: 2016-02-23 23:04:09.
+Update time: 2018-08-06 21:42:42.
 '''
 
 import os
 from textwrap import TextWrapper
-from tools import printHeader, printInd, printNumHeader
-    
-
+from tools import printHeader, printInd, printNumHeader, removeDupGeneralNotes
 
 
 
@@ -32,6 +31,8 @@ def groupByTags(annodict,verbose=True):
 
         if len(hlii)==0 and len(ntii)==0:
             continue
+
+        ntii=removeDupGeneralNotes(ntii)
 
         citeii=annoii.meta['citationkey']
         tagsii=annoii.meta['tags']

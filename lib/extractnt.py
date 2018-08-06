@@ -9,6 +9,7 @@
 # terms of the GPLv3 license.
 
 Update time: 2016-04-12 22:09:38.
+Update time: 2018-08-06 21:42:56.
 '''
 
 import math
@@ -46,7 +47,8 @@ def extractNotes(path,anno,verbose=True):
                     note_author=anno.meta['user_name'],\
                     tags=meta['tags'],
                     bbox=noteii['rect'],
-                    path=path)
+                    path=path,
+                    isgeneralnote=noteii['isgeneralnote'])
             nttexts.append(textjj)
 
     #----------------Number notes----------------

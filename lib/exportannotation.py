@@ -9,6 +9,7 @@
 # terms of the GPLv3 license.
 
 Update time: 2016-04-12 22:09:38.
+Update time: 2018-08-06 21:43:13.
 '''
 
 import os
@@ -86,6 +87,12 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
         titleii=hlii[0].title
     except:
         titleii=ntii[0].title
+
+    #-----Seperate sticky notes from general notes-----
+    # The same general note is replicated for each attachment when
+    # a doc has >1 attached pdfs and exporting pdfs. This is to avoid
+    # duplicate general notes when exporting to txt.
+    ntii=tools.removeDupGeneralNotes(ntii)
 
     outstr=u'\n\n{0}\n# {1}'.format(int(80)*'-',conv(titleii))
 
@@ -167,6 +174,12 @@ def _exportAnnoFileTemplated(abpath_out,anno,verbose=True):
 
     hls=anno.highlights
     nts=anno.notes
+
+    #-----Seperate sticky notes from general notes-----
+    # The same general note is replicated for each attachment when
+    # a doc has >1 attached pdfs and exporting pdfs. This is to avoid
+    # duplicate general notes when exporting to txt.
+    nts=tools.removeDupGeneralNotes(nts)
 
     def getFieldsDict(ntjj):
         dictjj={}

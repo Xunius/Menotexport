@@ -2,6 +2,7 @@
 Utility functions.
 
 Update time: 2016-03-24 11:11:46.
+Update time: 2018-08-06 21:43:20.
 '''
 import os
 import re
@@ -252,3 +253,24 @@ def makedirs(path):
                 os.makedirs(path)
 
     return
+
+
+def removeDupGeneralNotes(note_list):
+    '''Remove duplicate general notes from a list of Anno objs
+
+    The same general note is replicated for each attachment when
+    a doc has >1 attached pdfs and exporting pdfs. This is to avoid
+    duplicate general notes when exporting to txt.
+    '''
+
+    if len(note_list)==0:
+        return note_list
+    else:
+        note_list2=[]
+        nt_sticky=[ntjj for ntjj in note_list if ntjj.isgeneralnote==False]
+        nt_gen=[ntjj for ntjj in note_list if ntjj.isgeneralnote]
+        note_list2.extend(nt_sticky)
+        if len(nt_gen)>0:
+            note_list2.append(nt_gen[0])
+        return note_list2
+

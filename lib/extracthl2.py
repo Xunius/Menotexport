@@ -16,6 +16,7 @@ Update time: 2016-02-23 18:04:10.
 Update time: 2016-06-21 16:53:02.
 Update time: 2016-06-22 16:26:16.
 Update time: 2018-07-28 14:03:57.
+Update time: 2018-08-06 21:43:03.
 '''
 
 
@@ -59,7 +60,7 @@ def checkPdftotext():
 class Anno(object):
     def __init__(self,text,ctime=None,title=None,author=None,\
             note_author=None,page=None,citationkey=None,tags=None,
-            bbox=None,path=None):
+            bbox=None,path=None,isgeneralnote=None):
 
         self.text=text
         self.ctime=ctime
@@ -71,6 +72,7 @@ class Anno(object):
         self.tags=tags
         self.bbox=bbox
         self.path=path
+        self.isgeneralnote=isgeneralnote
 
         if tags is None:
             self.tags='None'
@@ -90,9 +92,10 @@ Citation key:       %s
 Tags:               %s
 Bbox:               %s
 Path:               %s
+Is general note:    %s
 ''' %(self.text, self.ctime, self.title, self.author,
       self.note_author, self.page, self.citationkey,
-      ', '.join(self.tags),self.bbox,self.path)
+      ', '.join(self.tags),self.bbox,self.path,self.isgeneralnote)
         
         reprstr=reprstr.encode('ascii','replace')
 
@@ -197,13 +200,13 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
     # pdftotext requires int coordinates, scale default dpi of
     # pdftotext (72) to 720, and multiply coordinates by 10.
     coord2str=lambda x: int(round(10.*x))  
+    #----------Create a dummy LTTextLine obj----------
+    dummy=LTTextLine([1,2,3,4])
     
     #----------------Loop through annos----------------
     for ii,hii in enumerate(anno):
 
-        #----------Create a dummy LTTextLine obj----------
         hiibox=hii['rect']
-        dummy=LTTextLine(hiibox)
         dummy.set_bbox(hiibox)   #Needs this step
 
         if box.is_hoverlap(dummy) and box.is_voverlap(dummy):
@@ -232,9 +235,11 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
                     # NOTE: use '-' as the output for pdftotext to direct the 
                     # output to stdout. Quite some speed up. How could I not
                     # notice this before!
-                    args=['pdftotext','-f',hii['page'],'-l',hii['page'],'-r',720,\
-                            '-x',coord2str(hiibox[0]),'-y',coord2str(pheight-hiibox[3]),\
-                            '-W',coord2str(hiibox[2]-hiibox[0]),'-H',coord2str(hiibox[3]-hiibox[1]),\
+                    args=['pdftotext','-f',hii['page'],'-l',hii['page'],\
+                            '-r',720,'-x',coord2str(hiibox[0]),'-y',\
+                            coord2str(pheight-hiibox[3]),'-W',\
+                            coord2str(hiibox[2]-hiibox[0]),'-H',\
+                            coord2str(hiibox[3]-hiibox[1]),\
                             os.path.abspath(filename),'-']
                     args=map(str,args)
 

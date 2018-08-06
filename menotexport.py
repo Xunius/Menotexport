@@ -19,6 +19,7 @@ Update time: 2016-04-15 16:25:00.
 Update time: 2016-06-22 16:26:11.
 Update time: 2018-06-24 13:21:26.
 Update time: 2018-07-28 19:46:44.
+Update time: 2018-08-06 21:42:33.
 
 TODO: 
 
@@ -61,6 +62,28 @@ else:
 
 #-------Fetch a column from pandas dataframe-------
 fetchField=lambda x, f: x[f].unique().tolist()
+
+
+#---------Regex pattern for matching dois---------
+DOI_PATTERN=re.compile(r'(?:doi:)?\s?(10.[1-9][0-9]{3}/.*$)',
+        re.DOTALL|re.UNICODE)
+
+# Sometimes citation imported via a .bib or .ris file may contain
+# a note field (`annote = {{some note}} `for .bib, `N1 - some note` for .ris).
+# It can be doi strings:
+#    * doi: 10.1021/ed020p517.1
+#    * 10.1021/ed020p517.1
+# It can also be ISBN strings: e.g. ISBN 978..... 
+# It can also be PMID strings: e.g. PMID: xxxx 
+# It could be something else, whatever the citation provider decides to put in.
+# So to distinguish them from actuall notes made by users, below is a list
+# of regex patterns trying to catch some recognizable patterns and exclude
+# them from the notes.
+
+NOTE_EXCLUDE_PATTERNS=[
+        DOI_PATTERN,
+        ]
+
 
 
 
@@ -496,7 +519,8 @@ def getNotes(db,filterdocid,results=None):
                 'content':txt,\
                 'cdate': cdate,\
                 'page':pg,
-                'path':pth
+                'path':pth,
+                'isgeneralnote': False
                   }
 
         #------------Save to dict------------
@@ -535,6 +559,7 @@ def getDocNotes(db,filterdocid,results=None):
     Update time: 2018-07-28 20:02:10.
     '''
 
+    # Older versions of Mendeley saves notes in DocumentsNotes
     query=\
     '''SELECT DocumentNotes.text,
               DocumentNotes.documentId,
@@ -544,12 +569,12 @@ def getDocNotes(db,filterdocid,results=None):
             (DocumentNotes.documentId=%s)
     ''' %filterdocid
 
-    # TODO: fetch "general notes" from Documents.notes in some versions
-    # of Mendeley
+    # Newer versions (not sure from which exactly) of Mendeley saves
+    # notes in Documents.note
     query2=\
     '''SELECT Documents.note
             FROM Documents
-            WHERE (Documents.id IS NOT NULL) AND
+            WHERE (Documents.note IS NOT NULL) AND
             (Documents.id=%s)
     ''' %filterdocid
 
@@ -557,16 +582,32 @@ def getDocNotes(db,filterdocid,results=None):
         results={}
 
     #------------------Get notes------------------
-    ret = db.execute(query)
-    #ret2 = db.execute(query2)
-    #aa=ret2.fetchall()
-    #if len(aa)>0:
-        #__import__('pdb').set_trace()
+    ret = db.execute(query).fetchall()
+    ret2 = db.execute(query2).fetchall()
+    ret=ret+ret2
+    username=getUserName(db)
 
-    for ii,r in enumerate(ret):
-        docnote=r[0]
-        docid=r[1]
-        basenote=r[2]
+    for ii,rii in enumerate(ret):
+        docnote=rii[0]
+        if len(docnote)==0:
+            # skip u''
+            continue
+
+        # skip things that are not user notes. See def of NOTE_EXCLUDE_PATTERNS
+        skip=False
+        for patternii in NOTE_EXCLUDE_PATTERNS:
+            if patternii.match(docnote) is not None:
+                skip=True
+                break
+
+        if skip:
+            continue
+
+        docid=filterdocid
+        try:
+            basenote=rii[2]
+        except:
+            basenote=None
         pg=1
 
         if docnote is not None and basenote is not None\
@@ -574,6 +615,7 @@ def getDocNotes(db,filterdocid,results=None):
             docnote=basenote+'\n\n'+docnote
 
         #--------------------Parse html--------------------
+        # Why am I doing this?
         soup=BeautifulSoup(docnote,'html.parser')
         docnote=soup.get_text()
         '''
@@ -587,19 +629,18 @@ def getDocNotes(db,filterdocid,results=None):
         pth=getFilePath(db,docid) # a list, could be more than 1, or None
         # If no attachment, use None as path
         if pth is None:
+            # make it compatible with the for loop below
             pth=[None,]
-
-        __import__('pdb').set_trace()
-        # why I cant fetch anything?
 
         bbox = [50, 700, 80, 730] 
         # needs a rectangle, size does not matter
-        note = {'rect': bbox,\
-                'author':'Mendeley user',\
-                'content':docnote,\
-                'cdate': datetime.now(),\
+        note = {'rect': bbox,
+                'author': username,
+                'content':docnote,
+                'cdate': datetime.now(),
                 'page':pg,
-                'path':pth
+                'path':pth,
+                'isgeneralnote': True
                   }
 
         #-------------------Save to dict-------------------
@@ -609,7 +650,7 @@ def getDocNotes(db,filterdocid,results=None):
                 if 'notes' in results[docid]:
                     if pthii in results[docid]['notes']:
                         if pg in results[docid]['notes'][pthii]:
-                            results[docid]['notes'][pthii][pg].insert(note)
+                            results[docid]['notes'][pthii][pg].insert(0,note)
                         else:
                             results[docid]['notes'][pthii][pg]=[note,]
                     else:
@@ -922,6 +963,8 @@ def extractAnnos(annotations,action,verbose):
         for fjj, annojj in annoii.file_annos.items():
 
             fnamejj=annojj.filename
+            # When a doc has no attachment, use title instead of filename
+            if fnamejj is None: fnamejj=annojj.meta['title']
             if verbose:
                 printNumHeader('Processing file:',ii+1,num,3)
                 printInd(fnamejj,4)
@@ -981,6 +1024,9 @@ def processDocs(db,outdir,docids,foldername,allfolders,action,\
     <separate>: bool, whether save one output for each file or all files.
     <iszotero>: bool, whether exported .bib is reformated to cater to zotero
                 import or not.
+
+    Author: guangzhi XU (xugzhi1987@gmail.com; guangzhi.xu@outlook.com)
+    Update time: 2018-08-06 21:42:27.
     '''
 
     exportfaillist=[]
@@ -1265,6 +1311,7 @@ def processCanonicals(db,outdir,annotations,docids,allfolders,action,\
 
 
 def matchDOI(db):
+    '''Not currently used'''
     query=\
     '''SELECT Documents.note
             FROM Documents
