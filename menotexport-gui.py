@@ -34,7 +34,6 @@ import menotexport
 import Queue
 import threading
 import sqlite3
-#import pandas as pd
 if sys.version_info[0]>=3:
     import tkinter as tk
     from tkinter import Frame

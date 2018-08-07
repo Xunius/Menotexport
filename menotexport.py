@@ -826,10 +826,11 @@ def getFolderList(db,folder,verbose=True):
     if type(folder) is str:
         folderids=db.execute(query1).fetchall()
         folderids=[ii[0] for ii in folderids]
-    elif type(folder) is tuple or type(folder) is list:
-        raise Exception("Not implemented")
+    elif isinstance(folder, (tuple,list)):
+        # get folder from gui
         #seldf=df[(df.folderid==folder[0]) & (df.folder==folder[1])]
         #folderids=fetchField(seldf,'folderid')
+        folderids=[folder[0]]
 
     #----------------Get all subfolders----------------
     if folder is not None:
