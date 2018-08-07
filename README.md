@@ -392,6 +392,7 @@ The software is tested on Linux and Windows 7, 10. Should also run on Mac.
 
 ## Versions
 
+* 1.5.0: Documents with more than 1 attactments (e.g. supplementary materials) are properly exported. Fix side-bar notes (aka "General notes") fetching problem.
 * 1.4.4: Add custom annotation templation support (not mature yet). Fix auto-renaming function fixed.
 * 1.4: Add export to .ris format.
 "Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, are now properly processed, and the results are saved to a directory "Canonical-My Library".
