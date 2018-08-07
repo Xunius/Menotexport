@@ -18,9 +18,19 @@
 Update time: 2016-04-15 16:25:00.
 Update time: 2016-06-22 16:26:11.
 Update time: 2018-06-24 13:21:26.
+Update time: 2018-07-28 19:46:44.
+Update time: 2018-08-06 21:42:33.
+
+TODO: 
+
+    * add python 3 compatibility. If seems that pdfminer support 3 now:
+    https://github.com/pdfminer/pdfminer.six
+    * Possible to remove pandas dependency?
+    * multi-thread or -process something to speed up
+
 '''
 
-__version__='Menotexport v1.4.4'
+__version__='Menotexport v1.5.0'
 
 #---------------------Imports---------------------
 import sys,os
@@ -33,7 +43,8 @@ from lib import exportpdf
 from lib import exportannotation
 from lib import export2bib
 from lib import export2ris
-from lib.tools import printHeader, printInd, printNumHeader
+from lib import extracthl2
+from lib.tools import printHeader, printInd, printNumHeader, makedirs
 #from html2text import html2text
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -53,6 +64,65 @@ else:
 fetchField=lambda x, f: x[f].unique().tolist()
 
 
+#---------Regex pattern for matching dois---------
+DOI_PATTERN=re.compile(r'(?:doi:)?\s?(10.[1-9][0-9]{3}/.*$)',
+        re.DOTALL|re.UNICODE)
+
+# Sometimes citation imported via a .bib or .ris file may contain
+# a note field (`annote = {{some note}} `for .bib, `N1 - some note` for .ris).
+# It can be doi strings:
+#    * doi: 10.1021/ed020p517.1
+#    * 10.1021/ed020p517.1
+# It can also be ISBN strings: e.g. ISBN 978..... 
+# It can also be PMID strings: e.g. PMID: xxxx 
+# It could be something else, whatever the citation provider decides to put in.
+# So to distinguish them from actuall notes made by users, below is a list
+# of regex patterns trying to catch some recognizable patterns and exclude
+# them from the notes.
+
+NOTE_EXCLUDE_PATTERNS=[
+        DOI_PATTERN,
+        ]
+
+
+
+
+class DocAnno(object):
+    def __init__(self,docid,meta,highlights=None,notes=None):
+        '''Obj to hold annotations (highlights+notes) in a doc.
+        '''
+
+        self.docid=docid
+        self.meta=meta
+
+        # Get file paths and names, a doc can have multiple files associated
+        self.path=meta['path'] # always a list if not None
+        if self.path is None:
+            self.hasfile=False
+            self.filename=None
+            self.path=[None,]  # if DocNotes exists but no file, to make
+            # the iteration below possible
+        else:
+            self.hasfile=True
+            self.filename=[os.path.split(pii)[1] for pii in self.path]
+
+        #----------Create a fileanno obj for each file----------
+        self.file_annos={}
+
+        if len(self.path)>1:
+            self.has_multifile=True
+        else:
+            self.has_multifile=False
+
+        for ii, pii in enumerate(self.path):
+            hlii=highlights.get(pii,{})
+            ntii=notes.get(pii,{})
+            metaii=meta.copy()
+            metaii['path']=pii
+
+            annoii=FileAnno(docid,metaii,highlights=hlii,notes=ntii)
+            self.file_annos[pii]=annoii
+
 
 class FileAnno(object):
 
@@ -64,57 +134,33 @@ class FileAnno(object):
         self.meta=meta
         self.highlights=highlights
         self.notes=notes
-        self.path=meta['path']
-        _dir, self.filename=os.path.split(self.path)
-        if _dir=='/pseudo_path':
+
+        self.path=meta['path'] # a string or None
+        if self.path is None:
             self.hasfile=False
+            self.filename=None
         else:
             self.hasfile=True
+            self.filename=os.path.split(self.path)[1]
 
         if highlights is None:
             self.hlpages=[]
-        elif type(highlights) is dict:
+        elif isinstance(highlights, dict):
             self.hlpages=highlights.keys()
-            self.hlpages.sort()
-        elif type(highlights) is list:
-            self.hlpages=[ii.page for ii in highlights]
             self.hlpages.sort()
         else:
             raise Exception("highlights type wrong")
 
         if notes is None:
             self.ntpages=[]
-        elif type(notes) is dict:
+        elif isinstance(notes, dict):
             self.ntpages=notes.keys()
-            self.ntpages.sort()
-        elif type(notes) is list:
-            self.ntpages=[ii.page for ii in notes]
             self.ntpages.sort()
         else:
             raise Exception("notes type wrong")
-            
 
         self.pages=list(set(self.hlpages+self.ntpages))
         self.pages.sort()
-
-
-def makedirs(path):
-    '''Make dir and remove invalid windows path characters
-
-    ':' is illegal in Mac and windows. Strategy: remove, although legal in Linux.
-    '''
-    if not os.path.exists(path):
-        try:
-            os.makedirs(path)
-        except WindowsError:
-            drive,remain=os.path.splitdrive(path)
-            remain=re.sub(r'[<>:"|?*]','_',remain)
-            remain=remain.strip()
-            path=os.path.join(drive,remain)
-            if not os.path.exists(path):
-                os.makedirs(path)
-
-    return
 
 
 def convert2datetime(s):
@@ -150,11 +196,12 @@ def getUserName(db):
     '''SELECT Profiles.firstName, Profiles.lastName
     FROM Profiles WHERE Profiles.isSelf="true"
     '''
+    # TODO: pull the new fix
     ret=db.execute(query)
     ret=[ii for ii in ret]
     return ' '.join(ret[0])
 
-    
+
 def getMetaData(db, docid):
     '''Get meta-data of a doc by documentId.
     '''
@@ -188,7 +235,8 @@ def getMetaData(db, docid):
               DocumentTags.tag,
               DocumentContributors.firstNames,
               DocumentContributors.lastName,
-              DocumentKeywords.keyword
+              DocumentKeywords.keyword,
+              Folders.name
        FROM Documents
        LEFT JOIN DocumentTags
            ON DocumentTags.documentId=Documents.id
@@ -196,7 +244,12 @@ def getMetaData(db, docid):
            ON DocumentContributors.documentId=Documents.id
        LEFT JOIN DocumentKeywords
            ON DocumentKeywords.documentId=Documents.id
-    '''
+       LEFT JOIN DocumentFolders
+           ON DocumentFolders.documentId=Documents.id
+       LEFT JOIN Folders
+           ON Folders.id=DocumentFolders.folderid
+       WHERE (Documents.id=%s)
+    ''' %docid
 
     #------------------Get file meta data------------------
     ret=db.execute(query)
@@ -205,42 +258,67 @@ def getMetaData(db, docid):
             'publication','volume','year','doi','abstract',\
             'arxivId','chapter','city','country','edition','institution',\
             'isbn','issn','month','day','publisher','series','type',\
-            'read','favourite','tags','firstnames','lastname','keywords']
+            'read','favourite','tags','firstnames','lastname','keywords',
+            'folder']
 
-    df=pd.DataFrame(data=data,columns=fields)
-    docdata=df[df.docid==docid]
+    docdata=pd.DataFrame(data=data,columns=fields)
     result={}
     for ff in fields:
         fieldii=fetchField(docdata,ff)
         result[ff]=fieldii[0] if len(fieldii)==1 else fieldii
 
     #-----------------Append user name-----------------
-    username=getUserName(db)
-    result['user_name']=username
+    result['user_name']=getUserName(db)
 
     #------------------Add local url------------------
-    url=getFilePath(db,docid)
-    result['path']=url
+    result['path']=getFilePath(db,docid)  # None or list
+
+    #-----Add folder to tags, if not there already-----
+    folder=result['folder']
+    result['folder']=folder or 'Canonical' # if no folder name, a canonical doc
+    tags=result['tags']
+    if folder is not None:
+        if tags is None:
+            if isinstance(folder,list):
+                tags=folder
+            else:
+                tags=[folder,]
+        elif isinstance(tags,list) and isinstance(folder,list):
+            tags.extend(folder)
+            tags=list(set(tags))
+        elif isinstance(tags,list) and not isinstance(folder,list):
+            tags.append(folder)
+            tags=list(set(tags))
+        elif not isinstance(tags,list) and isinstance(folder,list):
+            tags=folder+[tags,]
+            tags=list(set(tags))
+        elif not isinstance(tags,list) and not isinstance(folder,list):
+            tags=[tags, folder]
+            tags=list(set(tags))
+        else:
+            # there shouldn't be anything else, should it?
+            #pass
+            tags=[]
+    else:
+        tags=tags or []
+
+    if not isinstance(tags,list):
+        tags=[tags,]
+    tags.sort()
+
+    result['tags']=tags
 
     return result
 
 
-#---------------Get file path of a PDF using documentId---------------
+#---------------Get file path of PDF(s) using documentId---------------
 def getFilePath(db,docid,verbose=True):
-    '''Get file path of a PDF using documentId
+    '''Get file path of PDF(s) using documentId
+
+    Return <pth>: None or a LIST of file paths. If a single path, a len-1 list.
     '''
 
     query=\
-    '''SELECT Files.localUrl, 
-              DocumentFiles.hash,
-              Documents.id
-       FROM Files
-       LEFT JOIN DocumentFiles
-           ON DocumentFiles.hash=Files.hash
-       LEFT JOIN Documents
-           ON Documents.id=DocumentFiles.documentId
-    '''
-    query2=\
     '''SELECT Files.localUrl
        FROM Files
        LEFT JOIN DocumentFiles
@@ -250,130 +328,85 @@ def getFilePath(db,docid,verbose=True):
        WHERE (Documents.id=%s)
     ''' %docid
 
-    '''
     ret=db.execute(query)
-    data=ret.fetchall()
-    df=pd.DataFrame(data=data,columns=['url','hash','docid'])
-
-    #-----------------Search file path-----------------
-    pathdata=df[df.docid==docid]
-    if len(pathdata)==0:
-        return None
-    else:
-        url=fetchField(pathdata,'url')
-        pth = [converturl2abspath(urlii) for urlii in url]
-        if len(pth)==1:
-            pth=pth[0]
-        return pth
-    '''
-    ret=db.execute(query2)
     data=ret.fetchall()
     if len(data)==0:
         return None
     else:
         pth=[converturl2abspath(urlii[0]) for urlii in data]
-        if len(pth)==1:
-            pth=pth[0]
         return pth
 
 
-
-def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None):
-    '''Extract the coordinates of highlights from the Mendeley database
-    and put results into a dictionary.
+#----------Extract highlights coordinates and related meta data-------
+def getHighlights(db,filterdocid,results=None):
+    '''Extract highlights coordinates and related meta data.
 
     <db>: sqlite3.connection to Mendeley sqlite database.
-    <results>: dict or None, optional dictionary to hold the results. 
-    <folderid>: int, id of given folder. If None, don't do folder filtering.
-    <foldername>: str, name of folder corresponding to <folderid>. Used to
-                  populate meta data.
-    <filterdocid>: int, id of document to query. If None, don't do docid filtering.
+    <filterdocid>: int, id of document to query.
+    <results>: dict or None, optional dictionary to hold the results. If None,
+               create a new empty dict.
 
     Return: <results>: dictionary containing the query results, with
             the following structure:
 
-            results={documentId1: {'highlights': {page1: [hl1, hl2,...],
-                                                page2: [hl1, hl2,...],
-                                                ...}
-                                 'notes':      {page1: [nt1, nt2,...],
-                                                page4: [nt1, nt2,...],
-                                                ...}
-                                 'meta':       {'title': title,
-                                                'tags': [tag1, tag2,...],
-                                                'cite': citationkey,
-                                                'path': abspath,
-                                                ...
-                                                }
-                     documentId2: ...
+            results={documentId1:
+                {'highlights': {path1: {page1: [hl1, hl2,...],
+                                        page2: [hl1, hl2,...],
+                                        ...}
+                                path2: {page1: [hl1, hl2,...],
+                                        page2: [hl1, hl2,...],
+                                        ...}
                                 }
-            where hl1={'rect': bbox,
-                       'cdate': cdate,
-                       'page':pg}
-                  note={'rect': bbox,
-                        'author':author,
-                        'content':txt,
-                        'cdate': cdate,
-                        'page':pg}
+                 'notes': {path1: {page1: [nt1, nt2,...],
+                                   page4: [nt1, nt2,...],
+                                   ...}
+                           ...}
+                 'meta': {'title': title,
+                          'tags': [tag1, tag2,...],
+                          'cite': citationkey,
+                           ...
+                          }
+                     documentId2: ...
+                    }
+
+            where hl1={'rect': bbox,\
+                       'cdate': cdate,\
+                       'color': color,
+                       'page':pg,
+                       'path':pth
+                      }
+                  note={'rect': bbox,\
+                        'author':'Mendeley user',\
+                        'content':docnote,\
+                        'cdate': datetime.now(),\
+                        'page':pg,
+                        'path':pth
+                        }
     
     Update time: 2016-02-24 00:36:33.
+    Update time: 2018-06-27 21:45:27.
+    Update time: 2018-07-28 20:00:11.
     '''
 
+    # For Mendeley versions newer than 1.16.1 (include), with highlight colors
     query_new =\
     '''SELECT Files.localUrl, FileHighlightRects.page,
                     FileHighlightRects.x1, FileHighlightRects.y1,
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
                     FileHighlights.documentId,
-                    DocumentFolders.folderid,
-                    Folders.name,
                     FileHighlights.color
             FROM Files
             LEFT JOIN FileHighlights
                 ON FileHighlights.fileHash=Files.hash
             LEFT JOIN FileHighlightRects
                 ON FileHighlightRects.highlightId=FileHighlights.id
-            LEFT JOIN DocumentFolders
-                ON DocumentFolders.documentId=FileHighlights.documentId
-            LEFT JOIN Folders
-                ON Folders.id=DocumentFolders.folderid
-            WHERE (FileHighlightRects.page IS NOT NULL)
-    '''
+            WHERE (FileHighlightRects.page IS NOT NULL) AND
+            (FileHighlights.documentId=%s)
+    ''' %filterdocid
+
+    # For Mendeley versions older than 1.16.1, no highlight colors
     query_old =\
-    '''SELECT Files.localUrl, FileHighlightRects.page,
-                    FileHighlightRects.x1, FileHighlightRects.y1,
-                    FileHighlightRects.x2, FileHighlightRects.y2,
-                    FileHighlights.createdTime,
-                    FileHighlights.documentId,
-                    DocumentFolders.folderid,
-                    Folders.name
-            FROM Files
-            LEFT JOIN FileHighlights
-                ON FileHighlights.fileHash=Files.hash
-            LEFT JOIN FileHighlightRects
-                ON FileHighlightRects.highlightId=FileHighlights.id
-            LEFT JOIN DocumentFolders
-                ON DocumentFolders.documentId=FileHighlights.documentId
-            LEFT JOIN Folders
-                ON Folders.id=DocumentFolders.folderid
-            WHERE (FileHighlightRects.page IS NOT NULL)
-    '''
-
-    query_canonical_new =\
-    '''SELECT Files.localUrl, FileHighlightRects.page,
-                    FileHighlightRects.x1, FileHighlightRects.y1,
-                    FileHighlightRects.x2, FileHighlightRects.y2,
-                    FileHighlights.createdTime,
-                    FileHighlights.documentId,
-                    FileHighlights.color
-            FROM Files
-            LEFT JOIN FileHighlights
-                ON FileHighlights.fileHash=Files.hash
-            LEFT JOIN FileHighlightRects
-                ON FileHighlightRects.highlightId=FileHighlights.id
-            WHERE (FileHighlightRects.page IS NOT NULL)
-    '''
-
-    query_canonical_old =\
     '''SELECT Files.localUrl, FileHighlightRects.page,
                     FileHighlightRects.x1, FileHighlightRects.y1,
                     FileHighlightRects.x2, FileHighlightRects.y2,
@@ -384,18 +417,9 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
                 ON FileHighlights.fileHash=Files.hash
             LEFT JOIN FileHighlightRects
                 ON FileHighlightRects.highlightId=FileHighlights.id
-            WHERE (FileHighlightRects.page IS NOT NULL)
-    '''
-
-    if folderid is not None and filterdocid is None:
-        fstr='(Folders.id="%s")' %folderid
-        query_new=query_new+' AND\n'+fstr
-        query_old=query_old+' AND\n'+fstr
-
-    if filterdocid is not None:
-        fstr='(FileHighlights.documentId="%s")' %filterdocid
-        query_new=query_canonical_new+' AND\n'+fstr
-        query_old=query_canonical_old+' AND\n'+fstr
+            WHERE (FileHighlightRects.page IS NOT NULL) AND
+            (FileHighlights.documentId=%s)
+    ''' %filterdocid
 
     if results is None:
         results={}
@@ -411,99 +435,57 @@ def getHighlights(db,results=None,folderid=None,foldername=None,filterdocid=None
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
         pg = r[1]
-        bbox = [r[2], r[3], r[4], r[5]] 
+        bbox = [r[2], r[3], r[4], r[5]]
         # [x1,y1,x2,y2], (x1,y1) being bottom-left,
         # (x2,y2) being top-right. Origin at bottom-left
         cdate = convert2datetime(r[6])
         docid=r[7]
-        if filterdocid is None:
-            folder=r[9]
-            if hascolor:
-                color=r[10]
-            else:
-                color=None
-        else:
-            folder=None
-            if hascolor:
-                color=r[8]
-            else:
-                color=None
+        color=r[8] if hascolor else None
 
         hlight = {'rect': bbox,\
                   'cdate': cdate,\
                   'color': color,
-                  'page':pg\
+                  'page':pg,
+                  'path':pth   # distinguish between multi-attachments
                   }
 
         #------------Save to dict------------
+        # any better way of doing this sht?
         if docid in results:
             if 'highlights' in results[docid]:
-                if pg in results[docid]['highlights']:
-                    results[docid]['highlights'][pg].append(hlight)
+                if pth in results[docid]['highlights']:
+                    if pg in results[docid]['highlights'][pth]:
+                        results[docid]['highlights'][pth][pg].append(hlight)
+                    else:
+                        results[docid]['highlights'][pth][pg]=[hlight,]
                 else:
-                    results[docid]['highlights'][pg]=[hlight,]
+                    results[docid]['highlights'][pth]={pg:[hlight,]}
             else:
-                results[docid]['highlights']={pg:[hlight,]}
+                results[docid]['highlights']={pth:{pg:[hlight,]}}
         else:
-            meta=getMetaData(db, docid)
-            if folder is not None:
-                if meta['tags'] is None:
-                    tags=[folder,]
-                elif type(meta['tags']) is list and folder not in meta['tags']:
-                    tags=meta['tags']+[folder,]
-                elif type(meta['tags']) is list and folder in meta['tags']:
-                    tags=meta['tags']
-                else:
-                    #tags=[meta['tags'],folder]
-                    # there shouldn't be anything else, should it?
-                    #pass
-                    tags=[]
-            else:
-                tags=meta['tags'] or []
-            meta['tags']=tags
-            meta['path']=pth
-            meta['folder']='' if folder is None else foldername
-            results[docid]={'highlights':{pg:[hlight,]}}
-            results[docid]['meta']=meta
+            results[docid]={'highlights':{pth:{pg:[hlight,]}}}
 
     return results
 
 
 #-------------------Get sticky notes-------------------
-def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
-    '''Extract notes from the Mendeley database
+def getNotes(db,filterdocid,results=None):
+    '''Extract notes and related meta data
 
     <db>: sqlite3.connection to Mendeley sqlite database.
-    <results>: dict or None, optional dictionary to hold the results. 
-    <folderid>: int, id of given folder. If None, don't do folder filtering.
-    <foldername>: str, name of folder corresponding to <folderid>. Used to
-                  populate meta data.
-    <filterdocid>: int, id of document to query. If None, don't do docid filtering.
+    <filterdocid>: int, id of document to query.
+    <results>: dict or None, optional dictionary to hold the results. If None,
+               create a new empty dict.
 
     Return: <results>: dictionary containing the query results. See
             more in the doc of getHighlights()
+
     Update time: 2016-04-12 20:39:15.
+    Update time: 2018-06-27 21:52:04.
+    Update time: 2018-07-28 20:01:40.
     '''
 
     query=\
-    '''SELECT Files.localUrl, FileNotes.page,
-                    FileNotes.x, FileNotes.y,
-                    FileNotes.author, FileNotes.note,
-                    FileNotes.modifiedTime,
-                    FileNotes.documentId,
-                    DocumentFolders.folderid,
-                    Folders.name
-            FROM Files
-            LEFT JOIN FileNotes
-                ON FileNotes.fileHash=Files.hash
-            LEFT JOIN DocumentFolders
-                ON DocumentFolders.documentId=FileNotes.documentId
-            LEFT JOIN Folders
-                ON Folders.id=DocumentFolders.folderid
-            WHERE (FileNotes.page IS NOT NULL)
-    '''
-
-    query_canonical=\
     '''SELECT Files.localUrl, FileNotes.page,
                     FileNotes.x, FileNotes.y,
                     FileNotes.author, FileNotes.note,
@@ -512,16 +494,9 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
             FROM Files
             LEFT JOIN FileNotes
                 ON FileNotes.fileHash=Files.hash
-            WHERE (FileNotes.page IS NOT NULL)
-    '''
-
-    if folderid is not None and filterdocid is None:
-        fstr='(Folders.id="%s")' %folderid
-        query=query+' AND\n'+fstr
-
-    if filterdocid is not None:
-        fstr='(FileNotes.documentId="%s")' %filterdocid
-        query=query_canonical+' AND\n'+fstr
+            WHERE (FileNotes.page IS NOT NULL) AND
+            (FileNotes.documentId=%s)
+    ''' %filterdocid
 
     if results is None:
         results={}
@@ -531,133 +506,108 @@ def getNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
 
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
-   
         pg = r[1]
-        bbox = [r[2], r[3], r[2]+30, r[3]+30] 
-        # needs a rectangle however size does not matter
+        bbox = [r[2], r[3], r[2]+30, r[3]+30]
+        # needs a rectangle, size does not matter
         author=r[4]
         txt = r[5]
         cdate = convert2datetime(r[6])
         docid=r[7]
-        if filterdocid is None:
-            folder=r[9]
-        else:
-            folder=None
 
         note = {'rect': bbox,\
                 'author':author,\
                 'content':txt,\
                 'cdate': cdate,\
-                'page':pg\
+                'page':pg,
+                'path':pth,
+                'isgeneralnote': False
                   }
 
         #------------Save to dict------------
         if docid in results:
             if 'notes' in results[docid]:
-                if pg in results[docid]['notes']:
-                    results[docid]['notes'][pg].append(note)
+                if pth in results[docid]['notes']:
+                    if pg in results[docid]['notes'][pth]:
+                        results[docid]['notes'][pth][pg].append(note)
+                    else:
+                        results[docid]['notes'][pth][pg]=[note,]
                 else:
-                    results[docid]['notes'][pg]=[note,]
+                    results[docid]['notes'][pth]={pg:[note,]}
             else:
-                results[docid]['notes']={pg:[note,]}
+                results[docid]['notes']={pth:{pg:[note,]}}
         else:
-            meta=getMetaData(db, docid)
-            if folder is not None:
-                if meta['tags'] is None:
-                    tags=[folder,]
-                elif type(meta['tags']) is list and folder not in meta['tags']:
-                    tags=meta['tags']+[folder,]
-                elif type(meta['tags']) is list and folder in meta['tags']:
-                    tags=meta['tags']
-                else:
-                    #tags=[meta['tags'],folder]
-                    # see above
-                    #pass
-                    tags=[]
-            else:
-                tags=meta['tags'] or []
-            meta['tags']=tags
-            meta['path']=pth
-            meta['folder']='' if folder is None else foldername
-            results[docid]={'notes':{pg:[note,]}}
-            results[docid]['meta']=meta
+            results[docid]={'notes':{pth:{pg:[note,]}}}
+
 
     return results
 
 
 #-------------------Get side-bar notes-------------------
-def getDocNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
-    '''Extract side-bar notes from the Mendeley database
+def getDocNotes(db,filterdocid,results=None):
+    '''Extract side-bar notes and related meta data
 
     <db>: sqlite3.connection to Mendeley sqlite database.
-    <results>: dict or None, optional dictionary to hold the results. 
-    <folderid>: int, id of given folder. If None, don't do folder filtering.
-    <foldername>: str, name of folder corresponding to <folderid>. Used to
-                  populate meta data.
-    <filterdocid>: int, id of document to query. If None, don't do docid filtering.
+    <filterdocid>: int, id of document to query.
+    <results>: dict or None, optional dictionary to hold the results. If None,
+               create a new empty dict.
 
     Return: <results>: dictionary containing the query results. with
             See the doc in getHighlights().
+
     Update time: 2016-04-12 20:44:38.
+    Update time: 2018-06-27 21:56:51.
+    Update time: 2018-07-28 20:02:10.
     '''
 
+    # Older versions of Mendeley saves notes in DocumentsNotes
     query=\
     '''SELECT DocumentNotes.text,
               DocumentNotes.documentId,
-              DocumentNotes.baseNote,
-              DocumentFiles.hash,
-              Documents.title,
-              DocumentFolders.folderid,
-              Folders.name
+              DocumentNotes.baseNote
             FROM DocumentNotes
-            LEFT JOIN DocumentFolders
-                ON DocumentFolders.documentId=DocumentNotes.documentId
-            LEFT JOIN Folders
-                ON Folders.id=DocumentFolders.folderid
-            LEFT JOIN DocumentFiles
-                ON DocumentFiles.documentId=DocumentNotes.documentId
-            LEFT JOIN Documents
-                ON Documents.id=DocumentNotes.documentId
-            WHERE (DocumentNotes.documentId IS NOT NULL)
-    '''
-    query_canonical=\
-    '''SELECT DocumentNotes.text,
-              DocumentNotes.documentId,
-              DocumentNotes.baseNote,
-              DocumentFiles.hash,
-              Documents.title
-            FROM DocumentNotes
-            LEFT JOIN DocumentFiles
-                ON DocumentFiles.documentId=DocumentNotes.documentId
-            LEFT JOIN Documents
-                ON Documents.id=DocumentNotes.documentId
-            WHERE (DocumentNotes.documentId IS NOT NULL)
-    '''
+            WHERE (DocumentNotes.documentId IS NOT NULL) AND
+            (DocumentNotes.documentId=%s)
+    ''' %filterdocid
 
-    if filterdocid is None and folderid is not None:
-        fstr='(Folders.id="%s")' %folderid
-        query=query+' AND\n'+fstr
-
-    if filterdocid is not None:
-        fstr='(Documents.id="%s")' %filterdocid
-        query=query_canonical+' AND\n'+fstr
+    # Newer versions (not sure from which exactly) of Mendeley saves
+    # notes in Documents.note
+    query2=\
+    '''SELECT Documents.note
+            FROM Documents
+            WHERE (Documents.note IS NOT NULL) AND
+            (Documents.id=%s)
+    ''' %filterdocid
 
     if results is None:
         results={}
 
     #------------------Get notes------------------
-    ret = db.execute(query)
+    ret = db.execute(query).fetchall()
+    ret2 = db.execute(query2).fetchall()
+    ret=ret+ret2
+    username=getUserName(db)
 
-    for ii,r in enumerate(ret):
-        docnote=r[0]
-        docid=r[1]
-        basenote=r[2]
-        title=r[4]
-        if filterdocid is None:
-            folder=r[6]
-        else:
-            folder=None
-        #dochash=r[5]
+    for ii,rii in enumerate(ret):
+        docnote=rii[0]
+        if len(docnote)==0:
+            # skip u''
+            continue
+
+        # skip things that are not user notes. See def of NOTE_EXCLUDE_PATTERNS
+        skip=False
+        for patternii in NOTE_EXCLUDE_PATTERNS:
+            if patternii.match(docnote) is not None:
+                skip=True
+                break
+
+        if skip:
+            continue
+
+        docid=filterdocid
+        try:
+            basenote=rii[2]
+        except:
+            basenote=None
         pg=1
 
         if docnote is not None and basenote is not None\
@@ -665,6 +615,7 @@ def getDocNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
             docnote=basenote+'\n\n'+docnote
 
         #--------------------Parse html--------------------
+        # Why am I doing this?
         soup=BeautifulSoup(docnote,'html.parser')
         docnote=soup.get_text()
         '''
@@ -674,61 +625,55 @@ def getDocNotes(db,results=None,folderid=None,foldername=None,filterdocid=None):
         '''
 
         # Try get file path
-        pth=getFilePath(db,docid) or '/pseudo_path/%s.pdf' %title
+        #pth=getFilePath(db,docid) or '/pseudo_path/%s.pdf' %title
+        pth=getFilePath(db,docid) # a list, could be more than 1, or None
+        # If no attachment, use None as path
+        if pth is None:
+            # make it compatible with the for loop below
+            pth=[None,]
 
         bbox = [50, 700, 80, 730] 
         # needs a rectangle, size does not matter
-        note = {'rect': bbox,\
-                'author':'Mendeley user',\
-                'content':docnote,\
-                'cdate': datetime.now(),\
-                'page':pg\
+        note = {'rect': bbox,
+                'author': username,
+                'content':docnote,
+                'cdate': datetime.now(),
+                'page':pg,
+                'path':pth,
+                'isgeneralnote': True
                   }
 
         #-------------------Save to dict-------------------
-        if docid in results:
-            if 'notes' in results[docid]:
-                if pg in results[docid]['notes']:
-                    results[docid]['notes'][pg].insert(0,note)
+        # if multiple attachments, add to each of them
+        for pthii in pth:
+            if docid in results:
+                if 'notes' in results[docid]:
+                    if pthii in results[docid]['notes']:
+                        if pg in results[docid]['notes'][pthii]:
+                            results[docid]['notes'][pthii][pg].insert(0,note)
+                        else:
+                            results[docid]['notes'][pthii][pg]=[note,]
+                    else:
+                        results[docid]['notes'][pthii]={pg:[note,]}
                 else:
-                    results[docid]['notes'][pg]=[note,]
+                    results[docid]['notes']={pthii:{pg:[note,]}}
             else:
-                results[docid]['notes']={pg:[note,]}
-        else:
-            meta=getMetaData(db, docid)
-            if folder is not None:
-                if meta['tags'] is None:
-                    tags=[folder,]
-                elif type(meta['tags']) is list and folder not in meta['tags']:
-                    tags=meta['tags']+[folder,]
-                elif type(meta['tags']) is list and folder in meta['tags']:
-                    tags=meta['tags']
-                else:
-                    #tags=[meta['tags'],folder]
-                    #pass
-                    tags=[]
-            else:
-                tags=meta['tags'] or []
-            meta['tags']=tags
-            meta['path']=pth
-            meta['folder']='' if folder is None else foldername
-            results[docid]={'notes':{pg:[note,]}}
-            results[docid]['meta']=meta
+                results[docid]={'notes':{pthii:{pg:[note,]}}}
 
 
     return results
 
 
-#-------------Reformat annotations to a list of FileAnnos-------------
+#-------------Reformat annotations to a dict of DocAnno objs-------------
 def reformatAnno(annodict):
-    '''Reformat annotations to a dict of FileAnnos
+    '''Reformat annotations to a dict of DocAnno objs
 
     <annodict>: dict, annotation dict. See doc in getHighlights().
-    Return <annos>: dict, keys: documentId; value: FileAnno objs.
+    Return <result>: dict, keys: documentId; value: DocAnno objs.
     '''
     result={}
     for kk,vv in annodict.items():
-        annoii=FileAnno(kk,vv['meta'],\
+        annoii=DocAnno(kk,vv['meta'],\
             highlights=vv.get('highlights',{}),\
             notes=vv.get('notes',{}))
         result[kk]=annoii
@@ -736,11 +681,11 @@ def reformatAnno(annodict):
     return result
 
 
-#---------Get a list of doc meta-data not in annotation list----------
-def getOtherDocs(db,folderid,foldername,annodocids,verbose=True):
+def getOtherDocs(db,folderid,annodocids,verbose=True):
     '''Get a list of doc meta-data not in annotation list.
 
     <annodocids>: list, doc documentId.
+    Deprecated. No longer in use.
     '''
 
     folderdocids=getFolderDocList(db,folderid)
@@ -750,13 +695,14 @@ def getOtherDocs(db,folderid,foldername,annodocids,verbose=True):
     #------Docids in folder and not in annodocids------
     otherdocids=set(folderdocids).difference((annodocids))
     otherdocids=list(otherdocids)
+    otherdocids.sort()
 
     #------------------Get meta data------------------
     result=[]
     for ii in otherdocids:
         docii=getMetaData(db,ii)
         #docii['path']=getFilePath(db,ii) #Local file path, can be None
-        docii['folder']=foldername
+        #docii['folder']=foldername
         result.append(docii)
 
     return result
@@ -767,6 +713,7 @@ def getOtherCanonicalDocs(db,alldocids,annodocids,verbose=True):
     '''Get a list of doc meta-data not in annotation list.
 
     <annodocids>: list, doc documentId.
+    Deprecated, no longer in use.
     '''
 
     #------Docids in folder and not in annodocids------
@@ -787,30 +734,22 @@ def getOtherCanonicalDocs(db,alldocids,annodocids,verbose=True):
 #----------Get a list of docids from a folder--------------
 def getFolderDocList(db,folderid,verbose=True):
     '''Get a list of docids from a folder
+
+    Update time: 2018-07-28 20:11:09.
     '''
 
     query=\
-    '''SELECT Documents.id,
-              DocumentFolders.folderid,
-              Folders.name
+    '''SELECT Documents.id
        FROM Documents
        LEFT JOIN DocumentFolders
            ON Documents.id=DocumentFolders.documentId
-       LEFT JOIN Folders
-           ON Folders.id=DocumentFolders.folderid
-    '''
+       WHERE (DocumentFolders.folderid=%s)
+    ''' %folderid
 
-    if folderid is not None:
-        fstr='(Folders.id="%s")' %folderid
-        fstr='WHERE '+fstr
-        query=query+' '+fstr
-
-    #------------------Get docids------------------
     ret=db.execute(query)
     data=ret.fetchall()
-    df=pd.DataFrame(data=data,columns=['docid','folderid','folder'])
-    docids=fetchField(df,'docid')
-
+    docids=[ii[0] for ii in data]
+    docids.sort()
     return docids
 
 
@@ -818,8 +757,7 @@ def getFolderDocList(db,folderid,verbose=True):
 def getCanonicals(db,verbose=True):
 
     query=\
-    '''SELECT Documents.id,
-              DocumentFolders.folderId
+    '''SELECT Documents.id
        FROM Documents
        LEFT JOIN DocumentFolders
            ON DocumentFolders.documentId=Documents.id
@@ -828,10 +766,7 @@ def getCanonicals(db,verbose=True):
 
     ret=db.execute(query)
     data=ret.fetchall()
-    df=pd.DataFrame(data=data,columns=['docid','folderid'])
-    canonical_doc_ids=fetchField(df,'docid')
-
-    return [int(ii) for ii in canonical_doc_ids]
+    return [int(ii[0]) for ii in data]
 
 
 #--------------Get folder id and name list in database----------------
@@ -996,6 +931,21 @@ def getFolderTree(df,folderid,verbose=True):
 
 
 def extractAnnos(annotations,action,verbose):
+    '''Extract texts and attach meta to annotations.
+
+    <annotations>: dict, key: docid, value: DocAnno objs.
+    <action>: list, actions from cli arguments.
+
+    Return <annotations2>: dict, similar structure as <annotations> but
+                           with highlight texts extracted.
+           <faillist>: list, paths of failed pdfs.
+    '''
+
+    #------ Check if pdftotext is available--------
+    if extracthl2.checkPdftotext():
+        has_pdftotext=True
+    else:
+        has_pdftotext=False
 
     faillist=[]
     annotations2={}  #keys: docid, values: extracted annotations
@@ -1003,71 +953,82 @@ def extractAnnos(annotations,action,verbose):
     #-----------Loop through documents---------------
     num=len(annotations)
     docids=annotations.keys()
+
     for ii,idii in enumerate(docids):
         annoii=annotations[idii]
-        fii=annoii.path
-        fnameii=annoii.filename
+        hlii=[]
+        ntii=[]
 
-        if verbose:
-            printNumHeader('Processing file:',ii+1,num,3)
-            printInd(fnameii,4)
+        #------Loop through attached files in a doc------
+        for fjj, annojj in annoii.file_annos.items():
 
-        if 'm' in action:
-            from lib import extracthl2
-
-            try:
-	        #------ Check if pdftotext is available--------
-	        if extracthl2.checkPdftotext():
-		    if verbose:
-			printInd('Retrieving highlights using pdftotext ...',4,prefix='# <Menotexport>:')
-                    hltexts=extracthl2.extractHighlights2(fii,annoii,
-                            'pdftotext',verbose)
-	        else:
-		    if verbose:
-			printInd('Retrieving highlights using pdfminer ...',4,prefix='# <Menotexport>:')
-                    hltexts=extracthl2.extractHighlights2(fii,annoii,
-                            'pdfminer',verbose)
-            except:
-                faillist.append(fnameii)
-                hltexts=[]
-        else:
-            hltexts=[]
-
-        if 'n' in action:
+            fnamejj=annojj.filename
+            # When a doc has no attachment, use title instead of filename
+            if fnamejj is None: fnamejj=annojj.meta['title']
             if verbose:
-                printInd('Retrieving notes...',4,prefix='# <Menotexport>:')
-            try:
-                nttexts=extractnt.extractNotes(fii,annoii,verbose)
-            except:
-                faillist.append(fnameii)
+                printNumHeader('Processing file:',ii+1,num,3)
+                printInd(fnamejj,4)
+
+            if 'm' in action:
+                try:
+                    if has_pdftotext:
+                        if verbose:
+                            printInd('Retrieving highlights using pdftotext ...',4,prefix='# <Menotexport>:')
+                        hltexts=extracthl2.extractHighlights2(fjj,annojj,
+                                'pdftotext',verbose)
+                    else:
+                        if verbose:
+                            printInd('Retrieving highlights using pdfminer ...',4,prefix='# <Menotexport>:')
+                        hltexts=extracthl2.extractHighlights2(fjj,annojj,
+                                'pdfminer',verbose)
+                except:
+                    faillist.append(fnamejj)
+                    hltexts=[]
+            else:
+                hltexts=[]
+
+            if 'n' in action:
+                if verbose:
+                    printInd('Retrieving notes...',4,prefix='# <Menotexport>:')
+                try:
+                    nttexts=extractnt.extractNotes(fjj,annojj,verbose)
+                except:
+                    faillist.append(fnamejj)
+                    nttexts=[]
+            else:
                 nttexts=[]
-        else:
-            nttexts=[]
 
-        #------------Attach ori texts to notes------------
-        nttexts=extractnt.attachRefTextsToNotes(nttexts,hltexts)
+            #------------Attach ori texts to notes------------
+            nttexts=extractnt.attachRefTextsToNotes(nttexts,hltexts)
 
-        annoii.highlights=hltexts
-        annoii.notes=nttexts
+            hlii.extend(hltexts)
+            ntii.extend(nttexts)
+
+        annoii.highlights=hlii
+        annoii.notes=ntii
         annotations2[idii]=annoii
 
     return annotations2,faillist
 
 
-def processFolder(db,outdir,folderid,foldername,allfolders,action,\
+def processDocs(db,outdir,docids,foldername,allfolders,action,\
         separate,iszotero,verbose):
-    '''Process files/docs in a folder.
+    '''Process files/docs.
 
     <db>: sqlite database.
     <outdir>: str, output directory path.
-    <folderid>: int, folder id.
-    <foldername>: string, folder name corresponding to <folderid>.
+    <docids>: list of ints, ids of docs to process.
+    <foldername>: string, sub-folder name under <outdir> to save outputs.
     <allfolders>: bool, user chooses to process all folders or one folder.
-    <action>: list, possible elements: m, n, e, b.
+    <action>: list, possible elements: m, n, p, b, r, t
     <separate>: bool, whether save one output for each file or all files.
-    <iszotero>: bool, whether exported .bib is reformated to cater to zotero import or not.
+    <iszotero>: bool, whether exported .bib is reformated to cater to zotero
+                import or not.
+
+    Author: guangzhi XU (xugzhi1987@gmail.com; guangzhi.xu@outlook.com)
+    Update time: 2018-08-06 21:42:27.
     '''
-    
+
     exportfaillist=[]
     annofaillist=[]
     bibfaillist=[]
@@ -1080,35 +1041,45 @@ def processFolder(db,outdir,folderid,foldername,allfolders,action,\
     if 'n' in action or 'p' in action:
         isnote=True
 
-    annotations={}
-    
+    #----------Get meta data for docs----------
+    doc_meta={}
+    for idii in docids:
+        doc_meta[idii]=getMetaData(db,idii)
+
     #------------Get raw annotation data------------
-    if ishighlight:
-        __import__('pdb').set_trace()
-        annotations = getHighlights(db,annotations,folderid,foldername)
-    if isnote:
-        annotations = getNotes(db,annotations,folderid,foldername)
-        annotations = getDocNotes(db,annotations,folderid,foldername)
+    annotations={}
+    for idii in docids:
+        if ishighlight:
+            annotations = getHighlights(db,idii,annotations)
+        if isnote:
+            annotations = getNotes(db,idii,annotations)
+            annotations = getDocNotes(db,idii,annotations)
 
     if len(annotations)==0:
         printHeader('No annotations found in folder: %s' %foldername,2)
-        if 'b' not in action and 'p' not in action:
+        # Need to add 'r', right?
+        if 'b' not in action and 'p' not in action and 'r' not in action:
             return exportfaillist,annofaillist,bibfaillist,risfaillist
     else:
+        #----------Populate meta data for docs----------
+        for idii in annotations.keys():
+            annotations[idii]['meta']=doc_meta[idii]
+
         #---------------Reformat annotations---------------
         annotations=reformatAnno(annotations)
 
     #------Get other docs without annotations------
-    otherdocs=getOtherDocs(db,folderid,foldername,annotations.keys())
+    otherdocs=[doc_meta[idii] for idii in docids if idii not in\
+            annotations.keys()]
 
     #--------Make subdir using folder name--------
     outdir_folder=os.path.join(outdir,foldername)
     if not os.path.isdir(outdir_folder):
-        #os.makedirs(outdir_folder)
         makedirs(outdir_folder)
 
     #-------------------Export PDFs-------------------
     if 'p' in action:
+        #-----------Export PDFs with annotations-----------
         if len(annotations)>0:
             if verbose:
                 printHeader('Exporting annotated PDFs ...',2)
@@ -1129,6 +1100,10 @@ def processFolder(db,outdir,folderid,foldername,allfolders,action,\
             printHeader('Extracting annotations from PDFs ...',2)
         annotations,flist=extractAnnos(annotations,action,verbose)
         annofaillist.extend(flist)
+        # NOTE beyond this point things in <annotations> have changed:
+        # key: docid as before. value: DocAnno as before, 
+        # but DocAnno now has highlights and notes attributes which are
+        # both lists of extracthl2.Anno objs
 
     #------------Export annotations to txt------------
     if ('m' in action or 'n' in action) and len(annotations)>0:
@@ -1154,8 +1129,8 @@ def processFolder(db,outdir,folderid,foldername,allfolders,action,\
         #-----------Export docs with annotations-----------
         if len(annotations)>0:
             # <outdir> is the base folder to save outputs, specified by user
-            # <bibfolder> is the folder to save .bib file, which is <outdir> if <allfolders> is True,
-            # or <outdir>/<folder_tree> otherwise.
+            # <bibfolder> is the folder to save .bib file, which is <outdir>
+            # if <allfolders> is True, or <outdir>/<folder_tree> otherwise.
             flist=export2bib.exportAnno2Bib(annotations,outdir,\
                 bibfolder,allfolders,isfile,iszotero,verbose)
             bibfaillist.extend(flist)
@@ -1191,9 +1166,9 @@ def processFolder(db,outdir,folderid,foldername,allfolders,action,\
             risfaillist.extend(flist)
 
 
-    return annotations,exportfaillist,annofaillist,bibfaillist,risfaillist
+    return exportfaillist,annofaillist,bibfaillist,risfaillist
 
-    
+
 def processCanonicals(db,outdir,annotations,docids,allfolders,action,\
         separate,iszotero,verbose):
     '''Process files/docs in a folder.
@@ -1207,6 +1182,8 @@ def processCanonicals(db,outdir,annotations,docids,allfolders,action,\
     <action>: list, possible elements: m, n, e, b.
     <separate>: bool, whether save one output for each file or all files.
     <iszotero>: bool, whether exported .bib is reformated to cater to zotero import or not.
+
+    Deprecated, no longer in use.
     '''
     
     exportfaillist=[]
@@ -1333,10 +1310,32 @@ def processCanonicals(db,outdir,annotations,docids,allfolders,action,\
     return exportfaillist,annofaillist,bibfaillist,risfaillist
 
 
+def matchDOI(db):
+    '''Not currently used'''
+    query=\
+    '''SELECT Documents.note
+            FROM Documents
+            WHERE (Documents.note IS NOT NULL)
+    '''
 
-#----------------Bulk export to pdf----------------
+    ret=db.execute(query)
+    aa=ret.fetchall()
+
+    pattern=re.compile(r'(?:doi:)?\s?(10.[1-9][0-9]{3}/.*$)',
+            re.DOTALL|re.UNICODE)
+    for ii in aa:
+        m=pattern.match(ii[0])
+        if m is not None:
+            print ii[0],m.groups()
+
+    return
+
+
+
+
+#----------------Main----------------
 def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
-    
+
     try:
         db = sqlite3.connect(dbfin)
         if verbose:
@@ -1351,7 +1350,7 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
     folderlist=getFolderList(db,folder)
     allfolders=True if folder is None else False
 
-    #---------------Get canonical doc ids--------------
+    # get docids for doc ids that not in any folder
     if folder is None:
         canonical_doc_ids=getCanonicals(db)
 
@@ -1372,9 +1371,13 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
             if verbose:
                 printNumHeader('Processing folder: "%s"' %fnameii,\
                         ii+1,len(folderlist),1)
-            annotations,exportfaillistii,annofaillistii,bibfaillistii,risfaillistii=\
-                    processFolder(db,outdir,\
-                fidii,fnameii,allfolders,action,separate,iszotero,verbose)
+
+            #----------Get docids for docs in folder----------
+            docidsii=getFolderDocList(db,fidii)
+
+            exportfaillistii,annofaillistii,bibfaillistii,risfaillistii=\
+                processDocs(db,outdir,docidsii,fnameii,allfolders,action,
+                separate,iszotero,verbose)
 
             exportfaillist.extend(exportfaillistii)
             annofaillist.extend(annofaillistii)
@@ -1385,10 +1388,10 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
     if folder is None and len(canonical_doc_ids)>0:
         if verbose:
             printHeader('Processing docs under "My Library"')
-        annotations={}
+
         exportfaillistii,annofaillistii,bibfaillistii,risfaillistii=\
-                processCanonicals(db,outdir,annotations,\
-                canonical_doc_ids,allfolders,action,separate,iszotero,verbose)
+                processDocs(db,outdir,canonical_doc_ids,'My Library',
+                    allfolders,action,separate,iszotero,verbose)
 
         exportfaillist.extend(exportfaillistii)
         annofaillist.extend(annofaillistii)
@@ -1436,7 +1439,7 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
 
     #-----------------Remove tmp file-----------------
     if os.path.exists('tmp.txt'):
-	    os.remove('tmp.txt')
+	os.remove('tmp.txt')
 
 
     return 0

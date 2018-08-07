@@ -15,6 +15,8 @@ bbox of each highlight obtained from Mendeley dataset:
 Update time: 2016-02-23 18:04:10.
 Update time: 2016-06-21 16:53:02.
 Update time: 2016-06-22 16:26:16.
+Update time: 2018-07-28 14:03:57.
+Update time: 2018-08-06 21:43:03.
 '''
 
 
@@ -35,7 +37,6 @@ from math import sqrt
 
 from subprocess import Popen, PIPE
 import tools
-import time
 import wordfix
 import os
 
@@ -59,7 +60,7 @@ def checkPdftotext():
 class Anno(object):
     def __init__(self,text,ctime=None,title=None,author=None,\
             note_author=None,page=None,citationkey=None,tags=None,
-            bbox=None):
+            bbox=None,path=None,isgeneralnote=None):
 
         self.text=text
         self.ctime=ctime
@@ -70,6 +71,8 @@ class Anno(object):
         self.citationkey=citationkey
         self.tags=tags
         self.bbox=bbox
+        self.path=path
+        self.isgeneralnote=isgeneralnote
 
         if tags is None:
             self.tags='None'
@@ -88,9 +91,11 @@ Page:               %s
 Citation key:       %s
 Tags:               %s
 Bbox:               %s
+Path:               %s
+Is general note:    %s
 ''' %(self.text, self.ctime, self.title, self.author,
       self.note_author, self.page, self.citationkey,
-      ', '.join(self.tags),self.bbox)
+      ', '.join(self.tags),self.bbox,self.path,self.isgeneralnote)
         
         reprstr=reprstr.encode('ascii','replace')
 
@@ -185,6 +190,8 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
     '''Locate and extract strings from a page layout obj
 
     Extract text using pdftotext
+
+    Update time: 2018-07-30 09:48:38.
     '''
 
 
@@ -193,13 +200,13 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
     # pdftotext requires int coordinates, scale default dpi of
     # pdftotext (72) to 720, and multiply coordinates by 10.
     coord2str=lambda x: int(round(10.*x))  
+    #----------Create a dummy LTTextLine obj----------
+    dummy=LTTextLine([1,2,3,4])
     
     #----------------Loop through annos----------------
     for ii,hii in enumerate(anno):
 
-        #----------Create a dummy LTTextLine obj----------
         hiibox=hii['rect']
-        dummy=LTTextLine(hiibox)
         dummy.set_bbox(hiibox)   #Needs this step
 
         if box.is_hoverlap(dummy) and box.is_voverlap(dummy):
@@ -216,20 +223,33 @@ def findStrFromBox2(anno,box,filename,pheight,verbose=True):
                 if lineii.is_hoverlap(dummy) and\
                         lineii.is_voverlap(dummy):
 
-                    #------Call pdftotext and same to a temp file------
+                    #------Call pdftotext and save to a temp file------
                     # NOTE: pdftotext coordinate has origin at top-left.
                     # Coordinates from Mendeley has origin at bottom-left.
+                    """
                     args=['pdftotext','-f',hii['page'],'-l',hii['page'],'-r',720,\
                             '-x',coord2str(hiibox[0]),'-y',coord2str(pheight-hiibox[3]),\
                             '-W',coord2str(hiibox[2]-hiibox[0]),'-H',coord2str(hiibox[3]-hiibox[1]),\
                             os.path.abspath(filename),'tmp.txt']
+                    """
+                    # NOTE: use '-' as the output for pdftotext to direct the 
+                    # output to stdout. Quite some speed up. How could I not
+                    # notice this before!
+                    args=['pdftotext','-f',hii['page'],'-l',hii['page'],\
+                            '-r',720,'-x',coord2str(hiibox[0]),'-y',\
+                            coord2str(pheight-hiibox[3]),'-W',\
+                            coord2str(hiibox[2]-hiibox[0]),'-H',\
+                            coord2str(hiibox[3]-hiibox[1]),\
+                            os.path.abspath(filename),'-']
                     args=map(str,args)
 
-                    pp=Popen(args)
-                    while pp.poll() !=0:
-                        time.sleep(0.01)
+                    pp=Popen(args,stdout=PIPE,stderr=PIPE)
+                    #while pp.poll() !=0:
+                        #time.sleep(0.01)
+                    #tii=tools.readFile('tmp.txt',False)
 
-                    tii=tools.readFile('tmp.txt',False)
+                    tii=pp.communicate()[0]
+                    tii=tools.deu(tii)
                     textii.append(tii)
 
                     # break to avoid double sampling. Lines from lineii may
@@ -653,23 +673,28 @@ def extractHighlights(filename,anno,verbose=True):
 def extractHighlights2(filename,anno,method,verbose=True):
     '''Extract highlighted texts from a PDF
 
-    Extract texts from PDF using pdftotext
+    <filename>: str, path of PDF to extract highlights from.
+    <anno>: menotexport.FileAnno obj.
+    <method>: str, software to extract texts, 'pdfminer' or 'pdftotext'.
+
+    Return <hltexts>: list of Anno objs.
     '''
 
     hlpages=anno.hlpages
     if len(hlpages)==0:
         return []
 
-    #--------------Get pdfmine instances--------------
+    #--------------Get pdfminer instances--------------
     document, interpreter, device=init(filename)
 
     #----------------Loop through pages----------------
     hltexts=[]
+    authors=tools.getAuthorList(anno.meta)
 
     for ii,page in enumerate(PDFPage.create_pages(document)):
 
         #------------Get highlights in page------------
-        if len(hlpages)>0 and ii+1 in hlpages:
+        if ii+1 in hlpages:
 
             annoii=anno.highlights[ii+1]
             anno_total=len(annoii)
@@ -705,8 +730,6 @@ def extractHighlights2(filename,anno,method,verbose=True):
 
                 if numjj>0:
                     #--------------Attach text with meta--------------
-                    authors=tools.getAuthorList(anno.meta)
-
                     textjj=Anno(textjj,\
                         ctime=getCtime(annoii),\
                         title=anno.meta['title'],\
@@ -715,7 +738,8 @@ def extractHighlights2(filename,anno,method,verbose=True):
                         tags=anno.meta['tags'],
                         bbox=objj.bbox,
                         author=authors,
-                        note_author=anno.meta['user_name'])
+                        note_author=anno.meta['user_name'],
+                        path=filename)
 
                     hltexts.append(textjj)
 

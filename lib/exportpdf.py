@@ -15,41 +15,53 @@ import os
 import shutil
 import PyPDF2
 import pdfannotation
-from tools import printHeader, printInd, printNumHeader
+from tools import printInd, printNumHeader, makedirs
 
 
 
 #--------------------Export PDFs with annotations--------------
 def exportAnnoPdf(annotations,outdir,verbose=True):
     '''Export PDFs
+
+    <annotations>: dict, keys: docid, values: menotexport.DocAnno obj.
+    <outdir>: str, folder path to save PDFs.
+
+    Update time: 2018-07-28 20:21:09.
     '''
 
     faillist=[]
     num=len(annotations)
-    for ii,idii in enumerate(annotations.keys()):
-        annoii=annotations[idii]
-        fii=annoii.path
-        fnameii=annoii.filename
+    for ii,annoii in enumerate(annotations.values()):
+        if not annoii.hasfile:
+            continue
 
-        if verbose:
-            printNumHeader('Exporting PDF:',ii+1,num,3)
-            printInd(fnameii,4)
+        for fjj,annojj in annoii.file_annos.items():
+            assert fjj is not None, 'fjj is None'
+            # when side-bar note exists but no pdf.
+            # shouldn't happen if annoii.hasfile is False
 
-        try:
-            exportPdf(fii,outdir,annoii,verbose)
-        except:
-            faillist.append(fnameii)
+            fnamejj=annojj.filename
+
+            if verbose:
+                printNumHeader('Exporting PDF:',ii+1,num,3)
+                printInd(fnamejj,4)
+            try:
+                exportPdf(fjj,outdir,annojj,verbose)
+            except:
+                faillist.append(fnamejj)
 
     return faillist
-
 
 
 #---------------------Copy PDF to target location---------------------
 def copyPdf(doclist,outdir,verbose=True):
     '''Copy PDF to target location
+
+    <doclist>: list of meta data dicts
+    <outdir>: str, path to output folder
     '''
     if not os.path.isdir(outdir):
-        os.makedirs(outdir)
+        makedirs(outdir)
 
     faillist=[]
 
@@ -60,25 +72,24 @@ def copyPdf(doclist,outdir,verbose=True):
         if pathii is None:
             continue
 
-        basedir,filename=os.path.split(pathii)
-        targetname=os.path.join(outdir,filename)
+        for jj,pjj in enumerate(pathii):
+            basedir,filename=os.path.split(pjj)
+            targetname=os.path.join(outdir,filename)
 
-        if not os.path.exists(pathii):
-            faillist.append(pathii)
-            continue
+            if not os.path.exists(pjj):
+                faillist.append(pjj)
+                continue
 
-        if verbose:
-            printNumHeader('Copying file:',ii+1,num,3)
-            printInd(filename,4)
+            if verbose:
+                printNumHeader('Copying file:',ii+1,num,3)
+                printInd(filename,4)
 
-        try:
-            shutil.copy2(pathii,targetname)
-        except:
-            faillist.append(filename)
+            try:
+                shutil.copy2(pjj,targetname)
+            except:
+                faillist.append(filename)
 
     return faillist
-
-    
 
 
 #---------------Export pdf---------------
@@ -93,8 +104,9 @@ def exportPdf(fin,outdir,annotations,verbose):
     '''
 
     #---------------Skip unlinked files---------------
-    if not annotations.hasfile:
-        return
+    assert annotations.hasfile, 'no file of %s' %fin
+    #if not annotations.hasfile:
+        #return
 
     try:
         inpdf = PyPDF2.PdfFileReader(open(fin, 'rb'))

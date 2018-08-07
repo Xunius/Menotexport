@@ -13,7 +13,7 @@ Update time: 2016-06-22 16:25:15.
 
 import os
 import platform
-import tools
+#import tools
 import re
 from pylatexenc import latexencode
 
@@ -27,12 +27,12 @@ def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
     '''Parse file path entry
 
     '''
-    path_re=re.compile('^/(.*)',re.UNICODE)
+    #path_re=re.compile('^/(.*)',re.UNICODE)
     basedir,filename=os.path.split(path)
     basename,ext=os.path.splitext(filename)
 
-    if basedir=='/pseudo_path':
-        return ''
+    #if basedir=='/pseudo_path':
+    #    return ''
 
     abpath=os.path.join(baseoutdir,folder)
     abpath=os.path.join(abpath,filename)
@@ -55,14 +55,8 @@ def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
     return result
 
 
-    
-
-    
-
-
-
 #-----------------------Parse document meta-data-----------------------
-def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
+def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
     '''Parse document meta-data
 
     metadict
@@ -119,7 +113,14 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
         if kk=='path':
             if not isfile:
                 continue
-            vv=parseFilePath(vv,basedir,metadict['folder'],iszotero)
+            if not isinstance(vv,list) and not isinstance(vv,tuple):
+                vv=[vv,]
+            vv=[parseFilePath(ii,basedir,folder,iszotero) for\
+                    ii in vv]
+            # proper way of joining multiple paths?
+            vv='}, {'.join(vv)
+            vv=u'{%s}' %vv
+
             if vv=='':
                 continue
             else:
@@ -178,15 +179,12 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
 
     return string
 
-        
-
-
 
 #--------------Export documents with annotations to .bib--------------
 def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,iszotero,verbose=True):
     '''Export documents with annotations to .bib
 
-    annolist,outdir
+    <annodict>: dict, key: docid, value: menotexport.DocAnno objs.
     '''
 
     #----------------Loop through docs----------------
@@ -217,20 +215,17 @@ def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,iszotero,verbose=Tr
 
     return faillist
 
-    
-
-
-
 
 #-------------Export documents without annotations to .bib-------------
 def exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,iszotero,verbose=True):
     '''Export documents without annotations to .bib
 
-    doclist,outdir
+    <doclist>: list of meta data dists.
     '''
 
     if allfolders:
         fileout='Mendeley_lib.bib'
+        folder=''
     else:
         folder=os.path.split(outdir)[-1]
         fileout='Mendeley_lib_%s.bib' %folder
@@ -241,10 +236,12 @@ def exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,iszotero,verbose=True
     faillist=[]
 
     for docii in doclist:
-        bibdata=parseMeta(docii,basedir,isfile,iszotero)
-        with open(abpath_out, mode='a') as fout:
-            fout.write(bibdata)
-        #faillist.append(docii['title'])
+        try:
+            bibdata=parseMeta(docii,basedir,folder,isfile,iszotero)
+            with open(abpath_out, mode='a') as fout:
+                fout.write(bibdata)
+        except:
+            faillist.append(docii['title'])
 
     return faillist
 

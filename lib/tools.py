@@ -2,6 +2,7 @@
 Utility functions.
 
 Update time: 2016-03-24 11:11:46.
+Update time: 2018-08-06 21:43:20.
 '''
 import os
 import re
@@ -13,6 +14,7 @@ def deu(text):
         return text.decode('utf8','replace')
     else:
         return text
+
 
 def enu(text):
     if isinstance(text,unicode):
@@ -55,6 +57,7 @@ def printHeader(s, level=1, length=70, prefix='# <Menotexport>:'):
     #print(hline)
 
     return
+
 
 def printNumHeader(s, idx, num, level=1, length=70, prefix='# <Menotexport>:'):
     from textwrap import TextWrapper
@@ -117,7 +120,6 @@ def printInd(s, level=1, length=70, prefix=''):
     return 
 
 
-#-------------------Read in text file and store data-------------------
 def readFile(abpath_in,verbose=True):
     '''Read in text file and store data
 
@@ -145,7 +147,6 @@ def readFile(abpath_in,verbose=True):
     return lines
 
 
-
 def getAuthorList(meta_dict):
     '''Get author list string from annotation metadata dict'''
 
@@ -160,7 +161,6 @@ def getAuthorList(meta_dict):
         authors=' and '.join(authors)
 
     return authors
-
 
 
 def autoRename(abpath):
@@ -217,8 +217,6 @@ def autoRename(abpath):
     return newname
 
 
-
-#---------------Save result to file---------------
 def saveFile(abpath_out,text,overwrite=True,verbose=True):
 
     if os.path.isfile(abpath_out):
@@ -237,4 +235,42 @@ def saveFile(abpath_out,text,overwrite=True,verbose=True):
     return
         
 
-        
+
+def makedirs(path):
+    '''Make dir and remove invalid windows path characters
+
+    ':' is illegal in Mac and windows. Strategy: remove, although legal in Linux.
+    '''
+    if not os.path.exists(path):
+        try:
+            os.makedirs(path)
+        except WindowsError:
+            drive,remain=os.path.splitdrive(path)
+            remain=re.sub(r'[<>:"|?*]','_',remain)
+            remain=remain.strip()
+            path=os.path.join(drive,remain)
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+    return
+
+
+def removeDupGeneralNotes(note_list):
+    '''Remove duplicate general notes from a list of Anno objs
+
+    The same general note is replicated for each attachment when
+    a doc has >1 attached pdfs and exporting pdfs. This is to avoid
+    duplicate general notes when exporting to txt.
+    '''
+
+    if len(note_list)==0:
+        return note_list
+    else:
+        note_list2=[]
+        nt_sticky=[ntjj for ntjj in note_list if ntjj.isgeneralnote==False]
+        nt_gen=[ntjj for ntjj in note_list if ntjj.isgeneralnote]
+        note_list2.extend(nt_sticky)
+        if len(nt_gen)>0:
+            note_list2.append(nt_gen[0])
+        return note_list2
+

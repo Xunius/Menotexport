@@ -9,6 +9,7 @@
 # terms of the GPLv3 license.
 
 Update time: 2016-04-12 22:09:38.
+Update time: 2018-08-06 21:43:13.
 '''
 
 import os
@@ -31,13 +32,7 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
     '''Export annotations in a single PDF
 
     <abpath_out>: str, absolute path to output txt file.
-    <anno>: list, in the form [file_path, highlight_list, note_list].
-            highlight_list and note_list are both lists of
-            Anno objs (see extracthl.py), containing highlights
-            and notes in TEXT format with metadata. To be distinguished
-            with FileAnno objs which contains texts coordinates.
-            if highlight_list or note_list is [], no such info
-            in this PDF.
+    <anno>: menotexport.DocAnno obj.
 
     Function takes annotations from <anno> and output to the target txt file
     in the following format:
@@ -92,6 +87,12 @@ def _exportAnnoFile(abpath_out,anno,verbose=True):
         titleii=hlii[0].title
     except:
         titleii=ntii[0].title
+
+    #-----Seperate sticky notes from general notes-----
+    # The same general note is replicated for each attachment when
+    # a doc has >1 attached pdfs and exporting pdfs. This is to avoid
+    # duplicate general notes when exporting to txt.
+    ntii=tools.removeDupGeneralNotes(ntii)
 
     outstr=u'\n\n{0}\n# {1}'.format(int(80)*'-',conv(titleii))
 
@@ -173,6 +174,12 @@ def _exportAnnoFileTemplated(abpath_out,anno,verbose=True):
 
     hls=anno.highlights
     nts=anno.notes
+
+    #-----Seperate sticky notes from general notes-----
+    # The same general note is replicated for each attachment when
+    # a doc has >1 attached pdfs and exporting pdfs. This is to avoid
+    # duplicate general notes when exporting to txt.
+    nts=tools.removeDupGeneralNotes(nts)
 
     def getFieldsDict(ntjj):
         dictjj={}
@@ -290,12 +297,11 @@ def exportAnno(annodict,outdir,action,separate,verbose=True):
     '''Export highlights and/or notes to txt file
 
     <annodict>: dict, keys: doc ids,
-                      values: [highlight_list, note_list], 
-                      see doc in _exportAnnoFile().
+                      values: menotexport.DocAnno objs.,
     <outdir>: str, path to output folder.
     <action>: list, actions from cli arguments.
     <separate>: bool, True: save annotations if each PDF separately.
-                      False: save annotations from all PDFs to a single file.
+                False: save annotations from all PDFs to a single file.
 
     Calls _exportAnnoFile() for core processes.
     '''
@@ -317,8 +323,8 @@ def exportAnno(annodict,outdir,action,separate,verbose=True):
             printInd('Exporting all annotations to:',3)
             printInd(abpath_out,4)
 
-    #----------------Loop through files----------------
-    annofaillist=[]
+    #----------------Loop through docs----------------
+    faillist=[]
 
     num=len(annodict)
     docids=annodict.keys()
@@ -326,9 +332,7 @@ def exportAnno(annodict,outdir,action,separate,verbose=True):
     for ii,idii in enumerate(docids):
 
         annoii=annodict[idii]
-        fii=annoii.path
-        basenameii=os.path.basename(fii)
-        fnameii=os.path.splitext(basenameii)[0]
+        fnameii=annoii.meta['title']
 
         if verbose:
             printNumHeader('Exporting annos in file',ii+1,num,3)
@@ -358,10 +362,10 @@ def exportAnno(annodict,outdir,action,separate,verbose=True):
             else:
                 _exportAnnoFile(abpath_out,annoii)
         except:
-            annofaillist.append(basenameii)
+            faillist.append(fnameii)
             continue
 
-    return annofaillist
+    return faillist
 
 
 
