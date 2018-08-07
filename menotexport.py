@@ -25,18 +25,17 @@ TODO:
 
     * add python 3 compatibility. If seems that pdfminer support 3 now:
     https://github.com/pdfminer/pdfminer.six
-    * Possible to remove pandas dependency?
+    * Possible to remove pandas dependency? -- Done in v1.5.1
     * multi-thread or -process something to speed up
 
 '''
 
-__version__='Menotexport v1.5.0'
+__version__='Menotexport v1.5.1'
 
 #---------------------Imports---------------------
 import sys,os
 import sqlite3
 import argparse
-import pandas as pd
 from lib import extracttags
 from lib import extractnt
 from lib import exportpdf
@@ -58,10 +57,6 @@ else:
     #--------------------Python2.7--------------------
     from urllib import unquote
     from urlparse import urlparse
-
-
-#-------Fetch a column from pandas dataframe-------
-fetchField=lambda x, f: x[f].unique().tolist()
 
 
 #---------Regex pattern for matching dois---------
@@ -206,66 +201,79 @@ def getMetaData(db, docid):
     '''Get meta-data of a doc by documentId.
     '''
 
-    query=\
-    '''SELECT Documents.id,
-              Documents.citationkey,
-              Documents.title,
-              Documents.issue,
-              Documents.pages,
-              Documents.publication,
-              Documents.volume,
-              Documents.year,
-              Documents.doi,
-              Documents.abstract,
-              Documents.arxivId,
-              Documents.chapter,
-              Documents.city,
-              Documents.country,
-              Documents.edition,
-              Documents.institution,
-              Documents.isbn,
-              Documents.issn,
-              Documents.month,
-              Documents.day,
-              Documents.publisher,
-              Documents.series,
-              Documents.type,
-              Documents.read,
-              Documents.favourite,
-              DocumentTags.tag,
-              DocumentContributors.firstNames,
-              DocumentContributors.lastName,
-              DocumentKeywords.keyword,
-              Folders.name
+    # fetch column from Document table
+    query_base=\
+    '''SELECT Documents.%s
        FROM Documents
-       LEFT JOIN DocumentTags
-           ON DocumentTags.documentId=Documents.id
-       LEFT JOIN DocumentContributors
-           ON DocumentContributors.documentId=Documents.id
-       LEFT JOIN DocumentKeywords
-           ON DocumentKeywords.documentId=Documents.id
-       LEFT JOIN DocumentFolders
-           ON DocumentFolders.documentId=Documents.id
-       LEFT JOIN Folders
-           ON Folders.id=DocumentFolders.folderid
        WHERE (Documents.id=%s)
+    '''
+
+    query_tags=\
+    '''
+    SELECT DocumentTags.tag
+    FROM DocumentTags
+    WHERE (DocumentTags.documentId=%s)
     ''' %docid
 
+    query_firstnames=\
+    '''
+    SELECT DocumentContributors.firstNames
+    FROM DocumentContributors
+    WHERE (DocumentContributors.documentId=%s)
+    ''' %docid
+
+    query_lastnames=\
+    '''
+    SELECT DocumentContributors.lastName
+    FROM DocumentContributors
+    WHERE (DocumentContributors.documentId=%s)
+    ''' %docid
+
+    query_keywords=\
+    '''
+    SELECT DocumentKeywords.keyword
+    FROM DocumentKeywords
+    WHERE (DocumentKeywords.documentId=%s)
+    ''' %docid
+
+    query_folder=\
+    '''
+    SELECT Folders.name
+    FROM Folders
+       LEFT JOIN DocumentFolders
+           ON Folders.id=DocumentFolders.folderid
+    WHERE (DocumentFolders.documentId=%s)
+    ''' %docid
+
+    def fetchField(db,query):
+        aa=db.execute(query).fetchall()
+        bb=[ii[0] for ii in aa]
+        if len(bb)==1:
+            return bb[0]
+        elif len(bb)==0:
+            return None
+        else:
+            return bb
+
     #------------------Get file meta data------------------
-    ret=db.execute(query)
-    data=ret.fetchall()
-    fields=['docid','citationkey','title','issue','pages',\
+    fields=['id','citationkey','title','issue','pages',\
             'publication','volume','year','doi','abstract',\
             'arxivId','chapter','city','country','edition','institution',\
             'isbn','issn','month','day','publisher','series','type',\
-            'read','favourite','tags','firstnames','lastname','keywords',
-            'folder']
+            'read','favourite']
 
-    docdata=pd.DataFrame(data=data,columns=fields)
     result={}
-    for ff in fields:
-        fieldii=fetchField(docdata,ff)
-        result[ff]=fieldii[0] if len(fieldii)==1 else fieldii
+
+    # query single-worded fields, e.g. year, city
+    for kii in fields:
+        vii=fetchField(db,query_base %(kii,docid))
+        result[kii]=vii
+
+    result['tags']=fetchField(db,query_tags)
+    result['firstnames']=fetchField(db,query_firstnames)
+    result['lastname']=fetchField(db,query_lastnames)
+    result['keywords']=fetchField(db,query_keywords)
+    result['folder']=fetchField(db,query_folder)
 
     #-----------------Append user name-----------------
     result['user_name']=getUserName(db)
@@ -787,35 +795,41 @@ def getFolderList(db,folder,verbose=True):
     Update time: 2016-06-16 19:38:15.
     '''
 
+    # get all folders with id, name, parentid
     query=\
     '''SELECT Folders.id,
               Folders.name,
               Folders.parentID
        FROM Folders
     '''
+    # get folder by name
+    query1=\
+    '''SELECT Folders.id,
+              Folders.name,
+              Folders.parentID
+       FROM Folders
+       WHERE (Folders.name="%s")
+    '''%folder
 
     #-----------------Get all folders-----------------
     ret=db.execute(query)
     data=ret.fetchall()
-    df=pd.DataFrame(data=data,columns=['folderid','folder','parentID'])
-    allfolderids=fetchField(df,'folderid')
+
+    # dict, key: folderid, value: (folder_name, parent_id)
+    df=dict([(ii[0],ii[1:]) for ii in data])
+
+    allfolderids=[ii[0] for ii in data]
 
     #---------------Select target folder---------------
     if folder is None:
         folderids=allfolderids
     if type(folder) is str:
-        # Select the given folder, if more than 1 name match, select the
-        # one with lowest parentID.
-        try:
-            seldf=df[df.folder==folder].sort_values('parentID')
-        except:
-            # 0.16.2 version of pandas doens't have sort_values()?
-            # don't remember having this issue before.
-            seldf=df[df.folder==folder].sort('parentID')
-        folderids=fetchField(seldf,'folderid')
+        folderids=db.execute(query1).fetchall()
+        folderids=[ii[0] for ii in folderids]
     elif type(folder) is tuple or type(folder) is list:
-        seldf=df[(df.folderid==folder[0]) & (df.folder==folder[1])]
-        folderids=fetchField(seldf,'folderid')
+        raise Exception("Not implemented")
+        #seldf=df[(df.folderid==folder[0]) & (df.folder==folder[1])]
+        #folderids=fetchField(seldf,'folderid')
 
     #----------------Get all subfolders----------------
     if folder is not None:
@@ -878,15 +892,15 @@ def isFolderEmpty(db,folderid,verbose=True):
 def getSubFolders(df,folderid,verbose=True):
     '''Get subfolders of a given folder
 
-    <df>: dataframe, contains all folders (including empty ones) id, name and parentID.
+    <df>: dict, key: folderid, value: (folder_name, parent_id).
     <folderid>: int, folder id
     '''
-    getParentId=lambda df,id: fetchField(df[df.folderid==id],'parentID')[0]
+
+    getParentId=lambda df,id: df[id][1]
     results=[]
 
-    for ii in range(len(df)):
-        idii,fii,pii=df.loc[ii]
-
+    for idii in df:
+        fii,pii=df[idii]
         cid=idii
         while True:
             pid=getParentId(df,cid)
@@ -901,17 +915,16 @@ def getSubFolders(df,folderid,verbose=True):
     results.sort()
     return results
 
-
 #-------------Get folder tree structure of a given folder-------------
 def getFolderTree(df,folderid,verbose=True):
     '''Get folder tree structure of a given folder
 
-    <df>: dataframe, contains all folders (including empty ones) id, name and parentID.
+    <df>: dict, key: folderid, value: (folder_name, parent_id).
     <folderid>: int, folder id
     '''
 
-    getFolderName=lambda df,id: fetchField(df[df.folderid==id],'folder')[0]
-    getParentId=lambda df,id: fetchField(df[df.folderid==id],'parentID')[0]
+    getFolderName=lambda df,id: df[id][0]
+    getParentId=lambda df,id: df[id][1]
 
     folder=getFolderName(df,folderid)
 
@@ -927,7 +940,6 @@ def getFolderTree(df,folderid,verbose=True):
         cid=pid
 
     return folderid,folder
-
 
 
 def extractAnnos(annotations,action,verbose):
