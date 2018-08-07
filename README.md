@@ -363,7 +363,6 @@ Developed in python2.7. **NOT** compatible with python3+ (*pdfminer* doesn't sup
 
     - PyPDF2
     - sqlite3
-    - pandas (0.16 or later)
     - pdfminer (NOTE: version 2014+ is needed, the one in the Ubuntu repository has been out of date at the time of writing. Please check to make sure. If you get an error of "ImportError: No module named pdfdocument", you probably got an older version.)
     - BeautifulSoup4
 
@@ -392,6 +391,7 @@ The software is tested on Linux and Windows 7, 10. Should also run on Mac.
 
 ## Versions
 
+* 1.5.1: Remove pandas dependency. Fix author list error.
 * 1.5.0: Documents with more than 1 attactments (e.g. supplementary materials) are properly exported. Fix side-bar notes (aka "General notes") fetching problem.
 * 1.4.4: Add custom annotation templation support (not mature yet). Fix auto-renaming function fixed.
 * 1.4: Add export to .ris format.
