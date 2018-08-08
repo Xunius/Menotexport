@@ -114,11 +114,14 @@ def exportPdf(fin,outdir,annotations,verbose):
             # PyPDF2 seems to think some files are encrypted even
             # if they are not. We just ignore the encryption.
             # This seems to work for the one file where I saw this issue
-            inpdf._override_encryption = True
-            inpdf._flatten()
+            #inpdf._override_encryption = True
+            #inpdf._flatten()
+            # UPDATE: trying to decrypt takes a lot of time,
+            # as this rarely happens to academic docs I'm skipping this
+            # and simply treat as fail
+            raise Exception("Skip encrypt")
     except IOError:
         print('Could not find pdf file %s' %fin)
-        return
 
     outpdf = PyPDF2.PdfFileWriter()
 
