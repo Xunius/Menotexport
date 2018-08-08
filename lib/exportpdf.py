@@ -135,7 +135,9 @@ def exportPdf(fin,outdir,annotations,verbose):
         #----------------Process highlights----------------
         if pii in annotations.hlpages:
             for hjj in annotations.highlights[pii]:
-                anno = pdfannotation.createHighlight(hjj["rect"],\
+                # Changes suggested by matteosecli: add author of highlight:
+                anno = pdfannotation.createHighlight(hjj["rect"],
+                        author=hjj['author'],
                         cdate=hjj["cdate"], color=hjj['color'])
                 inpg=pdfannotation.addAnnotation(inpg,outpdf,anno)
 

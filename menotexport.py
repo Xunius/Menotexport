@@ -191,10 +191,8 @@ def getUserName(db):
     '''SELECT Profiles.firstName, Profiles.lastName
     FROM Profiles WHERE Profiles.isSelf="true"
     '''
-    # TODO: pull the new fix
-    ret=db.execute(query)
-    ret=[ii for ii in ret]
-    return ' '.join(ret[0])
+    ret=db.execute(query).fetchall()
+    return ' '.join(filter(None,ret[0]))
 
 
 def getMetaData(db, docid):
@@ -381,10 +379,11 @@ def getHighlights(db,filterdocid,results=None):
                        'cdate': cdate,\
                        'color': color,
                        'page':pg,
+                        'author':'highlight author',\
                        'path':pth
                       }
                   note={'rect': bbox,\
-                        'author':'Mendeley user',\
+                        'author':'note author',\
                         'content':docnote,\
                         'cdate': datetime.now(),\
                         'page':pg,
@@ -402,7 +401,7 @@ def getHighlights(db,filterdocid,results=None):
                     FileHighlightRects.x1, FileHighlightRects.y1,
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
-                    FileHighlights.documentId,
+                    FileHighlights.author,
                     FileHighlights.color
             FROM Files
             LEFT JOIN FileHighlights
@@ -419,7 +418,7 @@ def getHighlights(db,filterdocid,results=None):
                     FileHighlightRects.x1, FileHighlightRects.y1,
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
-                    FileHighlights.documentId
+                    FileHighlights.author
             FROM Files
             LEFT JOIN FileHighlights
                 ON FileHighlights.fileHash=Files.hash
@@ -440,6 +439,8 @@ def getHighlights(db,filterdocid,results=None):
 	ret = db.execute(query_old)
 	hascolor=False
 
+    username=getUserName(db)
+
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
         pg = r[1]
@@ -447,31 +448,37 @@ def getHighlights(db,filterdocid,results=None):
         # [x1,y1,x2,y2], (x1,y1) being bottom-left,
         # (x2,y2) being top-right. Origin at bottom-left
         cdate = convert2datetime(r[6])
-        docid=r[7]
+
+        # Changes suggested by matteosecli: retrieve author of highlight:
+        author=r[7]
+        if not author.strip():
+            author=username
+
         color=r[8] if hascolor else None
 
         hlight = {'rect': bbox,\
                   'cdate': cdate,\
                   'color': color,
-                  'page':pg,
-                  'path':pth   # distinguish between multi-attachments
+                  'page': pg,
+                  'author': author,
+                  'path': pth   # distinguish between multi-attachments
                   }
 
         #------------Save to dict------------
         # any better way of doing this sht?
-        if docid in results:
-            if 'highlights' in results[docid]:
-                if pth in results[docid]['highlights']:
-                    if pg in results[docid]['highlights'][pth]:
-                        results[docid]['highlights'][pth][pg].append(hlight)
+        if filterdocid in results:
+            if 'highlights' in results[filterdocid]:
+                if pth in results[filterdocid]['highlights']:
+                    if pg in results[filterdocid]['highlights'][pth]:
+                        results[filterdocid]['highlights'][pth][pg].append(hlight)
                     else:
-                        results[docid]['highlights'][pth][pg]=[hlight,]
+                        results[filterdocid]['highlights'][pth][pg]=[hlight,]
                 else:
-                    results[docid]['highlights'][pth]={pg:[hlight,]}
+                    results[filterdocid]['highlights'][pth]={pg:[hlight,]}
             else:
-                results[docid]['highlights']={pth:{pg:[hlight,]}}
+                results[filterdocid]['highlights']={pth:{pg:[hlight,]}}
         else:
-            results[docid]={'highlights':{pth:{pg:[hlight,]}}}
+            results[filterdocid]={'highlights':{pth:{pg:[hlight,]}}}
 
     return results
 
@@ -497,8 +504,7 @@ def getNotes(db,filterdocid,results=None):
     '''SELECT Files.localUrl, FileNotes.page,
                     FileNotes.x, FileNotes.y,
                     FileNotes.author, FileNotes.note,
-                    FileNotes.modifiedTime,
-                    FileNotes.documentId
+                    FileNotes.modifiedTime
             FROM Files
             LEFT JOIN FileNotes
                 ON FileNotes.fileHash=Files.hash
@@ -511,16 +517,20 @@ def getNotes(db,filterdocid,results=None):
 
     #------------------Get notes------------------
     ret = db.execute(query)
+    username=getUserName(db)
 
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
         pg = r[1]
         bbox = [r[2], r[3], r[2]+30, r[3]+30]
         # needs a rectangle, size does not matter
+
+        # Changes suggested by matteosecli: retrieve author of note:
         author=r[4]
+        if not author.strip():
+            author=username
         txt = r[5]
         cdate = convert2datetime(r[6])
-        docid=r[7]
 
         note = {'rect': bbox,\
                 'author':author,\
@@ -532,19 +542,19 @@ def getNotes(db,filterdocid,results=None):
                   }
 
         #------------Save to dict------------
-        if docid in results:
-            if 'notes' in results[docid]:
-                if pth in results[docid]['notes']:
-                    if pg in results[docid]['notes'][pth]:
-                        results[docid]['notes'][pth][pg].append(note)
+        if filterdocid in results:
+            if 'notes' in results[filterdocid]:
+                if pth in results[filterdocid]['notes']:
+                    if pg in results[filterdocid]['notes'][pth]:
+                        results[filterdocid]['notes'][pth][pg].append(note)
                     else:
-                        results[docid]['notes'][pth][pg]=[note,]
+                        results[filterdocid]['notes'][pth][pg]=[note,]
                 else:
-                    results[docid]['notes'][pth]={pg:[note,]}
+                    results[filterdocid]['notes'][pth]={pg:[note,]}
             else:
-                results[docid]['notes']={pth:{pg:[note,]}}
+                results[filterdocid]['notes']={pth:{pg:[note,]}}
         else:
-            results[docid]={'notes':{pth:{pg:[note,]}}}
+            results[filterdocid]={'notes':{pth:{pg:[note,]}}}
 
 
     return results
