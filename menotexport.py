@@ -195,6 +195,20 @@ def getUserName(db):
     return ' '.join(filter(None,ret[0]))
 
 
+def getProfileNames(db):
+    '''Get user (including co-authors) names'''
+
+    query =\
+    '''SELECT Profiles.uuid,
+              Profiles.firstName,
+              Profiles.lastName
+            FROM Profiles
+    '''
+    ret=db.execute(query).fetchall()
+    data=dict([(ii[0],' '.join(filter(None,ii[1:]))) for ii in ret])
+    return data
+
+
 def getMetaData(db, docid):
     '''Get meta-data of a doc by documentId.
     '''
@@ -402,12 +416,16 @@ def getHighlights(db,filterdocid,results=None):
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
                     FileHighlights.author,
+                    Profiles.firstName,
+                    Profiles.lastName,
                     FileHighlights.color
             FROM Files
             LEFT JOIN FileHighlights
                 ON FileHighlights.fileHash=Files.hash
             LEFT JOIN FileHighlightRects
                 ON FileHighlightRects.highlightId=FileHighlights.id
+            LEFT JOIN Profiles
+                ON Profiles.uuid=FileHighlights.profileUuid
             WHERE (FileHighlightRects.page IS NOT NULL) AND
             (FileHighlights.documentId=%s)
     ''' %filterdocid
@@ -418,12 +436,16 @@ def getHighlights(db,filterdocid,results=None):
                     FileHighlightRects.x1, FileHighlightRects.y1,
                     FileHighlightRects.x2, FileHighlightRects.y2,
                     FileHighlights.createdTime,
-                    FileHighlights.author
+                    FileHighlights.author,
+                    Profiles.firstName,
+                    Profiles.lastName
             FROM Files
             LEFT JOIN FileHighlights
                 ON FileHighlights.fileHash=Files.hash
             LEFT JOIN FileHighlightRects
                 ON FileHighlightRects.highlightId=FileHighlights.id
+            LEFT JOIN Profiles
+                ON Profiles.uuid=FileHighlights.profileUuid
             WHERE (FileHighlightRects.page IS NOT NULL) AND
             (FileHighlights.documentId=%s)
     ''' %filterdocid
@@ -439,8 +461,6 @@ def getHighlights(db,filterdocid,results=None):
 	ret = db.execute(query_old)
 	hascolor=False
 
-    username=getUserName(db)
-
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
         pg = r[1]
@@ -452,9 +472,9 @@ def getHighlights(db,filterdocid,results=None):
         # Changes suggested by matteosecli: retrieve author of highlight:
         author=r[7]
         if not author.strip():
-            author=username
+            author=' '.join(filter(None,r[8:10]))
 
-        color=r[8] if hascolor else None
+        color=r[10] if hascolor else None
 
         hlight = {'rect': bbox,\
                   'cdate': cdate,\
@@ -503,11 +523,16 @@ def getNotes(db,filterdocid,results=None):
     query=\
     '''SELECT Files.localUrl, FileNotes.page,
                     FileNotes.x, FileNotes.y,
-                    FileNotes.author, FileNotes.note,
-                    FileNotes.modifiedTime
+                    FileNotes.note,
+                    FileNotes.modifiedTime,
+                    FileNotes.author,
+                    Profiles.firstName,
+                    Profiles.lastName
             FROM Files
             LEFT JOIN FileNotes
                 ON FileNotes.fileHash=Files.hash
+            LEFT JOIN Profiles
+                ON Profiles.uuid=FileNotes.profileUuid
             WHERE (FileNotes.page IS NOT NULL) AND
             (FileNotes.documentId=%s)
     ''' %filterdocid
@@ -517,7 +542,6 @@ def getNotes(db,filterdocid,results=None):
 
     #------------------Get notes------------------
     ret = db.execute(query)
-    username=getUserName(db)
 
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
@@ -525,12 +549,13 @@ def getNotes(db,filterdocid,results=None):
         bbox = [r[2], r[3], r[2]+30, r[3]+30]
         # needs a rectangle, size does not matter
 
+        txt = r[4]
+        cdate = convert2datetime(r[5])
+
         # Changes suggested by matteosecli: retrieve author of note:
-        author=r[4]
+        author=r[6]
         if not author.strip():
-            author=username
-        txt = r[5]
-        cdate = convert2datetime(r[6])
+            author=' '.join(filter(None,r[7:9]))
 
         note = {'rect': bbox,\
                 'author':author,\
@@ -577,7 +602,7 @@ def getDocNotes(db,filterdocid,results=None):
     Update time: 2018-07-28 20:02:10.
     '''
 
-    # Older versions of Mendeley saves notes in DocumentsNotes
+    # Some versions of Mendeley saves notes in DocumentsNotes
     query=\
     '''SELECT DocumentNotes.text,
               DocumentNotes.documentId,
@@ -587,7 +612,7 @@ def getDocNotes(db,filterdocid,results=None):
             (DocumentNotes.documentId=%s)
     ''' %filterdocid
 
-    # Newer versions (not sure from which exactly) of Mendeley saves
+    # Some versions (not sure which exactly) of Mendeley saves
     # notes in Documents.note
     query2=\
     '''SELECT Documents.note
@@ -600,9 +625,17 @@ def getDocNotes(db,filterdocid,results=None):
         results={}
 
     #------------------Get notes------------------
-    ret = db.execute(query).fetchall()
-    ret2 = db.execute(query2).fetchall()
-    ret=ret+ret2
+    ret=[]
+    try:
+        ret1 = db.execute(query).fetchall()
+        ret.extend(ret1)
+    except:
+        pass
+    try:
+        ret2 = db.execute(query2).fetchall()
+        ret.extend(ret2)
+    except:
+        pass
     username=getUserName(db)
 
     for ii,rii in enumerate(ret):
