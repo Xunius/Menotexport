@@ -621,6 +621,12 @@ def getDocNotes(db,filterdocid,results=None):
             (Documents.id=%s)
     ''' %filterdocid
 
+    # regex to transform Mendeley's old note formatting to html
+    # e.g. <m:bold>Bold</m:bold>  to <bold>Bold</bold>
+    pattern=re.compile(r'<(/?)m:(bold|italic|underline|center|left|right|linebreak)(/?)>',
+            re.DOTALL | re.UNICODE)
+    subfunc=lambda match: u'<%s%s%s>' %match.groups()
+
     if results is None:
         results={}
 
@@ -665,9 +671,14 @@ def getDocNotes(db,filterdocid,results=None):
                 and docnote!=basenote:
             docnote=basenote+'\n\n'+docnote
 
+        #--------Convert old <m:tag> to html <tag>--------
+        docnote=re.sub(pattern,subfunc,docnote)
+
         #--------------------Parse html--------------------
-        # Why am I doing this?
         soup=BeautifulSoup(docnote,'html.parser')
+        # replace <br> tags with newline
+        for br in soup.find_all('br'):
+            br.replace_with('\n')
         docnote=soup.get_text()
         '''
         parser=html2text.HTML2Text()
