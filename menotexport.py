@@ -466,7 +466,10 @@ def getHighlights(db,filterdocid,results=None):
         pg = r[1]
         bbox = [r[2], r[3], r[4], r[5]]
         # [x1,y1,x2,y2], (x1,y1) being bottom-left,
-        # (x2,y2) being top-right. Origin at bottom-left
+        # (x2,y2) being top-right. Origin at bottom-left.
+        # Fix incorrect storage ordering in Mendeley:
+        if bbox[0] > bbox[2]: bbox[0], bbox[2] = bbox[2], bbox[0]
+        if bbox[1] > bbox[3]: bbox[1], bbox[3] = bbox[3], bbox[1]
         cdate = convert2datetime(r[6])
 
         # Changes suggested by matteosecli: retrieve author of highlight:
