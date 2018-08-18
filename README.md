@@ -355,6 +355,7 @@ then *start*.
   your Evernote account, will probably implement these in a later version.
 - To batch upload to **Evernote**, check out this repo: [txt2evernote](https://github.com/Xunius/txt2evernote).
 - "Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, are now properly processed, and the results are saved to a directory "Canonical-My Library".
+- To help managing papers on local disk, I'm experimenting some [bash script tools](https://github.com/Xunius/doc_manage).
 - A note for myself: when building the windows exe, downgrade setuptools to 19.2, use pandas=0.16, don't use pyinstaller inside anaconda otherwise the result package will be 10x bigger, may need to install pyinstaller from its git. 
 
 ## Dependencies
@@ -417,4 +418,5 @@ LGPLv3. pylatexenc is under MIT license.
 * [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf)
 * [txt2evernote](https://github.com/Xunius/txt2evernote)
 * [tagextract](https://github.com/Xunius/tagextract)
+* [doc_manage](https://github.com/Xunius/doc_manage)
 
