@@ -13,7 +13,7 @@ Some relavent info on this:
 * [a blog sharing a workaround](https://hk.saowen.com/a/2238ee56dccb0df24eb98973c499f19ebdf1058e36ea713689b049c32563a9db)
 * [issue report](https://github.com/Xunius/Menotexport/issues/25)
 
-I haven't got time to look into this, and I have little experience handling sqlite data encryption/decryption. So if anyone can offer any suggestion it will be greatly appreciated, including any advises on potential legal issues distributing a tool like this that bypasses their encryption.
+I have little experience handling sqlite data encryption/decryption. So if anyone can offer any suggestion it will be greatly appreciated, including any advises on potential legal issues distributing a tool like this that bypasses their encryption.
 
 Also if you encounter an error when trying to run this tool on your local database file:
 ```
@@ -34,7 +34,7 @@ Lesson learnt: backup your data regularly, and better still, ditch Mendeley.
 
 ## What does this do?
 
-Menotexport is a simple python solution to help extracts and exports annotations (highlighted
+Menotexport is a simple python solution to help extract and export annotations (highlighted
 texts, sticky notes and notes) you made in the build-in PDF reader of Mendeley, bulk-export
 PDFs with annotations, and bulk-export meta-data with annotations to .bib or .ris file.
 
@@ -54,8 +54,7 @@ The native but awkward solution to export a PDF with its annotations is: in
 Mendeley, open that PDF in the Mendeley PDF reader, go to `Files` -> `Export PDF
 with annotations`. However to export all your collections, this has to be repeated
 manually for each individual PDF in your library. To make it worse, the annotations
-exported in this manner are **NOT** editable: they are saved as static texts, you can't even
-delete a sticky note.
+exported in this manner are saved as static texts and are not editable.
 
 This tool can bulk export all PDFs with annotations while keeping your Mendeley
 folder structure, and the annotations are readable and editable by other PDF
@@ -64,7 +63,7 @@ complete library structure.
 
 ### 2. Extract annotation texts.
 
-To extract texts from the highlights, sticky notes and notes (in the right-hand
+To extract texts from the highlights, sticky notes and notes ("General notes" in the right-hand
 side-bar) in a PDF, other than Copy-n-Paste one by one, some softwares offer
 an automated solution.
 
@@ -123,10 +122,10 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 
 ### 1. Export preserves sub-folder structures
 
-Thanks to user feedbacks I realized that Mendeley supports embedded folder
-structures. This feature is now properly addressed: the exported PDFs, and
+Mendeley supports embedded folder
+structures and is properly addressed by this tool: the exported PDFs, and
 their corresponding "file" entries in the exported .bib (or .ris) file now
-reflect the folder structure in Mendeley library (empty folders are omitted,
+reflect the folder structure (empty folders are omitted,
 embedded folders are processed recursively).
 
 You are allowed to create folders with the same name in Mendeley, so long as
@@ -134,7 +133,7 @@ they appear in different parent folders. In case you did do so, they will be
 labelled differently in the GUI version: e.g. "folderA", "folder1/folderA" and
 "folder2/folderA" are used to distinguish these three "folderA"s. 
 
-### 2. New highlight colors in Mendeley
+### 2. Highlight colors in Mendeley
 
 Mendeley 1.16.1 introduces 7 more highlight colors, these are replicated in the exported PDFs.
 
@@ -166,7 +165,7 @@ Export meta-data and annotations to .ris file. If `-z` flag is toggled, the
 output can be properly recognized by Zotero, and a migration to Zotero via the
 .ris approach can be achieved by a process with `-pnmrz` options.
 
-### **NEW** 6. Custom template formatting for exported annotations (not quite mature yet).
+### 6. Custom template formatting for exported annotations.
 
 Annotations (notes+highlights) can be formatted in the way you like.
 
@@ -180,17 +179,17 @@ To use custom template:
 
 Currently, these variables are available in building a template:
 
-* text : note content for a note, or highlighted texts for a highlight.
-* page : page number of the note/highlight in the PDF file, not necessarily the same as printed out at the page margin.
+* text : content for a note, or highlighted texts for a highlight.
+* page : page number of the note/highlight in the PDF file (not necessarily the same as printed out at the page margin).
 * title: title of the document.
 * tags : tag list.
 * ctime: creation time.
 * author : author(s) of the document.
-* note_author: your name.
+* note_author: author(s) of the annotation.
 * citationkey: citation key.
 * num : an integer id of the note/highlight, counting restarts in each document.
 
-Put any of them in curly brackets to use them, e.g. `{title}`. NOTE not spaces in brackets. More instructions can be found in the template file.
+Put any of them in curly brackets to use them, e.g. `{title}`. NOTE no spaces in brackets. More instructions can be found in the template file.
 
 For deeper modification of the output formatting, you can hack into this file: `/lib/exportannotation.py`.
 
@@ -207,7 +206,7 @@ source activate menotexport
 conda install -c guangzhi menotexport
 ```
 
-For the installation of *conda* (*Anaconda* or a lighter-weight version of *Miniconda*), see their [official site](https://www.continuum.io/downloads).
+For the installation of *conda* (*Anaconda* or a lighter-weight version: *Miniconda*), see their [official site](https://www.continuum.io/downloads).
 
 ### 2. Pre-build binary GUI for Windows 
 
@@ -220,7 +219,7 @@ Version 1.5.1 (uploaded 07-Aug-2018, not fully tested): https://drive.google.com
 
 ### 3. Install the dependencies and use source code
 
-If all above approaches fail, the last choise is:
+If all above approaches fail:
 
 
 - For command line or GUI usage on Linux or Mac or Win, download the zip and
@@ -252,7 +251,7 @@ python menotexport.py [-h] [-p] [-m] [-n] [-b] [-r] [-s] [-z] [-f folder] dbfile
 where
 
 - `-h`: Show help messages.
-- `-p`: Bulk export PDFs (including PDFs with annotations and those without annotations as well).
+- `-p`: Bulk export PDFs.
 - `-m`: Extract markups (highlighted texts), also affects the outputs of the `-b` option.
 - `-n`: Extract notes (sticky notes and side-bar notes), also affects the outputs of the `-b` option.
 - `-b`: Export to .bib file. 
@@ -278,9 +277,9 @@ either `-m` or `-n` is given).
 - If not `-s`, also generate another txt `Mendeley_annotations_by_tags.txt` where
 information is grouped by tags.
 
-- If `-p` and `-n`, your sticky notes will be placed in the exported PDFs at
-  the same locations as in Mendeley.  If the document has side-bar notes (those
-  you created in the right-hand side-bar in Mendeley), it will be transfered to
+- If `-p` or `-n`, your sticky notes will be placed in the exported PDFs at
+  the same locations as in Mendeley.  If the document has side-bar notes (aka
+  "General note"), they will be transfered to
   the exported PDF as a sticky note at the top-left corner of the 1st page.
   All sticky notes are editable and deletable, but the formatting (bold,
   itatlic or underline) are gone.
@@ -334,8 +333,8 @@ then *start*.
   reproduced as they should be. **NOTE** that users have reported mis-alignments in highlighted texts
   when the exported PDF is opened in *Qiqqa*, I'm not sure it's more due to *Qiqqa* or this tool.
 - Note extraction works with **quite good** accruacy.
-- **Highlight extraction accuracy is compromised**, due to the inherent nature of the PDF
-  format. Not all texts are correctly extracted, and the order they appear in the output
+- **Highlight extraction accuracy is compromised**. Not all texts are correctly extracted,
+  and the order they appear in the output
   may not be exactly the same as in the PDFs (top-down, left-right). The performance tends to get
   particularly chaotic when the highlights cover some non-roman characters (e.g. Greek letters or math
   symbols). DO proof read afterwards.
@@ -352,14 +351,16 @@ then *start*.
 - This is not necessarily a bug but might be worth noting: if you choose to process all the Mendeley folders and export the PDFs, the duplicated files in different folders will be duplicated on the disk as well, therefore taking up multiples of disk spaces. Similarly the .bib file may contain duplicated entries, with different "folder" and "file" fields.
 - Sometimes your edits inside Mendeley may not be saved immediately to the database file. In such cases just reboot Mendeley. No needed to reboot Menotexport (if you are using the GUI), as each time you press the "start" button it will issue a new connection to the database.
 - Possible follow-ups one can do: re-format the extracted txts to PDFs, docs or sync into
-  your Evernote account, will probably implement these in a later version.
+  your Evernote account.
 - To batch upload to **Evernote**, check out this repo: [txt2evernote](https://github.com/Xunius/txt2evernote).
-- "Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, are now properly processed, and the results are saved to a directory "Canonical-My Library".
+- "Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, the results are saved to a directory "Canonical-My Library".
+- To help managing papers on local disk, I'm experimenting some [bash script tools](https://github.com/Xunius/doc_manage).
+- Check out [papis](https://github.com/papis/papis): Powerful and highly extensible command-line based document and bibliography manager.
 - A note for myself: when building the windows exe, downgrade setuptools to 19.2, use pandas=0.16, don't use pyinstaller inside anaconda otherwise the result package will be 10x bigger, may need to install pyinstaller from its git. 
 
 ## Dependencies
 
-Developed in python2.7. **NOT** compatible with python3+ (*pdfminer* doesn't support python3).
+Developed in python2.7. **NOT** compatible with python3+ yet.
 
 1. It requires the following python packages:
 
@@ -417,4 +418,5 @@ LGPLv3. pylatexenc is under MIT license.
 * [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf)
 * [txt2evernote](https://github.com/Xunius/txt2evernote)
 * [tagextract](https://github.com/Xunius/tagextract)
+* [doc_manage](https://github.com/Xunius/doc_manage)
 
