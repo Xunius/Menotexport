@@ -257,6 +257,7 @@ def getMetaData(db, docid):
     WHERE (DocumentFolders.documentId=%s)
     ''' %docid
 
+
     def fetchField(db,query):
         aa=db.execute(query).fetchall()
         bb=[ii[0] for ii in aa]
@@ -273,6 +274,7 @@ def getMetaData(db, docid):
             'arxivId','chapter','city','country','edition','institution',\
             'isbn','issn','month','day','publisher','series','type',\
             'read','favourite']
+
 
     result={}
 
@@ -329,6 +331,30 @@ def getMetaData(db, docid):
     result['tags']=tags
 
     return result
+
+
+def removeTrashedDocs(db, docids):
+    '''Remove ids of docs that are in Trash.
+
+    Ids of trashed docs will still appear in a folder, and will lead to
+    duplicates in the export.
+    '''
+
+    query_delete=\
+    '''
+    SELECT Documents.deletionPending
+    FROM Documents
+    WHERE (Documents.id=%s)
+    '''
+
+    results=[]
+
+    for idii in docids:
+        is_del=db.execute(query_delete %idii).fetchall()[0][0]
+        if not is_del=='true':
+            results.append(idii)
+
+    return results
 
 
 #---------------Get file path of PDF(s) using documentId---------------
@@ -1110,6 +1136,9 @@ def processDocs(db,outdir,docids,foldername,allfolders,action,\
         ishighlight=True
     if 'n' in action or 'p' in action:
         isnote=True
+
+    #---------------Remove docs in trash---------------
+    docids=removeTrashedDocs(db,docids)
 
     #----------Get meta data for docs----------
     doc_meta={}
