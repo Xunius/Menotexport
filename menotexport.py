@@ -1447,6 +1447,10 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
 
     #----------------Get folder list----------------
     folderlist=getFolderList(db,folder)
+    if folder is not None and len(folderlist)==0:
+        printHeader('Given folder name not found in database. Quit.')
+        return 1
+
     allfolders=True if folder is None else False
 
     # get docids for doc ids that not in any folder
