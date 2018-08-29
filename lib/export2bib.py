@@ -138,9 +138,7 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
 
         #----------Add tags to keywords if iszotero----------
         if iszotero and (kk=='tags' or kk=='keywords') and not gotkeywords:
-            #keywords=getField(metadict,'keywords',[])
-            # avoid keywords for sbaross
-            keywords=[]
+            keywords=getField(metadict,'keywords',[])
             if type(keywords) is not list:
                 keywords=[keywords,]
             tags=getField(metadict,'tags',[])
