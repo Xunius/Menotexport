@@ -138,7 +138,9 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
 
         #----------Add tags to keywords if iszotero----------
         if iszotero and (kk=='tags' or kk=='keywords') and not gotkeywords:
-            keywords=getField(metadict,'keywords',[])
+            #keywords=getField(metadict,'keywords',[])
+            # avoid keywords for sbaross
+            keywords=[]
             if type(keywords) is not list:
                 keywords=[keywords,]
             tags=getField(metadict,'tags',[])
@@ -151,7 +153,8 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
             gotkeywords=True
 
         #----------------Parse annotations----------------
-        if kk=='annote':
+        #if kk=='annote':
+        if kk in ['notes', 'highlights']:
             if type(fieldvv) is not list:
                 fieldvv=[fieldvv,]
 
@@ -163,7 +166,8 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
             else:
                 fieldvv=['{ %s }' %ii for ii in fieldvv]
                 fieldvv=u', '.join(fieldvv)
-                entrykk='%s = {%s}' %(kk, fieldvv)
+                #entrykk='%s = {%s}' %(kk, fieldvv)
+                entrykk='%s = {%s}' %('annote', fieldvv)
                 entries.append(entrykk)
 
         #--------------------All others--------------------
@@ -194,19 +198,25 @@ def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,iszotero,verbose=Tr
         metaii=annoii.meta
         hlii=annoii.highlights
         ntii=annoii.notes
-        annotexts=[]
+        #annotexts=[]
+        hltexts=[]
+        nttexts=[]
 
         #------------------Get highlights------------------
         if len(hlii)>0:
             for hljj in hlii:
-                annotexts.append('> %s' %hljj.text)
+                #annotexts.append('> %s' %hljj.text)
+                hltexts.append('> %s' %hljj.text)
 
         #------------------Get notes------------------
         if len(ntii)>0:
             for ntjj in ntii:
-                annotexts.append('- %s' %ntjj.text)
+                #annotexts.append('- %s' %ntjj.text)
+                nttexts.append('- %s' %ntjj.text)
 
-        metaii['annote']=annotexts
+        #metaii['annote']=annotexts
+        metaii['notes']=nttexts
+        metaii['highlights']=hltexts
         doclist.append(metaii)
 
     #----------------------Export----------------------

@@ -332,6 +332,9 @@ def exportAnno(annodict,outdir,action,separate,verbose=True):
     for ii,idii in enumerate(docids):
 
         annoii=annodict[idii]
+        if len(annoii.notes)==0 and len(annoii.highlights)==0:
+            continue
+
         fnameii=annoii.meta['title']
 
         if verbose:
