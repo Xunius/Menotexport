@@ -155,8 +155,10 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
         #----------------Parse annotations----------------
         #if kk=='annote':
         if kk in ['notes', 'highlights']:
-            if type(fieldvv) is not list:
-                fieldvv=[fieldvv,]
+            #if type(fieldvv) is not list:
+                #fieldvv=[fieldvv,]
+            if len(fieldvv)==0:
+                continue
 
             # For import to zotero, separate annotes
             if iszotero:

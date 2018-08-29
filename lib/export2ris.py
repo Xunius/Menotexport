@@ -94,7 +94,7 @@ def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
 
 
 #-----------------------Parse document meta-data-----------------------
-def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
+def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
     '''Parse document meta-data
 
     metadict
@@ -170,6 +170,18 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
     if len(loc)>0:
         entries.append('CY - %s' %loc)
 
+    #------------------Get file path------------------
+    if isfile:
+        vv=metadict['path']
+        if not isinstance(vv,list) and not isinstance(vv,tuple):
+            vv=[vv,]
+        #vv=parseFilePath(vv,basedir,metadict['folder'],iszotero)
+        vv=[parseFilePath(ii,basedir,folder,iszotero) for\
+                ii in vv]
+        for vii in vv:
+            entries.append('L1 - %s' %vii)
+
+
     #--------------Populate other fields--------------
     gotkeywords=False
 
@@ -177,16 +189,9 @@ def parseMeta(metadict,basedir,isfile,iszotero,verbose=True):
         if vv is None:
             continue
         if kk in ['type','firstnames','lastname','docid','year','month',\
-                'day','pages','city','country']:
+                'day','pages','city','country', 'path']:
             continue
 
-        #------------------Get file path------------------
-        if kk=='path':
-            if not isfile:
-                continue
-            vv=parseFilePath(vv,basedir,metadict['folder'],iszotero)
-            if vv=='':
-                continue
 
         #----------Add tags to keywords if iszotero----------
         if iszotero and (kk=='tags' or kk=='keywords') and not gotkeywords:
@@ -284,7 +289,7 @@ def exportDoc2Ris(doclist,basedir,outdir,allfolders,isfile,iszotero,verbose=True
     faillist=[]
 
     for docii in doclist:
-        risdata=parseMeta(docii,basedir,isfile,iszotero)
+        risdata=parseMeta(docii,basedir,folder,isfile,iszotero)
         with open(abpath_out, mode='a') as fout:
             fout.write(risdata)
         #faillist.append(docii['title'])
