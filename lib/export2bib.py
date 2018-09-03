@@ -56,7 +56,7 @@ def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
 
 
 #-----------------------Parse document meta-data-----------------------
-def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
+def parseMeta(metadict,basedir,folder,isfile,iszotero,iskeyword,verbose=True):
     '''Parse document meta-data
 
     metadict
@@ -118,8 +118,9 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
             vv=[parseFilePath(ii,basedir,folder,iszotero) for\
                     ii in vv]
             # proper way of joining multiple paths?
-            vv='}, {'.join(vv)
-            vv=u'{%s}' %vv
+            #vv='}, {'.join(vv)
+            vv='; '.join(vv)
+            vv=u'%s' %vv
 
             if vv=='':
                 continue
@@ -138,11 +139,14 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
 
         #----------Add tags to keywords if iszotero----------
         if iszotero and (kk=='tags' or kk=='keywords') and not gotkeywords:
-            keywords=getField(metadict,'keywords',[])
-            if type(keywords) is not list:
+            if iskeyword:
+                keywords=getField(metadict,'keywords',[])
+            else:
+                keywords=[]
+            if not isinstance(keywords, list):
                 keywords=[keywords,]
             tags=getField(metadict,'tags',[])
-            if type(tags) is not list:
+            if not isinstance(tags, list):
                 tags=[tags,]
             keywords.extend(tags)
 	    keywords=list(set(keywords))
@@ -177,15 +181,17 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
             entrykk='%s = {%s}' %(kk, fieldvv)
             entries.append(entrykk)
 
-    entries=',\n'.join(entries)
-    string=string+entries+'\n}\n'
+    #entries=',\n'.join(entries)
+    entries=',\n'.join([u'\t%s' %eii for eii in entries])
+    string=string+entries+'\n}\n\n'
     string=string.encode('ascii','replace')
 
     return string
 
 
 #--------------Export documents with annotations to .bib--------------
-def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,iszotero,verbose=True):
+def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,iszotero,
+        iskeyword,verbose=True):
     '''Export documents with annotations to .bib
 
     <annodict>: dict, key: docid, value: menotexport.DocAnno objs.
@@ -221,13 +227,14 @@ def exportAnno2Bib(annodict,basedir,outdir,allfolders,isfile,iszotero,verbose=Tr
 
     #----------------------Export----------------------
     faillist=exportDoc2Bib(doclist,basedir,outdir,\
-            allfolders,isfile,iszotero,verbose)
+            allfolders,isfile,iszotero,iskeyword,verbose)
 
     return faillist
 
 
 #-------------Export documents without annotations to .bib-------------
-def exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,iszotero,verbose=True):
+def exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,iszotero,iskeyword,
+        verbose=True):
     '''Export documents without annotations to .bib
 
     <doclist>: list of meta data dists.
@@ -247,7 +254,7 @@ def exportDoc2Bib(doclist,basedir,outdir,allfolders,isfile,iszotero,verbose=True
 
     for docii in doclist:
         try:
-            bibdata=parseMeta(docii,basedir,folder,isfile,iszotero)
+            bibdata=parseMeta(docii,basedir,folder,isfile,iszotero,iskeyword)
             with open(abpath_out, mode='a') as fout:
                 fout.write(bibdata)
         except:

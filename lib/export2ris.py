@@ -94,7 +94,7 @@ def parseFilePath(path,baseoutdir,folder,iszotero,verbose=True):
 
 
 #-----------------------Parse document meta-data-----------------------
-def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
+def parseMeta(metadict,basedir,folder,isfile,iszotero,iskeyword,verbose=True):
     '''Parse document meta-data
 
     metadict
@@ -173,13 +173,14 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
     #------------------Get file path------------------
     if isfile:
         vv=metadict['path']
-        if not isinstance(vv,list) and not isinstance(vv,tuple):
-            vv=[vv,]
-        #vv=parseFilePath(vv,basedir,metadict['folder'],iszotero)
-        vv=[parseFilePath(ii,basedir,folder,iszotero) for\
-                ii in vv]
-        for vii in vv:
-            entries.append('L1 - %s' %vii)
+        if vv is not None:
+            if not isinstance(vv,list) and not isinstance(vv,tuple):
+                vv=[vv,]
+            #vv=parseFilePath(vv,basedir,metadict['folder'],iszotero)
+            vv=[parseFilePath(ii,basedir,folder,iszotero) for\
+                    ii in vv]
+            for vii in vv:
+                entries.append('L1 - %s' %vii)
 
 
     #--------------Populate other fields--------------
@@ -195,7 +196,10 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
 
         #----------Add tags to keywords if iszotero----------
         if iszotero and (kk=='tags' or kk=='keywords') and not gotkeywords:
-            keywords=getField(metadict,'keywords',[])
+            if iskeyword:
+                keywords=getField(metadict,'keywords',[])
+            else:
+                keywords=[]
             if type(keywords) is not list:
                 keywords=[keywords,]
             tags=getField(metadict,'tags',[])
@@ -236,7 +240,8 @@ def parseMeta(metadict,basedir,folder,isfile,iszotero,verbose=True):
 
 
 #--------------Export documents with annotations to .ris--------------
-def exportAnno2Ris(annodict,basedir,outdir,allfolders,isfile,iszotero,verbose=True):
+def exportAnno2Ris(annodict,basedir,outdir,allfolders,isfile,iszotero,
+        iskeyword,verbose=True):
     '''Export documents with annotations to .ris
 
     '''
@@ -265,14 +270,15 @@ def exportAnno2Ris(annodict,basedir,outdir,allfolders,isfile,iszotero,verbose=Tr
 
     #----------------------Export----------------------
     faillist=exportDoc2Ris(doclist,basedir,outdir,\
-            allfolders,isfile,iszotero,verbose)
+            allfolders,isfile,iszotero,iskeyword,verbose)
 
     return faillist
 
     
 
 #-------------Export documents without annotations to .ris-------------
-def exportDoc2Ris(doclist,basedir,outdir,allfolders,isfile,iszotero,verbose=True):
+def exportDoc2Ris(doclist,basedir,outdir,allfolders,isfile,iszotero,
+        iskeyword,verbose=True):
     '''Export documents without annotations to .bib
 
     '''
@@ -289,7 +295,7 @@ def exportDoc2Ris(doclist,basedir,outdir,allfolders,isfile,iszotero,verbose=True
     faillist=[]
 
     for docii in doclist:
-        risdata=parseMeta(docii,basedir,folder,isfile,iszotero)
+        risdata=parseMeta(docii,basedir,folder,isfile,iszotero,iskeyword)
         with open(abpath_out, mode='a') as fout:
             fout.write(risdata)
         #faillist.append(docii['title'])

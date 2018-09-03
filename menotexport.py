@@ -1224,6 +1224,7 @@ def processDocs(db,outdir,docids,foldername,allfolders,action,\
 
         bibfolder=outdir if allfolders else outdir_folder
         isfile=True if 'p' in action else False
+        iskeyword=True if 'k' in action else False
 
         #-----------Export docs with annotations-----------
         if len(annotations)>0:
@@ -1231,13 +1232,13 @@ def processDocs(db,outdir,docids,foldername,allfolders,action,\
             # <bibfolder> is the folder to save .bib file, which is <outdir>
             # if <allfolders> is True, or <outdir>/<folder_tree> otherwise.
             flist=export2bib.exportAnno2Bib(annotations,outdir,\
-                bibfolder,allfolders,isfile,iszotero,verbose)
+                bibfolder,allfolders,isfile,iszotero,iskeyword,verbose)
             bibfaillist.extend(flist)
 
         #------Export other docs without annotations------
         if len(otherdocs)>0:
             flist=export2bib.exportDoc2Bib(otherdocs,outdir,\
-                bibfolder,allfolders,isfile,iszotero,verbose)
+                bibfolder,allfolders,isfile,iszotero,iskeyword,verbose)
             bibfaillist.extend(flist)
 
     #----------Export meta and anno to ris file----------
@@ -1248,6 +1249,7 @@ def processDocs(db,outdir,docids,foldername,allfolders,action,\
 
         risfolder=outdir if allfolders else outdir_folder
         isfile=True if 'p' in action else False
+        iskeyword=True if 'k' in action else False
 
         #-----------Export docs with annotations-----------
         if len(annotations)>0:
@@ -1255,13 +1257,13 @@ def processDocs(db,outdir,docids,foldername,allfolders,action,\
             # <bibfolder> is the folder to save .bib file, which is <outdir> if <allfolders> is True,
             # or <outdir>/<folder_tree> otherwise.
             flist=export2ris.exportAnno2Ris(annotations,outdir,\
-                risfolder,allfolders,isfile,iszotero,verbose)
+                risfolder,allfolders,isfile,iszotero,iskeyword,verbose)
             risfaillist.extend(flist)
 
         #------Export other docs without annotations------
         if len(otherdocs)>0:
             flist=export2ris.exportDoc2Ris(otherdocs,outdir,\
-                risfolder,allfolders,isfile,iszotero,verbose)
+                risfolder,allfolders,isfile,iszotero,iskeyword,verbose)
             risfaillist.extend(flist)
 
 
@@ -1563,6 +1565,7 @@ if __name__ == "__main__":
 
     parser.add_argument('dbfile', type=str,\
             help='The Mendeley sqlite database file')
+    
     parser.add_argument('outdir', type=str,\
             help='Target folder to save the outputs.')
 
@@ -1571,6 +1574,7 @@ if __name__ == "__main__":
             const='p',\
             help='''Bulk export all PDFs (with highlights and notes if they have any).
             Can be used with -m, -n, -b and -r''')
+
     parser.add_argument('-m', '--markup', dest='action',\
             action='append_const', \
             const='m',\
@@ -1578,6 +1582,7 @@ if __name__ == "__main__":
             Can be used with -p, -n, -b and -r.
                 If used with -n, highlights and notes are combined
                 in annotations.txt.''')
+
     parser.add_argument('-n', '--note', dest='action',\
             action='append_const', \
             const='n',\
@@ -1585,6 +1590,7 @@ if __name__ == "__main__":
             Can be used with -p, -m, -b and -r.
                 If used with -m, highlights and notes are combined
                 in annotations.txt.''')
+    
     parser.add_argument('-b', '--bib', dest='action',\
             action='append_const', \
             const='b',\
@@ -1594,6 +1600,7 @@ if __name__ == "__main__":
             save the .bib file into a sub-directory named after <folder>.
             If choose to process all folders, save the .bib file
             to <outdir>.''')
+
     parser.add_argument('-r', '--ris', dest='action',\
             action='append_const', \
             const='r',\
@@ -1613,6 +1620,7 @@ if __name__ == "__main__":
             help='''Export annotations to a separate txt file
             for each PDF.
             Default to export all file annotations to a single file.''')
+
     parser.add_argument('-z', '--zotero', action='store_true',\
             default=False,\
             help='''Exported .bib or .ris file has slightly different formating
@@ -1626,6 +1634,15 @@ if __name__ == "__main__":
             Use custom template to format the exported annotations.
             The template file is /menotexport_install_folder/annotation_template.py.
             See instructions in that file on how to modify template.
+            ''')
+
+    parser.add_argument('-k', '--keep-keywords', dest='action',
+            action='append_const',
+            const='k',
+            help='''Merge Author Keywords to tags.
+            Zotero doesn't have a keyword field. If -z (--zotero), using this flag
+            will merge the "author keyword" field from Mendeley to "tags" field.
+            Default is False.
             ''')
 
     parser.add_argument('-v', '--verbose', action='store_true',\
