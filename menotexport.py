@@ -191,7 +191,13 @@ def getUserName(db):
     '''SELECT Profiles.firstName, Profiles.lastName
     FROM Profiles WHERE Profiles.isSelf="true"
     '''
+    query_fallback=\
+    '''SELECT Profiles.firstName, Profiles.lastName
+    FROM Profiles
+    '''
     ret=db.execute(query).fetchall()
+    if len(ret)==0:
+        ret=db.execute(query_fallback).fetchall()
     return ' '.join(filter(None,ret[0]))
 
 
@@ -299,6 +305,9 @@ def getMetaData(db, docid):
     folder=result['folder']
     result['folder']=folder or 'Canonical' # if no folder name, a canonical doc
     tags=result['tags']
+    tags=tags or []
+    # Now I decide not to do this
+    '''
     if folder is not None:
         if tags is None:
             if isinstance(folder,list):
@@ -323,6 +332,7 @@ def getMetaData(db, docid):
             tags=[]
     else:
         tags=tags or []
+    '''
 
     if not isinstance(tags,list):
         tags=[tags,]
