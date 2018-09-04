@@ -214,7 +214,7 @@ For Windows 7 and Windows 10 (64bit) (**version 1.4, updated on 08-July-2017**),
 
 Version 1.4.4 (uploaded 10-Nov-2017, not fully tested yet, please provide feedbacks if this works correctly): https://drive.google.com/open?id=1rd-mOKspare4bkKWEMmm-2uwH04p-sIq. 
 
-Version 1.5.1 (uploaded 07-Aug-2018, not fully tested): https://drive.google.com/open?id=101DrrnH6qWiHmDPwYAx4JqnSCrbQs-dE
+Version 1.5.1 (uploaded 04-Sept-2018, not fully tested): https://drive.google.com/open?id=1v-f2Gfryzy__RUkF9c0aD1GXTuBJPpyv
 
 
 ### 3. Install the dependencies and use source code
