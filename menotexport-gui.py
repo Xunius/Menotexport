@@ -502,7 +502,7 @@ C:\Users\Your_name\AppData\Local\Mendeley Ltd\Mendeley Desktop\your_email@www.me
             self.check_separate.configure(state=tk.DISABLED)
             self.check_iszotero.configure(state=tk.DISABLED)
             self.check_custom_template.configure(state=tk.DISABLED)
-	    self.messagelabel.configure(text='Message (working...)')
+            self.messagelabel.configure(text='Message (working...)')
 
             folder=None if self.menfolder=='All' else folder_sel
 
