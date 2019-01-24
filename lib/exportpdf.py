@@ -123,7 +123,10 @@ def exportPdf(fin,outdir,annotations,verbose):
     except IOError:
         print('Could not find pdf file %s' %fin)
 
+    # retain meta data
+    meta = inpdf.getDocumentInfo()
     outpdf = PyPDF2.PdfFileWriter()
+    outpdf.addMetadata(meta)
 
     #----------------Loop through pages----------------
     pages=range(1,inpdf.getNumPages()+1)

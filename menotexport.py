@@ -491,11 +491,11 @@ def getHighlights(db,filterdocid,results=None):
 
     #------------------Get highlights------------------
     try:
-	ret = db.execute(query_new)
-	hascolor=True
+        ret = db.execute(query_new)
+        hascolor=True
     except:
-	ret = db.execute(query_old)
-	hascolor=False
+        ret = db.execute(query_old)
+        hascolor=False
 
     for ii,r in enumerate(ret):
         pth = converturl2abspath(r[0])
@@ -1437,7 +1437,7 @@ def matchDOI(db):
     for ii in aa:
         m=pattern.match(ii[0])
         if m is not None:
-            print ii[0],m.groups()
+            print(ii[0],m.groups())
 
     return
 
@@ -1554,7 +1554,7 @@ def main(dbfin,outdir,action,folder,separate,iszotero,verbose=True):
 
     #-----------------Remove tmp file-----------------
     if os.path.exists('tmp.txt'):
-	os.remove('tmp.txt')
+       os.remove('tmp.txt')
 
 
     return 0
