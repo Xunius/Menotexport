@@ -413,6 +413,7 @@ LGPLv3. pylatexenc is under MIT license.
 
 ## Related projects
 
+* [Meitingtrunk: reference manager with a similar interface to Mendeley](https://github.com/Xunius/MeiTingTrunk)
 * [Mendeley2Zotero](https://github.com/flinz/mendeley2zotero)
 * [Adios_Mendeley](https://github.com/rdiaz02/Adios_Mendeley)
 * [Menextract2pdf](https://github.com/cycomanic/Menextract2pdf)
