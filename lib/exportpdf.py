@@ -154,6 +154,23 @@ def exportPdf(fin,outdir,annotations,verbose):
 
         outpdf.addPage(inpg)
 
+
+    # this is a fix provided by rongmu regarding issue #22:
+    # https://github.com/Xunius/Menotexport/issues/22
+    # As I'm not giving it tests I'll put it inside a try
+
+    # fix start ----------------------------------{{{
+    # Copy the root (document catalog) except for /Pages
+    # PDF Reference, Sixth Edition, version 1.7, p.137
+    # https://www.adobe.com/devnet/pdf/pdf_reference_archive.html
+    try:
+        for k,v in inpdf.trailer["/Root"].items():
+            if k.getObject() != "/Pages":
+                outpdf._root_object.update({k: v})
+    except:
+        pass
+    # fix end ----------------------------------}}}
+
     #-----------------------Save-----------------------
     filename=annotations.filename
     if not os.path.isdir(outdir):
