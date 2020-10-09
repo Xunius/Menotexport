@@ -23,6 +23,8 @@ file is not a database
 
 before we figure out an easy to bypass this, please consider backing up your database file, and trying an older version of Mendeley before 1.19. Sorry for the trouble.
 
+**Update 2020-10-09**: Here is a method suggested by a user to decrypt the sqlite database file: https://eighty-twenty.org/2018/06/13/mendeley-encrypted-db. See also this [issue report](https://github.com/Xunius/Menotexport/issues/25).
+
 
 ### More rants
 
