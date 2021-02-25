@@ -25,6 +25,7 @@ before we figure out an easy to bypass this, please consider backing up your dat
 
 **Update 2020-10-09**: Here is a method suggested by a user to decrypt the sqlite database file: https://eighty-twenty.org/2018/06/13/mendeley-encrypted-db. See also this [issue report](https://github.com/Xunius/Menotexport/issues/25).
 
+**Update 2021-02-25**: Here is some [tips for migration to Zenodo](https://github.com/Xunius/Menotexport/issues/35), thanks for the inputs from **pboley**.
 
 ### More rants
 
@@ -115,9 +116,9 @@ Fields that are exported to a .bib entry (as long as they are present in your Me
 	- type
 	- keywords
 	- read            # Read or not
-	- favourite       # Marked as Favourite or starred in Mendeley 
+	- favourite       # Marked as Favourite or starred in Mendeley
 	- tags            # Tags added to a document
-	- file            # Location of the attached PDF on local disk 
+	- file            # Location of the attached PDF on local disk
 	- folder          # Folder name in the Mendeley library
 
 ## Some other features
@@ -133,7 +134,7 @@ embedded folders are processed recursively).
 You are allowed to create folders with the same name in Mendeley, so long as
 they appear in different parent folders. In case you did do so, they will be
 labelled differently in the GUI version: e.g. "folderA", "folder1/folderA" and
-"folder2/folderA" are used to distinguish these three "folderA"s. 
+"folder2/folderA" are used to distinguish these three "folderA"s.
 
 ### 2. Highlight colors in Mendeley
 
@@ -159,7 +160,7 @@ highlights", "Extract notes" and "Export to .bib" (by giving a "-pmnb" flag),
 process a folder or the entire Mendeley library, then point the "import"
 function of Zotero to the exported .bib file. Document entries with meta-data,
 notes (highlighted texts + notes), tags and the attached PDFs (if they exist)
-will be added. 
+will be added.
 
 ### 5. Export to .ris format.
 
@@ -210,11 +211,11 @@ conda install -c guangzhi menotexport
 
 For the installation of *conda* (*Anaconda* or a lighter-weight version: *Miniconda*), see their [official site](https://www.continuum.io/downloads).
 
-### 2. Pre-build binary GUI for Windows 
+### 2. Pre-build binary GUI for Windows
 
 For Windows 7 and Windows 10 (64bit) (**version 1.4, updated on 08-July-2017**), download `menotexport-gui-win7-win10.zip` from Google Drive: https://drive.google.com/open?id=0B8wpnLHH0j1hTTM5cTE2TXg2b1k, unpack, then launch `menotexport-gui.exe`.
 
-Version 1.4.4 (uploaded 10-Nov-2017, not fully tested yet, please provide feedbacks if this works correctly): https://drive.google.com/open?id=1rd-mOKspare4bkKWEMmm-2uwH04p-sIq. 
+Version 1.4.4 (uploaded 10-Nov-2017, not fully tested yet, please provide feedbacks if this works correctly): https://drive.google.com/open?id=1rd-mOKspare4bkKWEMmm-2uwH04p-sIq.
 
 Version 1.5.1 (uploaded 04-Sept-2018, not fully tested): https://drive.google.com/open?id=1v-f2Gfryzy__RUkF9c0aD1GXTuBJPpyv
 
@@ -256,7 +257,7 @@ where
 - `-p`: Bulk export PDFs.
 - `-m`: Extract markups (highlighted texts), also affects the outputs of the `-b` option.
 - `-n`: Extract notes (sticky notes and side-bar notes), also affects the outputs of the `-b` option.
-- `-b`: Export to .bib file. 
+- `-b`: Export to .bib file.
 - `-r`: Export to .ris file.
 - `-s`: Save extracted texts to a separate txt file for each PDF. Default to
       save all texts to a single file.
@@ -274,7 +275,7 @@ either `-m` or `-n` is given).
 
 - If not `-s`, save extracted texts from all PDFs to `Mendeley_annotations.txt`
 (if both `-m` and `-n` are given), or to `Mendeley_highlights.txt` or
-`Mendeley_notes.txt` (if either `-m` or `-n` is given). 
+`Mendeley_notes.txt` (if either `-m` or `-n` is given).
 
 - If not `-s`, also generate another txt `Mendeley_annotations_by_tags.txt` where
 information is grouped by tags.
@@ -306,7 +307,7 @@ To bulk export, extract and save to separate txt files:
 python menotexport.py -pmns <dbfile> <outputdir>
 ```
 
-To bulk export all PDFs and extract all annotations in Mendeley folder "Tropical_Cyclones" and save extracted annotations to a single file: 
+To bulk export all PDFs and extract all annotations in Mendeley folder "Tropical_Cyclones" and save extracted annotations to a single file:
 
 ```
 python menotexport.py -pmn -f "Tropical_Cyclones" <dbfile> <outputdir>
@@ -324,7 +325,7 @@ python menotexport.py -pmnbz <dbfile> <outputdir>
 
 Launch `menotexport-gui.py` (or `menotexport-gui.exe`), select the Mendeley
 database file and an output folder. Select the actions to perform (see above),
-then *start*. 
+then *start*.
 
 
 ## Caveats and further notes
@@ -345,7 +346,7 @@ then *start*.
   will be replicated in the exported PDFs even if `-m` is not given.
 - Highlighted texts from a single "block" of texts are treated as one record/entry. A "block" of
   texts is a continuous chunk of texts in the PDF, could be a whole paragraph, a single
-  line separated from others, or a single isolated word. 
+  line separated from others, or a single isolated word.
 - Citationkeys and tags are added to the extracted texts in the save .txt files to facilitate further information
   processes, both can be editted in Mendeley.
 - If choose to save all annotations to a single file, the programme also re-structure the extracted texts
@@ -358,7 +359,7 @@ then *start*.
 - "Canonical documents", which are documents saved in Mendeley's "My Library" (kind of the root folder) but not belonging to any user created folder, the results are saved to a directory "Canonical-My Library".
 - To help managing papers on local disk, I'm experimenting some [bash script tools](https://github.com/Xunius/doc_manage).
 - Check out [papis](https://github.com/papis/papis): Powerful and highly extensible command-line based document and bibliography manager.
-- A note for myself: when building the windows exe, downgrade setuptools to 19.2, use pandas=0.16, don't use pyinstaller inside anaconda otherwise the result package will be 10x bigger, may need to install pyinstaller from its git. 
+- A note for myself: when building the windows exe, downgrade setuptools to 19.2, use pandas=0.16, don't use pyinstaller inside anaconda otherwise the result package will be 10x bigger, may need to install pyinstaller from its git.
 
 ## Dependencies
 
@@ -373,12 +374,12 @@ Developed in python2.7. **NOT** compatible with python3+ yet.
 
 2. **(Optional but recommended)** For better performances in highlight extraction, it further requires the *pdftotext* software.
 
-    - Linux: *pdftotext* comes with most popular Linux distros. In case you need to install it: 
+    - Linux: *pdftotext* comes with most popular Linux distros. In case you need to install it:
 
         ```
         sudo apt-get install poppler-utils
         ```
-    
+
     - Windows: Download the *poppler* package from [here](http://blog.alivate.com.au/poppler-windows/), unpack to any folder, then add the path to the `pdftotext.exe` file (e.g. `D:\Downloads\poppler-0.44_x86\poppler-0.44\bin`) to your PATH environmental variable. How to do this is system version dependent, please google. NOTE that the *pdftotext* in the *xpdf* package for Windows does not work: it doesn't have coordinate-based portion extraction.
 
 It further incorporates (with minor adjustments) the pdfannotation.py file from
